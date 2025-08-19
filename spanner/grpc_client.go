@@ -280,6 +280,7 @@ func (g *grpcSpannerClient) Read(ctx context.Context, req *spannerpb.ReadRequest
 	setSpanAttributes(span, req)
 	mt := g.newBuiltinMetricsTracer(ctx)
 	defer recordOperationCompletion(mt)
+	req.RoutingHint = &spannerpb.RoutingHint{}
 	ctx = context.WithValue(ctx, metricsTracerKey, mt)
 	resp, err := g.raw.Read(ctx, req, g.optsWithNextRequestID(opts)...)
 	statusCode, _ := status.FromError(err)
@@ -292,6 +293,7 @@ func (g *grpcSpannerClient) StreamingRead(ctx context.Context, req *spannerpb.Re
 	// manually added when creating Stream iterators for StreamingRead.
 	span := oteltrace.SpanFromContext(ctx)
 	setSpanAttributes(span, req)
+	req.RoutingHint = &spannerpb.RoutingHint{}
 	client, err := g.raw.StreamingRead(peer.NewContext(ctx, &peer.Peer{}), req, opts...)
 	mt, ok := ctx.Value(metricsTracerKey).(*builtinMetricsTracer)
 	if !ok {
