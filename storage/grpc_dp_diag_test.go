@@ -29,9 +29,9 @@ import (
 func TestDirectPathDiagnostic(t *testing.T) {
 	// Start a mock metadata server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/computeMetadata/v1/instance/service-accounts/"+defaultServiceAccount+"/email" {
+		if r.URL.Path == "/computeMetadata/v1/instance/service-accounts/"+defaultKey+"/email" {
 			w.Write([]byte("default-compute@developer.gserviceaccount.com"))
-		} else if r.URL.Path == "/computeMetadata/v1/"+defaultServiceAccountToken {
+		} else if r.URL.Path == "/computeMetadata/v1/"+serviceAccountTokenKey {
 			w.Write([]byte(`{"access_token": "mock-token", "expires_in": 3600, "token_type": "Bearer"}`))
 		} else {
 			w.WriteHeader(http.StatusNotFound)
