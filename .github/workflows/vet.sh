@@ -28,6 +28,16 @@ for i in $(find . -name go.mod); do
   popd
 done
 
+# Fail if a cloud.google.com/go or google.golang.org/api dependency is unstable in storage/.
+for i in $(find ./storage -name go.mod); do
+  if grep -qE '\b(cloud\.google\.com/go|google\.golang\.org/api).* v.*-' "$i"; then
+    echo "Error: Unstable dependency found in $i"
+    grep -E '\b(cloud\.google\.com/go|google\.golang\.org/api).* v.*-' "$i"
+    echo "Please use stable versions for cloud.google.com/go and google.golang.org/api dependencies in storage/."
+    exit 1
+  fi
+done
+
 # Documentation for the :^ pathspec can be found at:
 # https://git-scm.com/docs/gitglossary#Documentation/gitglossary.txt-aiddefpathspecapathspec
 git diff '*go.mod' :^internal/generated/snippets | tee /dev/stderr | (! read)
