@@ -28,15 +28,60 @@ for i in $(find . -name go.mod); do
   popd
 done
 
-# Fail if a cloud.google.com/go or google.golang.org/api dependency is unstable in storage/.
-for i in $(find ./storage -name go.mod); do
-  if grep -qE '\b(cloud\.google\.com/go|google\.golang\.org/api).* v.*-' "$i"; then
-    echo "Error: Unstable dependency found in $i"
-    grep -E '\b(cloud\.google\.com/go|google\.golang\.org/api).* v.*-' "$i"
-    echo "Please use stable versions for cloud.google.com/go and google.golang.org/api dependencies in storage/."
-    exit 1
-  fi
-done
+# Check for regressions to unstable dependencies in go.mod files.
+# We compare against the PR base branch if available, otherwise origin/main, or just HEAD~1.
+BASE=""
+if [ -n "$GITHUB_BASE_REF" ]; then
+  # In GitHub Actions, GITHUB_BASE_REF is the name of the base branch (e.g. main)
+  BASE="origin/$GITHUB_BASE_REF"
+elif git rev-parse origin/main >/dev/null 2>&1; then
+  BASE=$(git merge-base origin/main HEAD 2>/dev/null || echo "origin/main")
+else
+  BASE="HEAD~1"
+fi
+
+if [ -n "$BASE" ] && git rev-parse "$BASE" >/dev/null 2>&1; then
+  git diff -U0 "$BASE" HEAD -- '*go.mod' | awk '
+    /^diff --git/ {
+      file=$3; sub(/^b\//, "", file); sub(/^a\//, "", file)
+      next
+    }
+    /^-[\t ]*(require )?[a-zA-Z0-9.\/_-]+[\t ]+v/ {
+      sub(/^-[\t ]*(require )?/, "", $0)
+      old[file "\0" $1] = $2
+    }
+    /^\+[\t ]*(require )?[a-zA-Z0-9.\/_-]+[\t ]+v/ {
+      sub(/^\+[\t ]*(require )?/, "", $0)
+      new[file "\0" $1] = $2
+    }
+    END {
+      fail=0
+      for (key in new) {
+        split(key, parts, "\0")
+        file = parts[1]
+        mod = parts[2]
+
+        # If the dependency existed previously
+        if (key in old) {
+          # If it was stable (no hyphen) and is now unstable (contains hyphen)
+          if (old[key] !~ /-/ && new[key] ~ /-/) {
+            print "Error: " file " changes " mod " from stable " old[key] " to unstable " new[key]
+            fail=1
+          }
+        } else {
+          # First time introduction of unstable dependency
+          if (new[key] ~ /-/) {
+            print "Warning: " file " introduces new unstable dependency " mod " " new[key]
+          }
+        }
+      }
+      if (fail) {
+        print "Please use stable versions for dependencies where possible. If a pseudo-version is required, discuss in the PR."
+        exit 1
+      }
+    }
+  '
+fi
 
 # Documentation for the :^ pathspec can be found at:
 # https://git-scm.com/docs/gitglossary#Documentation/gitglossary.txt-aiddefpathspecapathspec
