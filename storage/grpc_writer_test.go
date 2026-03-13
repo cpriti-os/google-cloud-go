@@ -416,3 +416,61 @@ func TestGRPCWriter_Deadlock(t *testing.T) {
 	}
 	close(completions)
 }
+
+func TestPickStreamError(t *testing.T) {
+	err1 := errors.New("error 1")
+	err2 := errors.New("error 2")
+
+	tests := []struct {
+		name    string
+		recvErr error
+		sendErr error
+		want    error
+	}{
+		{
+			name:    "recvErr is io.EOF, sendErr is nil",
+			recvErr: io.EOF,
+			sendErr: nil,
+			want:    nil,
+		},
+		{
+			name:    "recvErr is io.EOF, sendErr is err1",
+			recvErr: io.EOF,
+			sendErr: err1,
+			want:    err1,
+		},
+		{
+			name:    "recvErr is err1, sendErr is nil",
+			recvErr: err1,
+			sendErr: nil,
+			want:    err1,
+		},
+		{
+			name:    "recvErr is err1, sendErr is err2",
+			recvErr: err1,
+			sendErr: err2,
+			want:    err1,
+		},
+		{
+			name:    "recvErr is nil, sendErr is err2",
+			recvErr: nil,
+			sendErr: err2,
+			want:    err2,
+		},
+		{
+			name:    "both nil",
+			recvErr: nil,
+			sendErr: nil,
+			want:    nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := pickStreamError(tt.recvErr, tt.sendErr)
+			if got != tt.want {
+				t.Errorf("pickStreamError(%v, %v) = %v; want %v", tt.recvErr, tt.sendErr, got, tt.want)
+			}
+		})
+	}
+}
