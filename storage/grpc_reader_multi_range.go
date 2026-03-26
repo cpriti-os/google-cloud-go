@@ -180,11 +180,48 @@ func (c *grpcStorageClient) NewMultiRangeDownloader(ctx context.Context, params 
 	// Blocking call to establish the first session and get attributes.
 	initialStreamID := manager.streamIDCounter
 	manager.streamIDCounter++
-	manager.streams[initialStreamID] = &mrdStream{
+	initialStream := &mrdStream{
 		id:            initialStreamID,
 		pendingRanges: make(map[int64]*rangeRequest),
 	}
-	session, finalSpec, err := manager.createNewSession(initialStreamID, readSpec, true)
+	manager.streams[initialStreamID] = initialStream
+
+	var initialProtoRanges []*storagepb.ReadRange
+	for _, req := range params.ranges {
+		if req.Length < 0 {
+			err := fmt.Errorf("storage: MultiRangeDownloaderRange limit cannot be negative")
+			manager.setPermanentError(err)
+			return nil, err
+		}
+		if req.Output == nil {
+			err := fmt.Errorf("storage: MultiRangeDownloaderRange output cannot be nil")
+			manager.setPermanentError(err)
+			return nil, err
+		}
+
+		rangeReq := &rangeRequest{
+			output:     req.Output,
+			offset:     req.Offset,
+			length:     req.Length,
+			origOffset: req.Offset,
+			origLength: req.Length,
+			callback:   req.Callback,
+			readID:     manager.readIDCounter,
+		}
+		initialStream.pendingRanges[rangeReq.readID] = rangeReq
+		initialStream.updateCapacity(manager, 1, rangeReq.length)
+		initialStream.statsRanges++
+		initialStream.statsRangeBytes += rangeReq.length
+
+		initialProtoRanges = append(initialProtoRanges, &storagepb.ReadRange{
+			ReadOffset: rangeReq.offset,
+			ReadLength: rangeReq.length,
+			ReadId:     rangeReq.readID,
+		})
+		manager.readIDCounter++
+	}
+
+	session, finalSpec, err := manager.createNewSession(initialStreamID, readSpec, initialProtoRanges, true)
 	if err != nil {
 		manager.setPermanentError(err)
 		return nil, err
@@ -638,7 +675,7 @@ func (m *multiRangeDownloaderManager) addNewStream() {
 		return
 	}
 	go func(id int, readSpec *storagepb.BidiReadObjectSpec) {
-		newSession, newSpec, err := m.createNewSession(id, readSpec, false)
+		newSession, newSpec, err := m.createNewSession(id, readSpec, nil, false)
 		if err != nil || newSession == nil {
 			// If we can't create a stream, the handler checks the health of
 			// manager and then decides to kill the manager.
@@ -670,7 +707,7 @@ func (m *multiRangeDownloaderManager) addNewStream() {
 	}(id, clonedSpec)
 }
 
-func (m *multiRangeDownloaderManager) createNewSession(id int, readSpec *storagepb.BidiReadObjectSpec, waitForResult bool) (*bidiReadStreamSession, *storagepb.BidiReadObjectSpec, error) {
+func (m *multiRangeDownloaderManager) createNewSession(id int, readSpec *storagepb.BidiReadObjectSpec, initialRanges []*storagepb.ReadRange, waitForResult bool) (*bidiReadStreamSession, *storagepb.BidiReadObjectSpec, error) {
 	retry := m.settings.retry
 
 	var firstResult mrdSessionResult
@@ -682,7 +719,7 @@ func (m *multiRangeDownloaderManager) createNewSession(id int, readSpec *storage
 			newSession = nil
 		}
 
-		session, result := m.openAndInitializeSession(ctx, id, readSpec, waitForResult)
+		session, result := m.openAndInitializeSession(ctx, id, readSpec, initialRanges, waitForResult)
 
 		if result.err != nil {
 			if session != nil {
@@ -695,7 +732,7 @@ func (m *multiRangeDownloaderManager) createNewSession(id int, readSpec *storage
 				// We might get a redirect error here for an out-of-region request.
 				// Add the routing token and read handle to the request and do one
 				// retry.
-				session, result = m.openAndInitializeSession(ctx, id, readSpec, waitForResult)
+				session, result = m.openAndInitializeSession(ctx, id, readSpec, initialRanges, waitForResult)
 
 				if result.err != nil {
 					if session != nil {
@@ -729,8 +766,8 @@ func (m *multiRangeDownloaderManager) createNewSession(id int, readSpec *storage
 	return newSession, readSpec, nil
 }
 
-func (m *multiRangeDownloaderManager) openAndInitializeSession(ctx context.Context, id int, spec *storagepb.BidiReadObjectSpec, waitForResult bool) (*bidiReadStreamSession, mrdSessionResult) {
-	session, err := newBidiReadStreamSession(m.ctx, id, m.sessionResps, m.client, m.settings, m.params, spec)
+func (m *multiRangeDownloaderManager) openAndInitializeSession(ctx context.Context, id int, spec *storagepb.BidiReadObjectSpec, initialRanges []*storagepb.ReadRange, waitForResult bool) (*bidiReadStreamSession, mrdSessionResult) {
+	session, err := newBidiReadStreamSession(m.ctx, id, m.sessionResps, m.client, m.settings, m.params, spec, initialRanges)
 	if err != nil {
 		return nil, mrdSessionResult{err: err}
 	}
@@ -997,7 +1034,7 @@ func (m *multiRangeDownloaderManager) ensureSession(ctx context.Context, stream 
 	// Clone the spec within the event loop.
 	clonedSpec := proto.Clone(m.readSpec).(*storagepb.BidiReadObjectSpec)
 	go func(id int, readSpec *storagepb.BidiReadObjectSpec) {
-		session, finalSpec, err := m.createNewSession(id, readSpec, false)
+		session, finalSpec, err := m.createNewSession(id, readSpec, nil, false)
 		select {
 		case <-ctx.Done():
 			return
@@ -1125,7 +1162,7 @@ type bidiReadStreamSession struct {
 	streamErr error
 }
 
-func newBidiReadStreamSession(ctx context.Context, id int, respC chan<- mrdSessionResult, client *grpcStorageClient, settings *settings, params *newMultiRangeDownloaderParams, readSpec *storagepb.BidiReadObjectSpec) (*bidiReadStreamSession, error) {
+func newBidiReadStreamSession(ctx context.Context, id int, respC chan<- mrdSessionResult, client *grpcStorageClient, settings *settings, params *newMultiRangeDownloaderParams, readSpec *storagepb.BidiReadObjectSpec, initialRanges []*storagepb.ReadRange) (*bidiReadStreamSession, error) {
 	sCtx, cancel := context.WithCancel(ctx)
 
 	s := &bidiReadStreamSession{
@@ -1143,6 +1180,7 @@ func newBidiReadStreamSession(ctx context.Context, id int, respC chan<- mrdSessi
 
 	initialReq := &storagepb.BidiReadObjectRequest{
 		ReadObjectSpec: s.readSpec,
+		ReadRanges:     initialRanges,
 	}
 	reqCtx := gax.InsertMetadataIntoOutgoingContext(s.ctx, contextMetadataFromBidiReadObject(initialReq)...)
 

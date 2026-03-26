@@ -309,6 +309,8 @@ type newMultiRangeDownloaderParams struct {
 	maxConnections      int
 	targetPendingRanges int
 	targetPendingBytes  int
+
+	ranges []MultiRangeDownloaderRange
 }
 
 type newRangeReaderParams struct {
