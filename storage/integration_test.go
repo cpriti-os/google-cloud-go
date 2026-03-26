@@ -8752,12 +8752,12 @@ func TestIntegration_ParallelUpload(t *testing.T) {
 			},
 			{
 				name: "recursive composition logic",
-				// Using the smallest valid chunk size (256 KiB) minimizes the amount of data
-				// uploaded while guaranteeing we generate >32 parts to test the recursive path.
-				// 32 parts of 256 KiB = 8 MiB, so 8 MiB + 1 byte = 33 parts.
-				content:  bytes.Repeat([]byte("d"), (8<<20)+1),
-				config:   ParallelUploadConfig{PartSize: 256 * 1024, MaxConcurrency: 16},
-				expected: (8 << 20) + 1,
+				// 160 MiB + 1 byte = 32 parts of 5 MiB each + 1 part of 1 byte.
+				// This guarantees 33 parts, exceeding the 32 maxComposeComponents limit,
+				// which is sufficient to exercise the recursive compose path.
+				content:  bytes.Repeat([]byte("d"), (160<<20)+1),
+				config:   ParallelUploadConfig{PartSize: 5 << 20, MaxConcurrency: 16},
+				expected: (160 << 20) + 1,
 			},
 		}
 
@@ -8945,8 +8945,10 @@ func TestIntegration_ParallelUpload_ChecksumValidation(t *testing.T) {
 					if err == nil {
 						t.Fatalf("expected error due to incorrect checksum, got nil")
 					}
-					// User provided CRC32C is verified client-side after compose returns.
-					if !strings.Contains(err.Error(), "does not match the expected CRC32C") {
+					// User provided CRC32C is verified server-side during final compose,
+					// or client-side if server validation didn't catch it.
+					if !strings.Contains(err.Error(), "does not match the expected CRC32C") &&
+						!strings.Contains(err.Error(), "crc32c validation failed") {
 						t.Fatalf("expected a CRC32C mismatch error, but got %v", err)
 					}
 				} else {

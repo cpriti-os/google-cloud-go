@@ -1077,7 +1077,7 @@ func TestPCUWorker_WriteContextCancellation(t *testing.T) {
 		t.Errorf("expected error on close after cancellation, got nil")
 	}
 
-	// Ensure no goroutines leak.
+	// Ensure no goroutines leak
 	done := make(chan struct{})
 	go func() {
 		state.workerWG.Wait()
