@@ -101,10 +101,7 @@ func TestParallelUploadConfig_defaults(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := tt.in
-			err := cfg.defaults()
-			if err != nil {
-				t.Errorf("defaults() error = %v", err)
-			}
+				cfg.defaults()
 			if diff := cmp.Diff(tt.want, cfg); diff != "" {
 				t.Errorf("defaults() mismatch (-want +got):\n%s", diff)
 			}
@@ -1093,41 +1090,5 @@ func TestPCUWorker_WriteContextCancellation(t *testing.T) {
 		// Success: worker and collector exited.
 	case <-time.After(2 * time.Second):
 		t.Errorf("worker or collector did not exit after context cancellation")
-	}
-}
-
-func TestParallelUploadConfig_PartSizeValidation(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name        string
-		partSize    int
-		expectError bool
-	}{
-		{
-			name:        "zero defaults to 16MiB",
-			partSize:    0,
-			expectError: false,
-		},
-		{
-			name:        "less than minPartSize adjusts to minPartSize",
-			partSize:    1024,
-			expectError: false,
-		},
-		{
-			name:        "greater than max object size returns error",
-			partSize:    6 * 1024 * 1024 * 1024 * 1024, // 6 TiB
-			expectError: true,
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			cfg := &ParallelUploadConfig{PartSize: tc.partSize}
-			err := cfg.defaults()
-			if (err != nil) != tc.expectError {
-				t.Errorf("defaults() error = %v, expectError %v", err, tc.expectError)
-			}
-		})
 	}
 }

@@ -61,14 +61,11 @@ type ParallelUploadConfig struct {
 }
 
 // defaults fills in values for the configuration options.
-// Returns an error if the PartSize is larger than the maximum object size (5 TiB).
-func (c *ParallelUploadConfig) defaults() error {
+func (c *ParallelUploadConfig) defaults() {
 	if c.PartSize == 0 {
 		c.PartSize = defaultPartSize
 	} else if c.PartSize < minPartSize {
 		c.PartSize = minPartSize
-	} else if int64(c.PartSize) > 5*1024*1024*1024*1024 {
-		return fmt.Errorf("storage: ParallelUploadConfig.PartSize cannot exceed 5 TiB")
 	}
 	// Use a heuristic for the number of workers: start with 4, add 1 for
 	// every 2 CPUs, but don't exceed a cap of 16. This provides a
@@ -76,7 +73,6 @@ func (c *ParallelUploadConfig) defaults() error {
 	if c.MaxConcurrency == 0 {
 		c.MaxConcurrency = min(baseWorkers+(runtime.NumCPU()/2), maxWorkers)
 	}
-	return nil
 }
 
 type pcuSettings struct {
@@ -176,9 +172,7 @@ func (w *Writer) initPCU(ctx context.Context) error {
 	}
 
 	cfg := &w.ParallelUploadConfig
-	if err := cfg.defaults(); err != nil {
-		return err
-	}
+	cfg.defaults()
 
 	// Ensure PartSize is a multiple of googleapi.MinUploadChunkSize.
 	cfg.PartSize = gRPCChunkSize(cfg.PartSize)
