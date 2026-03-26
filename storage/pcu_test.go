@@ -101,7 +101,7 @@ func TestParallelUploadConfig_defaults(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := tt.in
-				cfg.defaults()
+			cfg.defaults()
 			if diff := cmp.Diff(tt.want, cfg); diff != "" {
 				t.Errorf("defaults() mismatch (-want +got):\n%s", diff)
 			}
