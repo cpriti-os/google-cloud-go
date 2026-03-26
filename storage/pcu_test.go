@@ -101,7 +101,10 @@ func TestParallelUploadConfig_defaults(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := tt.in
-			cfg.defaults()
+			err := cfg.defaults()
+			if err != nil {
+				t.Errorf("defaults() error = %v", err)
+			}
 			if diff := cmp.Diff(tt.want, cfg); diff != "" {
 				t.Errorf("defaults() mismatch (-want +got):\n%s", diff)
 			}
@@ -994,6 +997,137 @@ func TestPCUState_Close(t *testing.T) {
 				t.Errorf("cleanup logic was not executed")
 			}
 			mu.Unlock()
+		})
+	}
+}
+
+func TestPCUWorker_WriteContextCancellation(t *testing.T) {
+	t.Parallel()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	uploadStarted := make(chan struct{}) // To signal when upload starts.
+
+	state := &pcuState{
+		ctx:      ctx,
+		cancel:   cancel,
+		started:  true,
+		bufferCh: make(chan []byte, 2),
+		uploadCh: make(chan uploadTask, 2),
+		resultCh: make(chan uploadResult, 2),
+		w: &Writer{
+			ctx: ctx,
+			o: &ObjectHandle{
+				bucket: "b",
+				object: "test-object",
+				c:      &Client{},
+			},
+		},
+		config:   &ParallelUploadConfig{PartSize: 10, MaxConcurrency: 1},
+		settings: &pcuSettings{bufferPoolSize: 2},
+		partMap:  make(map[int]*ObjectHandle),
+		doCleanupFn: func(s *pcuState) {
+			// Mock cleanup to prevent nil pointer dereference
+		},
+		uploadPartFn: func(s *pcuState, task uploadTask) (*ObjectHandle, *ObjectAttrs, error) {
+			close(uploadStarted)
+			<-s.ctx.Done() // Block until context is canceled.
+			return nil, nil, s.ctx.Err()
+		},
+	}
+
+	state.workerWG.Add(1)
+	go state.worker()
+
+	state.collectorWG.Add(1)
+	go state.resultCollector()
+
+	// Pre-fill buffer pool.
+	for i := 0; i < 2; i++ {
+		state.bufferCh <- make([]byte, 10)
+	}
+
+	// Trigger a flush by writing exact PartSize.
+	n, err := state.write([]byte("0123456789"))
+	if err != nil {
+		t.Fatalf("state.write failed: %v", err)
+	}
+	if n != 10 {
+		t.Errorf("n = %d; want 10", n)
+	}
+
+	<-uploadStarted // Wait until upload starts.
+
+	cancel() // Cancel context mid-upload.
+
+	// This Write should return an error because the context is canceled.
+	// We might need to wait slightly for the cancellation to propagate to the worker and set firstErr.
+	var writeErr error
+	for i := 0; i < 50; i++ {
+		_, writeErr = state.write([]byte("abcd"))
+		if writeErr != nil {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	if writeErr == nil {
+		t.Errorf("expected error on subsequent write after cancellation, got nil")
+	}
+
+	err = state.close()
+	if err == nil {
+		t.Errorf("expected error on close after cancellation, got nil")
+	}
+
+	// Ensure no goroutines leak
+	done := make(chan struct{})
+	go func() {
+		state.workerWG.Wait()
+		state.collectorWG.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		// Success: worker and collector exited.
+	case <-time.After(2 * time.Second):
+		t.Errorf("worker or collector did not exit after context cancellation")
+	}
+}
+
+func TestParallelUploadConfig_PartSizeValidation(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		partSize    int
+		expectError bool
+	}{
+		{
+			name:        "zero defaults to 16MiB",
+			partSize:    0,
+			expectError: false,
+		},
+		{
+			name:        "less than minPartSize adjusts to minPartSize",
+			partSize:    1024,
+			expectError: false,
+		},
+		{
+			name:        "greater than max object size returns error",
+			partSize:    6 * 1024 * 1024 * 1024 * 1024, // 6 TiB
+			expectError: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg := &ParallelUploadConfig{PartSize: tc.partSize}
+			err := cfg.defaults()
+			if (err != nil) != tc.expectError {
+				t.Errorf("defaults() error = %v, expectError %v", err, tc.expectError)
+			}
 		})
 	}
 }

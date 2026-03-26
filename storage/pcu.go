@@ -20,6 +20,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"log"
 	"path"
 	"runtime"
 	"sort"
@@ -60,11 +61,14 @@ type ParallelUploadConfig struct {
 }
 
 // defaults fills in values for the configuration options.
-func (c *ParallelUploadConfig) defaults() {
+// Returns an error if the PartSize is larger than the maximum object size (5 TiB).
+func (c *ParallelUploadConfig) defaults() error {
 	if c.PartSize == 0 {
 		c.PartSize = defaultPartSize
 	} else if c.PartSize < minPartSize {
 		c.PartSize = minPartSize
+	} else if int64(c.PartSize) > 5*1024*1024*1024*1024 {
+		return fmt.Errorf("storage: ParallelUploadConfig.PartSize cannot exceed 5 TiB")
 	}
 	// Use a heuristic for the number of workers: start with 4, add 1 for
 	// every 2 CPUs, but don't exceed a cap of 16. This provides a
@@ -72,6 +76,7 @@ func (c *ParallelUploadConfig) defaults() {
 	if c.MaxConcurrency == 0 {
 		c.MaxConcurrency = min(baseWorkers+(runtime.NumCPU()/2), maxWorkers)
 	}
+	return nil
 }
 
 type pcuSettings struct {
@@ -171,7 +176,9 @@ func (w *Writer) initPCU(ctx context.Context) error {
 	}
 
 	cfg := &w.ParallelUploadConfig
-	cfg.defaults()
+	if err := cfg.defaults(); err != nil {
+		return err
+	}
 
 	// Ensure PartSize is a multiple of googleapi.MinUploadChunkSize.
 	cfg.PartSize = gRPCChunkSize(cfg.PartSize)
@@ -556,6 +563,8 @@ func (s *pcuState) composeParts() error {
 
 	// Perform client-side CRC32C validation if a user-provided checksum was specified.
 	if s.w.SendCRC32C && s.w.CRC32C != 0 && attrs.CRC32C != s.w.CRC32C {
+		// Note: The composed object is already persisted in GCS. It is not automatically
+		// deleted here to allow for manual inspection or recovery if needed.
 		return fmt.Errorf("storage: object was uploaded, but its CRC32C (%d) does not match the expected CRC32C (%d)", attrs.CRC32C, s.w.CRC32C)
 	}
 
@@ -573,15 +582,21 @@ func (s *pcuState) doCleanup() {
 	// Semaphore to avoid spawning too many goroutines for deletion.
 	sem := make(chan struct{}, s.config.MaxConcurrency)
 
+	// Use WithoutCancel to ensure cleanup isn't killed by parent context cancellation.
+	// Use WithTimeout to ensure cleanup doesn't block indefinitely.
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(s.ctx), 5*time.Minute)
+	defer cancel()
+
 	runDelete := func(h *ObjectHandle) {
 		defer wg.Done()
 		sem <- struct{}{}
 		defer func() { <-sem }()
 
-		// Use WithoutCancel to ensure cleanup isn't killed by parent context cancellation.
 		// Ignore cleanup errors here since its best effort and will rely on bucket
 		// lifecycle policies if cleanup fails.
-		_ = s.deleteFn(context.WithoutCancel(s.ctx), h)
+		if err := s.deleteFn(ctx, h); err != nil {
+			log.Printf("storage: failed to delete temporary part %q during PCU cleanup: %v", h.object, err)
+		}
 	}
 
 	for _, h := range s.partMap {

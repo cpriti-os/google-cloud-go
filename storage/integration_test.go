@@ -8752,9 +8752,12 @@ func TestIntegration_ParallelUpload(t *testing.T) {
 			},
 			{
 				name:     "recursive composition logic",
-				content:  bytes.Repeat([]byte("d"), 165<<20), // 165 MiB = 33 parts of 5 MiB each (tests recursive compose)
-				config:   ParallelUploadConfig{PartSize: 5 << 20, MaxConcurrency: 16},
-				expected: 165 << 20,
+				// Using the smallest valid chunk size (256 KiB) minimizes the amount of data
+				// uploaded while guaranteeing we generate >32 parts to test the recursive path.
+				// 32 parts of 256 KiB = 8 MiB, so 8 MiB + 1 byte = 33 parts.
+				content:  bytes.Repeat([]byte("d"), (8<<20)+1),
+				config:   ParallelUploadConfig{PartSize: 256 * 1024, MaxConcurrency: 16},
+				expected: (8 << 20) + 1,
 			},
 		}
 
