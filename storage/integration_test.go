@@ -373,6 +373,74 @@ var readCases = []readCase{
 	},
 }
 
+func TestIntegration_MultiRangeDownloader_WithRanges(t *testing.T) {
+	multiTransportTest(skipAllButZonal(context.Background(), "Bidi Read API test"), t, func(t *testing.T, ctx context.Context, bucket string, _ string, client *Client) {
+		content := make([]byte, 5<<20)
+		rand.New(rand.NewSource(0)).Read(content)
+		objName := "MultiRangeDownloader_WithRanges"
+
+		// Upload test data.
+		obj := client.Bucket(bucket).Object(objName)
+		if err := writeObject(ctx, obj, "text/plain", content); err != nil {
+			t.Fatal(err)
+		}
+		defer func() {
+			if err := obj.Delete(ctx); err != nil {
+				log.Printf("failed to delete test object: %v", err)
+			}
+		}()
+		res := make([]multiRangeDownloaderOutput, 2)
+		for i := range res {
+			res[i].buf = bytes.Buffer{}
+		}
+		callback1 := func(x, y int64, err error) {
+			res[0].offset = x
+			res[0].limit = y
+			res[0].err = err
+		}
+		callback2 := func(x, y int64, err error) {
+			res[1].offset = x
+			res[1].limit = y
+			res[1].err = err
+		}
+
+		req1 := MultiRangeDownloaderRange{
+			Output:   &res[0].buf,
+			Offset:   0,
+			Length:   10,
+			Callback: callback1,
+		}
+		req2 := MultiRangeDownloaderRange{
+			Output:   &res[1].buf,
+			Offset:   -20,
+			Length:   20,
+			Callback: callback2,
+		}
+
+		reader, err := obj.NewMultiRangeDownloader(ctx, WithRanges(req1, req2))
+		if err != nil {
+			t.Fatalf("NewMultiRangeDownloader: %v", err)
+		}
+
+		// Wait for the initial requests to finish.
+		reader.Wait()
+
+		if res[0].err != nil || res[1].err != nil {
+			t.Fatalf("unexpected error reading range: %v, %v", res[0].err, res[1].err)
+		}
+		if got, want := res[0].buf.Bytes(), content[:10]; !bytes.Equal(got, want) {
+			t.Errorf("read: got %v, want %v", got, want)
+		}
+		if got, want := res[1].buf.Bytes(), content[len(content)-20:]; !bytes.Equal(got, want) {
+			t.Errorf("read: got %v, want %v", got, want)
+		}
+
+		if err := reader.Close(); err != nil {
+			t.Fatalf("closing multirange downloader: %v", err)
+		}
+	})
+}
+
 func TestIntegration_MultiRangeDownloader(t *testing.T) {
 	multiTransportTest(skipAllButZonal(context.Background(), "Bidi Read API test"), t, func(t *testing.T, ctx context.Context, bucket string, _ string, client *Client) {
 		content := make([]byte, 5<<20)

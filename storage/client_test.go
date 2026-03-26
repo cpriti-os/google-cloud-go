@@ -1923,6 +1923,82 @@ type multiRangeDownloaderOutput struct {
 	buf    bytes.Buffer
 }
 
+func TestMultiRangeDownloader_WithRanges_Emulated(t *testing.T) {
+	transportClientTest(skipHTTP("mrd is implemented for grpc client"), t, func(t *testing.T, ctx context.Context, project, bucket string, client storageClient) {
+		setBidiReads(t, client)
+		content := make([]byte, 5<<20)
+		rand.New(rand.NewSource(0)).Read(content)
+		_, err := client.CreateBucket(context.Background(), project, bucket, &BucketAttrs{
+			Name: bucket,
+		}, nil)
+		if err != nil {
+			t.Fatalf("client.CreateBucket: %v", err)
+		}
+		prefix := time.Now().Nanosecond()
+		objectName := fmt.Sprintf("%d-object-%d", prefix, time.Now().Nanosecond())
+		veneerClient := &Client{tc: client}
+		w := veneerClient.Bucket(bucket).Object(objectName).NewWriter(context.Background())
+		if _, err := w.Write(content); err != nil {
+			t.Fatalf("failed to populate test data: %v", err)
+		}
+		if err := w.Close(); err != nil {
+			t.Fatalf("closing object: %v", err)
+		}
+
+		res := make([]multiRangeDownloaderOutput, 4)
+		for i := range res {
+			res[i].buf = bytes.Buffer{}
+		}
+
+		callback1 := func(x, y int64, err error) {
+			res[0].offset = x
+			res[0].limit = y
+			res[0].err = err
+		}
+		callback2 := func(x, y int64, err error) {
+			res[1].offset = x
+			res[1].limit = y
+			res[1].err = err
+		}
+
+		req1 := MultiRangeDownloaderRange{
+			Output:   &res[0].buf,
+			Offset:   0,
+			Length:   10,
+			Callback: callback1,
+		}
+		req2 := MultiRangeDownloaderRange{
+			Output:   &res[1].buf,
+			Offset:   100,
+			Length:   20,
+			Callback: callback2,
+		}
+
+		reader, err := veneerClient.Bucket(bucket).Object(objectName).NewMultiRangeDownloader(context.Background(), WithRanges(req1, req2))
+		if err != nil {
+			t.Fatalf("error opening multirangedownloader: %v", err)
+		}
+
+		// Wait for the initial requests to finish.
+		reader.Wait()
+
+		if res[0].err != nil || res[1].err != nil {
+			t.Fatalf("unexpected error reading range: %v, %v", res[0].err, res[1].err)
+		}
+
+		if got, want := res[0].buf.Bytes(), content[:10]; !bytes.Equal(got, want) {
+			t.Errorf("read: got %v, want %v", got, want)
+		}
+		if got, want := res[1].buf.Bytes(), content[100:120]; !bytes.Equal(got, want) {
+			t.Errorf("read: got %v, want %v", got, want)
+		}
+
+		if err := reader.Close(); err != nil {
+			t.Errorf("closing multirange downloader: %v", err)
+		}
+	})
+}
+
 func TestMultiRangeDownloaderEmulated(t *testing.T) {
 	transportClientTest(skipHTTP("mrd is implemented for grpc client"), t, func(t *testing.T, ctx context.Context, project, bucket string, client storageClient) {
 		setBidiReads(t, client)

@@ -221,6 +221,37 @@ func WithTargetPendingBytes(c int) MRDOption {
 	return targetPendingBytes(c)
 }
 
+// MultiRangeDownloaderRange represents a single range to be added
+// to a MultiRangeDownloader at creation time.
+type MultiRangeDownloaderRange struct {
+	// Output is where the data of the range will be written.
+	Output io.Writer
+	// Offset is the first byte to return in the read, relative to the start of
+	// the object. A negative offset will be interpreted as the number of bytes
+	// from the end of the object.
+	Offset int64
+	// Length is the number of bytes to return. A limit of zero indicates that
+	// there is no limit. A negative limit will cause an error.
+	Length int64
+	// Callback is called when the range read has completed or an error occurred.
+	// It is passed the requested offset, the number of bytes read, and the error.
+	Callback func(int64, int64, error)
+}
+
+type mrdRanges []MultiRangeDownloaderRange
+
+func (c mrdRanges) apply(params *newMultiRangeDownloaderParams) {
+	params.ranges = append(params.ranges, c...)
+}
+
+// WithRanges returns an MRDOption which adds ranges to the MultiRangeDownloader
+// in the initial request, saving a roundtrip to retrieve object metadata first.
+// The callbacks for these ranges will be invoked once the initial stream
+// successfully receives the corresponding data, or encounters an error.
+func WithRanges(ranges ...MultiRangeDownloaderRange) MRDOption {
+	return mrdRanges(ranges)
+}
+
 // NewMultiRangeDownloader creates a multi-range reader for an object.
 // Must be called on a gRPC client created using [NewGRPCClient].
 //
