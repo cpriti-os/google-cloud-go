@@ -237,26 +237,24 @@ func (w *Writer) isGRPCClient() bool {
 	return ok
 }
 
-func (w *Writer) initPCUIfNeeded() error {
-	if !w.EnableParallelUpload || w.pcu != nil {
-		return nil
-	}
-	if !w.isGRPCClient() {
-		// PCU only supported for gRPC.
-		// Nullify the config and proceed with standard upload.
-		// Log prominent warning.
-		log.Printf("storage: ParallelUploadConfig is ignored because Parallel Uploads are only supported for gRPC clients. Proceeding with standard upload.")
-		w.EnableParallelUpload = false
-		return nil
-	}
-	return w.initPCU(w.ctx)
-}
-
 func (w *Writer) getOrInitPCU() (*pcuState, error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
-	if err := w.initPCUIfNeeded(); err != nil {
-		return nil, err
+	if w.pcu == nil {
+		if !w.EnableParallelUpload {
+			return nil, nil
+		}
+		if !w.isGRPCClient() {
+			// PCU only supported for gRPC.
+			// Nullify the config and proceed with standard upload.
+			// Log prominent warning.
+			log.Printf("storage: ParallelUploadConfig is ignored because Parallel Uploads are only supported for gRPC clients. Proceeding with standard upload.")
+			w.EnableParallelUpload = false
+			return nil, nil
+		}
+		if err := w.initPCU(w.ctx); err != nil {
+			return nil, err
+		}
 	}
 	return w.pcu, nil
 }
