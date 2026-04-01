@@ -1040,7 +1040,15 @@ func (s *gRPCOneshotBidiWriteBufferSender) connect(ctx context.Context, cs gRPCB
 						req := bidiWriteObjectRequest(r, bufChecksum, objectChecksums)
 
 						if firstSend {
-							proto.Merge(req, s.firstMessage)
+							req.FirstMessage = s.firstMessage.FirstMessage
+							req.CommonObjectRequestParams = s.firstMessage.CommonObjectRequestParams
+							if s.firstMessage.ObjectChecksums != nil {
+								if req.ObjectChecksums == nil {
+									req.ObjectChecksums = s.firstMessage.ObjectChecksums
+								} else {
+									proto.Merge(req.ObjectChecksums, s.firstMessage.ObjectChecksums)
+								}
+							}
 							firstSend = false
 						}
 
@@ -1539,7 +1547,15 @@ func (s *gRPCAppendBidiWriteBufferSender) send(stream storagepb.Storage_BidiWrit
 	})
 	req := bidiWriteObjectRequest(r, bufChecksum, objectChecksums)
 	if sendFirstMessage {
-		proto.Merge(req, s.firstMessage)
+		req.FirstMessage = s.firstMessage.FirstMessage
+		req.CommonObjectRequestParams = s.firstMessage.CommonObjectRequestParams
+		if s.firstMessage.ObjectChecksums != nil {
+			if req.ObjectChecksums == nil {
+				req.ObjectChecksums = s.firstMessage.ObjectChecksums
+			} else {
+				proto.Merge(req.ObjectChecksums, s.firstMessage.ObjectChecksums)
+			}
+		}
 	}
 
 	return stream.Send(req)
