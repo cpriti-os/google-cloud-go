@@ -41,6 +41,8 @@ import (
 	"google.golang.org/api/option/internaloption"
 	raw "google.golang.org/api/storage/v1"
 	htransport "google.golang.org/api/transport/http"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 )
 
 // httpStorageClient is the HTTP-JSON API implementation of the transport-agnostic
@@ -64,6 +66,15 @@ func newHTTPStorageClient(ctx context.Context, opts ...storageOption) (storageCl
 	s := initSettings(opts...)
 	o := s.clientOption
 	config := newStorageConfig(o...)
+
+	if !config.disableClientMetrics {
+		// Do not fail client creation if enabling metrics fails.
+		if metricsContext, err := enableClientMetrics(ctx, s, config); err == nil {
+			s.metricsContext = metricsContext
+			s.clientOption = append(s.clientOption, metricsContext.clientOpts...)
+			ctx = context.WithValue(ctx, metricInstrumentsKey, metricsContext.instruments)
+		}
+	}
 
 	var creds *auth.Credentials
 	// In general, it is recommended to use raw.NewService instead of htransport.NewClient
@@ -119,6 +130,14 @@ func newHTTPStorageClient(ctx context.Context, opts ...storageOption) (storageCl
 	if err != nil {
 		return nil, fmt.Errorf("dialing: %w", err)
 	}
+
+	if s.metricsContext != nil && s.metricsContext.instruments != nil {
+		hc.Transport = &httpMetricsRoundTripper{
+			rt:          hc.Transport,
+			instruments: s.metricsContext.instruments,
+		}
+	}
+
 	// RawService should be created with the chosen endpoint to take account of user override.
 	rawService, err := raw.NewService(ctx, option.WithEndpoint(ep), option.WithHTTPClient(hc))
 	if err != nil {
@@ -941,6 +960,12 @@ func (c *httpStorageClient) newRangeReaderXML(ctx context.Context, params *newRa
 			select {
 			case <-timer:
 				log.Printf("[%s] stalled read-req cancelled after %fs", requestID, stallTimeout.Seconds())
+				if c.settings != nil && c.settings.metricsContext != nil && c.settings.metricsContext.instruments != nil {
+					c.settings.metricsContext.instruments.gcsStorageClientStallDuration.Record(ctx, stallTimeout.Seconds(), metric.WithAttributes(
+						attribute.String("gcp.client.service", "storage"),
+						attribute.String("rpc.method", "ReadObject"),
+					))
+				}
 				cancel()
 				<-done
 				if res != nil && res.Body != nil {
@@ -959,7 +984,11 @@ func (c *httpStorageClient) newRangeReaderXML(ctx context.Context, params *newRa
 	if err != nil {
 		return nil, err
 	}
-	return parseReadResponse(res, params, reopen)
+	var instruments *metricInstruments
+	if s != nil && s.metricsContext != nil {
+		instruments = s.metricsContext.instruments
+	}
+	return parseReadResponse(res, params, reopen, instruments)
 }
 
 func (c *httpStorageClient) newRangeReaderJSON(ctx context.Context, params *newRangeReaderParams, s *settings) (r *Reader, err error) {
@@ -983,7 +1012,11 @@ func (c *httpStorageClient) newRangeReaderJSON(ctx context.Context, params *newR
 	if err != nil {
 		return nil, err
 	}
-	return parseReadResponse(res, params, reopen)
+	var instruments *metricInstruments
+	if s != nil && s.metricsContext != nil {
+		instruments = s.metricsContext.instruments
+	}
+	return parseReadResponse(res, params, reopen, instruments)
 }
 
 // httpInternalWriter writes data for an HTTP upload. For single-shot uploads,
@@ -1391,12 +1424,13 @@ func (c *httpStorageClient) DeleteNotification(ctx context.Context, bucket strin
 }
 
 type httpReader struct {
-	body     io.ReadCloser
-	seen     int64
-	reopen   func(seen int64) (*http.Response, error)
-	checkCRC bool   // should we check the CRC?
-	wantCRC  uint32 // the CRC32c value the server sent in the header
-	gotCRC   uint32 // running crc
+	body        io.ReadCloser
+	seen        int64
+	reopen      func(seen int64) (*http.Response, error)
+	checkCRC    bool   // should we check the CRC?
+	wantCRC     uint32 // the CRC32c value the server sent in the header
+	gotCRC      uint32 // running crc
+	instruments *metricInstruments
 }
 
 func (r *httpReader) Read(p []byte) (int, error) {
@@ -1417,6 +1451,12 @@ func (r *httpReader) Read(p []byte) (int, error) {
 			// anything worth looking at.
 			if r.checkCRC {
 				if r.gotCRC != r.wantCRC {
+					if r.instruments != nil {
+						r.instruments.gcsStorageClientChecksumMismatchCount.Add(context.Background(), 1, metric.WithAttributes(
+							attribute.String("gcp.client.service", "storage"),
+							attribute.String("rpc.method", "ReadObject"),
+						))
+					}
 					return n, fmt.Errorf("storage: bad CRC on read: got %d, want %d",
 						r.gotCRC, r.wantCRC)
 				}
@@ -1534,6 +1574,11 @@ func readerReopen(ctx context.Context, header http.Header, params *newRangeReade
 				}
 				params.gen = gen64
 			}
+
+			if s.metricsContext != nil && s.metricsContext.instruments != nil {
+				recordGFEDurationFromHeader(ctx, s.metricsContext.instruments, res.Header, "storage.googleapis.com")
+			}
+
 			return nil
 		}, s.retry, s.idempotent)
 		if err != nil {
@@ -1543,7 +1588,7 @@ func readerReopen(ctx context.Context, header http.Header, params *newRangeReade
 	}
 }
 
-func parseReadResponse(res *http.Response, params *newRangeReaderParams, reopen func(int64) (*http.Response, error)) (r *Reader, err error) {
+func parseReadResponse(res *http.Response, params *newRangeReaderParams, reopen func(int64) (*http.Response, error), instruments *metricInstruments) (r *Reader, err error) {
 	defer func() {
 		if err != nil {
 			res.Body.Close()
@@ -1646,11 +1691,13 @@ func parseReadResponse(res *http.Response, params *newRangeReaderParams, reopen 
 		size:           size,
 		remain:         remain,
 		checkCRC:       checkCRC,
+		instruments:    instruments,
 		reader: &httpReader{
-			reopen:   reopen,
-			body:     body,
-			wantCRC:  crc,
-			checkCRC: checkCRC,
+			reopen:      reopen,
+			body:        body,
+			wantCRC:     crc,
+			checkCRC:    checkCRC,
+			instruments: instruments,
 		},
 	}, nil
 }

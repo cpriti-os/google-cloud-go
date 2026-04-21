@@ -361,6 +361,8 @@ type Reader struct {
 	mu          sync.Mutex
 	handle      *ReadHandle
 	unfinalized bool
+
+	instruments *metricInstruments
 }
 
 // Close closes the Reader. It must be called when done reading.
@@ -375,6 +377,11 @@ func (r *Reader) Read(p []byte) (int, error) {
 	if r.remain != -1 {
 		r.remain -= int64(n)
 	}
+
+	if r.instruments != nil {
+		recordReadBodySize(r.ctx, r.instruments, "ReadObject", int64(n))
+	}
+
 	return n, err
 }
 
