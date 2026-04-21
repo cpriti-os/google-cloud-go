@@ -118,6 +118,8 @@ type metricsContext struct {
 	clientOpts []option.ClientOption
 	// instance of metric reader used by gRPC client-side metrics
 	provider *metric.MeterProvider
+	// instruments contains the OpenTelemetry metric instruments
+	instruments *metricInstruments
 	// clean func to call when closing gRPC client
 	close func()
 }
@@ -146,12 +148,14 @@ func newGRPCMetricContext(ctx context.Context, cfg metricsConfig) (*metricsConte
 		if err != nil {
 			return nil, err
 		}
-		exporter, err = smr.exporter()
-		if err != nil {
-			return nil, err
+		if !cfg.disableExporter {
+			exporter, err = smr.exporter()
+			if err != nil {
+				return nil, err
+			}
 		}
 		meterOpts = append(meterOpts, metric.WithResource(smr.resource))
-	} else {
+	} else if cfg.customExporter != nil {
 		exporter = *cfg.customExporter
 	}
 	interval := time.Minute
@@ -169,7 +173,7 @@ func newGRPCMetricContext(ctx context.Context, cfg metricsConfig) (*metricsConte
 	if cfg.manualReader != nil {
 		meterOpts = append(meterOpts, metric.WithReader(cfg.manualReader))
 	}
-	if !cfg.disableExporter {
+	if !cfg.disableExporter && exporter != nil {
 		meterOpts = append(meterOpts, metric.WithReader(
 			metric.NewPeriodicReader(&exporterLogSuppressor{Exporter: exporter}, metric.WithInterval(interval))))
 	}
@@ -203,9 +207,18 @@ func newGRPCMetricContext(ctx context.Context, cfg metricsConfig) (*metricsConte
 		option.WithGRPCDialOption(
 			grpc.WithDefaultCallOptions(grpc.StaticMethodCallOption{})),
 	}
+	instruments, err := initializeMetrics(provider.Meter("cloud.google.com/go/storage"))
+	if err != nil {
+		return nil, err
+	}
+	opts = append(opts,
+		option.WithGRPCDialOption(grpc.WithChainUnaryInterceptor(unaryMetricsInterceptor(instruments))),
+		option.WithGRPCDialOption(grpc.WithChainStreamInterceptor(streamMetricsInterceptor(instruments))),
+	)
 	return &metricsContext{
-		clientOpts: opts,
-		provider:   provider,
+		clientOpts:  opts,
+		provider:    provider,
+		instruments: instruments,
 		close: func() {
 			provider.Shutdown(ctx)
 		},

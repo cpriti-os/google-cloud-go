@@ -43,6 +43,8 @@ import (
 	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/proto"
 	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 )
 
 const (
@@ -1568,6 +1570,16 @@ func (r *gRPCReader) updateCRC(b []byte) {
 // Checks whether the CRC matches at the conclusion of a read, if CRC checking was enabled.
 func (r *gRPCReader) runCRCCheck() error {
 	if r.checkCRC && r.gotCRC != r.wantCRC {
+		var instruments *metricInstruments
+		if r.settings != nil && r.settings.metricsContext != nil && r.settings.metricsContext.instruments != nil {
+			instruments = r.settings.metricsContext.instruments
+		}
+		if instruments != nil {
+			instruments.gcsStorageClientChecksumMismatchCount.Add(context.Background(), 1, metric.WithAttributes(
+				attribute.String("gcp.client.service", "storage"),
+				attribute.String("rpc.method", "ReadObject"),
+			))
+		}
 		return fmt.Errorf("storage: bad CRC on read: got %d, want %d", r.gotCRC, r.wantCRC)
 	}
 	return nil
@@ -1606,6 +1618,13 @@ func (r *gRPCReader) Read(p []byte) (int, error) {
 			// If data for our readID was found, we can update `seen` and return.
 			if found {
 				r.seen += int64(n)
+
+				var instruments *metricInstruments
+				if r.settings != nil && r.settings.metricsContext != nil && r.settings.metricsContext.instruments != nil {
+					instruments = r.settings.metricsContext.instruments
+				}
+				recordReadBodySize(context.Background(), instruments, "ReadObject", int64(n))
+
 				return n, nil
 			}
 			// If not found, this message is exhausted for our purposes.

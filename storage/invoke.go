@@ -32,6 +32,8 @@ import (
 	"github.com/google/uuid"
 	gax "github.com/googleapis/gax-go/v2"
 	"github.com/googleapis/gax-go/v2/callctx"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -100,67 +102,127 @@ func run(ctx context.Context, call func(ctx context.Context) error, retry *retry
 		opt(options)
 	}
 
-	attempts := 1
-	invocationID := uuid.New().String()
-	retryCtx := &RetryContext{
-		Attempt:      attempts,
-		InvocationID: invocationID,
-		Operation:    options.operation,
-		Bucket:       options.bucket,
-		Object:       options.object,
+	var instruments *metricInstruments
+	if insts, ok := ctx.Value(metricInstrumentsKey).(*metricInstruments); ok {
+		instruments = insts
 	}
 
-	if retry == nil {
-		retry = defaultRetry
-	}
-	if (retry.policy == RetryIdempotent && !isIdempotent) || retry.policy == RetryNever {
-		ctxWithHeaders := setInvocationHeaders(ctx, invocationID, attempts)
-		return call(ctxWithHeaders)
-	}
-	bo := gax.Backoff{}
-	if retry.backoff != nil {
-		bo.Multiplier = retry.backoff.Multiplier
-		bo.Initial = retry.backoff.Initial
-		bo.Max = retry.backoff.Max
-	}
+	wrapperCall := func() error {
+		attempts := 1
+		invocationID := uuid.New().String()
+		retryCtx := &RetryContext{
+			Attempt:      attempts,
+			InvocationID: invocationID,
+			Operation:    options.operation,
+			Bucket:       options.bucket,
+			Object:       options.object,
+		}
 
-	var quitAfterTimer *time.Timer
-	if retry.maxRetryDuration != 0 {
-		quitAfterTimer = time.NewTimer(retry.maxRetryDuration)
-		defer quitAfterTimer.Stop()
-	}
+		if retry == nil {
+			retry = defaultRetry
+		}
+		if (retry.policy == RetryIdempotent && !isIdempotent) || retry.policy == RetryNever {
+			ctxWithHeaders := setInvocationHeaders(ctx, invocationID, attempts)
 
-	var lastErr error
-	return internal.Retry(ctx, bo, func() (stop bool, err error) {
+			attemptStart := time.Now()
+			err := call(ctxWithHeaders)
+			recordAttemptMetrics(ctx, instruments, options.operation, attemptStart, err)
+			return err
+		}
+		bo := gax.Backoff{}
+		if retry.backoff != nil {
+			bo.Multiplier = retry.backoff.Multiplier
+			bo.Initial = retry.backoff.Initial
+			bo.Max = retry.backoff.Max
+		}
+
+		var quitAfterTimer *time.Timer
 		if retry.maxRetryDuration != 0 {
-			select {
-			case <-quitAfterTimer.C:
-				if lastErr == nil {
-					return true, fmt.Errorf("storage: request not sent, choose a larger value for the retry deadline (currently set to %s)", retry.maxRetryDuration)
+			quitAfterTimer = time.NewTimer(retry.maxRetryDuration)
+			defer quitAfterTimer.Stop()
+		}
+
+		var lastErr error
+		return internal.Retry(ctx, bo, func() (stop bool, err error) {
+			if retry.maxRetryDuration != 0 {
+				select {
+				case <-quitAfterTimer.C:
+					if lastErr == nil {
+						return true, fmt.Errorf("storage: request not sent, choose a larger value for the retry deadline (currently set to %s)", retry.maxRetryDuration)
+					}
+					return true, fmt.Errorf("storage: retry deadline of %s reached after %v attempts; last error: %w", retry.maxRetryDuration, attempts, lastErr)
+				default:
 				}
-				return true, fmt.Errorf("storage: retry deadline of %s reached after %v attempts; last error: %w", retry.maxRetryDuration, attempts, lastErr)
-			default:
+			}
+
+			ctxWithHeaders := setInvocationHeaders(ctx, invocationID, attempts)
+
+			attemptStart := time.Now()
+			lastErr = call(ctxWithHeaders)
+			recordAttemptMetrics(ctx, instruments, options.operation, attemptStart, lastErr)
+
+			if lastErr != nil && retry.maxAttempts != nil && attempts >= *retry.maxAttempts {
+				return true, fmt.Errorf("storage: retry failed after %v attempts; last error: %w", *retry.maxAttempts, lastErr)
+			}
+
+			retryCtx.Attempt = attempts
+			retryable := retry.runShouldRetry(lastErr, retryCtx)
+			attempts++
+			// Explicitly check context cancellation so that we can distinguish between a
+			// DEADLINE_EXCEEDED error from the server and a user-set context deadline.
+			// Unfortunately gRPC will codes.DeadlineExceeded (which may be retryable if it's
+			// sent by the server) in both cases.
+			if ctxErr := ctx.Err(); errors.Is(ctxErr, context.Canceled) || errors.Is(ctxErr, context.DeadlineExceeded) {
+				retryable = false
+			}
+			return !retryable, lastErr
+		})
+	}
+
+	if instruments != nil {
+		start := time.Now()
+		err := wrapperCall()
+		duration := time.Since(start).Seconds()
+
+		status := "OK"
+		errorType := "OK"
+		if err != nil {
+			status = "ERROR"
+			errorType = "UNKNOWN"
+			if strings.Contains(err.Error(), "timeout") || strings.Contains(err.Error(), "deadline") {
+				errorType = "TIMEOUT"
+			} else if strings.Contains(err.Error(), "connection") {
+				errorType = "CONNECTIVITY"
 			}
 		}
 
-		ctxWithHeaders := setInvocationHeaders(ctx, invocationID, attempts)
-		lastErr = call(ctxWithHeaders)
-		if lastErr != nil && retry.maxAttempts != nil && attempts >= *retry.maxAttempts {
-			return true, fmt.Errorf("storage: retry failed after %v attempts; last error: %w", *retry.maxAttempts, lastErr)
+		instruments.gcsStorageClientOperationDuration.Record(ctx, duration, metric.WithAttributes(
+			attribute.String("gcp.client.service", "storage"),
+			attribute.String("rpc.method", options.operation),
+			attribute.String("status", status),
+			attribute.String("error.type", errorType),
+		))
+
+		instruments.gcsStorageClientOperations.Add(ctx, 1, metric.WithAttributes(
+			attribute.String("gcp.client.service", "storage"),
+			attribute.String("rpc.method", options.operation),
+			attribute.String("status", status),
+			attribute.String("error.type", errorType),
+		))
+
+		if err != nil {
+			instruments.gcsStorageClientErrors.Add(ctx, 1, metric.WithAttributes(
+				attribute.String("gcp.client.service", "storage"),
+				attribute.String("rpc.method", options.operation),
+				attribute.String("error.type", errorType),
+				attribute.String("gcp.errors.domain", "storage.googleapis.com"),
+			))
 		}
 
-		retryCtx.Attempt = attempts
-		retryable := retry.runShouldRetry(lastErr, retryCtx)
-		attempts++
-		// Explicitly check context cancellation so that we can distinguish between a
-		// DEADLINE_EXCEEDED error from the server and a user-set context deadline.
-		// Unfortunately gRPC will codes.DeadlineExceeded (which may be retryable if it's
-		// sent by the server) in both cases.
-		if ctxErr := ctx.Err(); errors.Is(ctxErr, context.Canceled) || errors.Is(ctxErr, context.DeadlineExceeded) {
-			retryable = false
-		}
-		return !retryable, lastErr
-	})
+		return err
+	}
+
+	return wrapperCall()
 }
 
 // Sets invocation ID headers on the context which will be propagated as

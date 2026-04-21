@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"google.golang.org/api/option"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/googleapis/gax-go/v2/callctx"
 )
@@ -98,7 +99,7 @@ func TestSetHeadersFromContext(t *testing.T) {
 
 func TestAppendableWriteUnsupported(t *testing.T) {
 	ctx := context.Background()
-	c, err := newHTTPStorageClient(ctx)
+	c, err := newHTTPStorageClient(ctx, withClientOptions(option.WithoutAuthentication()))
 	if err != nil {
 		t.Fatalf("failed to create HTTP client: %v", err)
 	}
