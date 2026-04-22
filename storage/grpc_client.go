@@ -536,6 +536,9 @@ func (c *grpcStorageClient) LockBucketRetentionPolicy(ctx context.Context, bucke
 }
 func (c *grpcStorageClient) ListObjects(ctx context.Context, bucket string, q *Query, opts ...storageOption) *ObjectIterator {
 	s := callSettings(c.settings, opts...)
+	if s.userProject != "" {
+		ctx = setUserProjectMetadata(ctx, s.userProject)
+	}
 	it := &ObjectIterator{
 		ctx: ctx,
 	}
@@ -555,9 +558,6 @@ func (c *grpcStorageClient) ListObjects(ctx context.Context, bucket string, q *Q
 		SoftDeleted:              it.query.SoftDeleted,
 		IncludeFoldersAsPrefixes: it.query.IncludeFoldersAsPrefixes,
 		Filter:                   it.query.Filter,
-	}
-	if s.userProject != "" {
-		ctx = setUserProjectMetadata(ctx, s.userProject)
 	}
 	fetch := func(pageSize int, pageToken string) (token string, err error) {
 		// Add trace span around List API call within the fetch.
