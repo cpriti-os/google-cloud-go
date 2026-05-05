@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"hash/crc32"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 	"sync"
@@ -363,6 +364,10 @@ func (r *Reader) Read(p []byte) (int, error) {
 	n, err := r.reader.Read(p)
 	if r.remain != -1 {
 		r.remain -= int64(n)
+		if r.remain < 0 {
+			log.Printf("storage: received %d more bytes than requested from GCS", -r.remain)
+			r.remain = -1
+		}
 	}
 	return n, err
 }
@@ -375,6 +380,10 @@ func (r *Reader) WriteTo(w io.Writer) (int64, error) {
 	n, err := io.Copy(w, r.reader)
 	if r.remain != -1 {
 		r.remain -= int64(n)
+		if r.remain < 0 {
+			log.Printf("storage: received %d more bytes than requested from GCS", -r.remain)
+			r.remain = -1
+		}
 	}
 	return n, err
 }
