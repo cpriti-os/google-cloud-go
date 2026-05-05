@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"sync"
 
 	"cloud.google.com/go/storage/internal/apiv2/storagepb"
@@ -969,6 +970,10 @@ func (m *multiRangeDownloaderManager) processDataRanges(result mrdSessionResult,
 		}
 		written, _, err := result.decoder.writeToAndUpdateCRC(req.output, readID, nil)
 		req.bytesWritten += written
+		if req.length >= 0 && req.bytesWritten > req.length {
+			log.Printf("storage: received %d more bytes than requested from GCS", req.bytesWritten-req.length)
+			req.length = -1
+		}
 		mrdStream.updateCapacity(m, 0, -written)
 		if err != nil {
 			m.failRange(mrdStream, req, err)
