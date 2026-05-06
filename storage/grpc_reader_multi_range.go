@@ -404,6 +404,7 @@ type rangeRequest struct {
 	readID       int64
 	bytesWritten int64
 	completed    bool
+	attempts     int
 }
 
 // Methods implementing internalMultiRangeDownloader
@@ -769,6 +770,7 @@ func (m *multiRangeDownloaderManager) handleAddCmd(ctx context.Context, cmd *mrd
 		origLength: cmd.length,
 		callback:   cmd.callback,
 		readID:     m.readIDCounter,
+		attempts:   1,
 	}
 	m.readIDCounter++
 
@@ -1028,7 +1030,40 @@ func (m *multiRangeDownloaderManager) handleStreamEnd(result mrdSessionResult, s
 		m.readSpec.RoutingToken = result.redirect.RoutingToken
 		m.readSpec.ReadHandle = result.redirect.ReadHandle
 		m.ensureSession(m.ctx, stream)
-	} else if m.settings.retry != nil && m.settings.retry.runShouldRetry(err, nil) {
+		return
+	}
+
+	streamRetryable := false
+	if m.settings.retry != nil {
+		// Evaluate retry at the range level
+		for _, req := range stream.pendingRanges {
+			if req.completed {
+				continue
+			}
+
+			if m.settings.retry.maxAttempts != nil && req.attempts >= *m.settings.retry.maxAttempts {
+				m.failRange(stream, req, fmt.Errorf("storage: retry failed after %v attempts; last error: %w", *m.settings.retry.maxAttempts, err))
+				continue
+			}
+
+			retryCtx := &RetryContext{
+				Attempt: req.attempts,
+			}
+			if m.settings.retry.runShouldRetry(err, retryCtx) {
+				req.attempts++
+				streamRetryable = true
+			} else {
+				m.failRange(stream, req, err)
+			}
+		}
+
+		// If the stream has no pending ranges but is generally retryable, allow reconnection.
+		if len(stream.pendingRanges) == 0 && m.settings.retry.runShouldRetry(err, nil) {
+			streamRetryable = true
+		}
+	}
+
+	if streamRetryable {
 		m.ensureSession(m.ctx, stream)
 	} else {
 		m.failStream(stream, err)
