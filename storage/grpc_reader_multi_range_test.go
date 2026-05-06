@@ -13,8 +13,8 @@ import (
 )
 
 type mockBidiStreamSession struct {
-	sendReqs   []*storagepb.BidiReadObjectRequest
-	shutdownC  int
+	sendReqs  []*storagepb.BidiReadObjectRequest
+	shutdownC int
 }
 
 func (m *mockBidiStreamSession) SendRequest(req *storagepb.BidiReadObjectRequest) {
@@ -67,13 +67,13 @@ func TestMultiRangeDownloaderManager_RetryCap(t *testing.T) {
 	var callbackErr error
 	doneC := make(chan struct{})
 	req := &rangeRequest{
-		output: new(bytes.Buffer),
-		offset: 0,
-		length: 100,
+		output:     new(bytes.Buffer),
+		offset:     0,
+		length:     100,
 		origOffset: 0,
 		origLength: 100,
-		readID: 1,
-		attempts: 1, // first attempt
+		readID:     1,
+		attempts:   1, // first attempt
 		callback: func(offset, length int64, err error) {
 			callbackErr = err
 			close(doneC)
