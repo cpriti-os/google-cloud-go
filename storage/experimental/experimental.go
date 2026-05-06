@@ -115,3 +115,10 @@ func WithZonalBucketAPIs() option.ClientOption {
 func WithDirectConnectivityEnforced() option.ClientOption {
 	return internal.WithDirectConnectivityEnforced.(func() option.ClientOption)()
 }
+
+// WithLinuxIOUring provides an [option.ClientOption] that may be passed to
+// [cloud.google.com/go/storage.NewGRPCClient].
+// It enables the client to use the high-performance Linux io_uring network transport.
+func WithLinuxIOUring() option.ClientOption {
+	return internal.WithLinuxIOUring.(func() option.ClientOption)()
+}

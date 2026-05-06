@@ -44,6 +44,7 @@ func init() {
 	storageinternal.WithGRPCBidiReads = withGRPCBidiReads
 	storageinternal.WithZonalBucketAPIs = withZonalBucketAPIs
 	storageinternal.WithDirectConnectivityEnforced = withDirectConnectivityEnforced
+	storageinternal.WithLinuxIOUring = withLinuxIOUring
 }
 
 // getDynamicReadReqIncreaseRateFromEnv returns the value set in the env variable.
@@ -89,6 +90,7 @@ type storageConfig struct {
 	grpcBidiReads          bool
 	grpcAppendableUploads  bool
 	grpcDirectPathEnforced bool
+	grpcLinuxIOUring       bool
 }
 
 // newStorageConfig generates a new storageConfig with all the given
@@ -299,4 +301,16 @@ func (w *withZonalBucketAPIsConfig) ApplyStorageOpt(config *storageConfig) {
 	// Use both appendable upload semantics and bidi reads.
 	config.grpcAppendableUploads = true
 	config.grpcBidiReads = true
+}
+
+func withLinuxIOUring() option.ClientOption {
+	return &withLinuxIOUringConfig{}
+}
+
+type withLinuxIOUringConfig struct {
+	internaloption.EmbeddableAdapter
+}
+
+func (w *withLinuxIOUringConfig) ApplyStorageOpt(config *storageConfig) {
+	config.grpcLinuxIOUring = true
 }

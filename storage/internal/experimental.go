@@ -47,4 +47,8 @@ var (
 	// It sets the gRPC client to use direct path connectivity for all requests and may fail
 	// if direct path connectivity cannot be established for a request.
 	WithDirectConnectivityEnforced any // func() option.ClientOption
+
+	// WithLinuxIOUring is a function which is implemented by the storage package.
+	// It sets the gRPC client to use high-performance Linux io_uring network transport.
+	WithLinuxIOUring any // func() option.ClientOption
 )

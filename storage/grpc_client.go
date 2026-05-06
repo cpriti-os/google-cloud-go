@@ -81,6 +81,7 @@ const (
 func defaultGRPCOptions() []option.ClientOption {
 	defaults := []option.ClientOption{
 		option.WithGRPCConnectionPool(defaultConnPoolSize),
+		option.WithGRPCDialOption(grpc.WithContextDialer(customDialer)),
 	}
 
 	// Set emulator options for gRPC if an emulator was specified. Note that in a
@@ -159,6 +160,9 @@ func newGRPCStorageClient(ctx context.Context, opts ...storageOption) (*grpcStor
 	s.gax = append(s.gax, gax.WithRetry(nil), gax.WithTimeout(0))
 
 	config := newStorageConfig(s.clientOption...)
+	if config.grpcLinuxIOUring {
+		enableLinuxIOUring = true
+	}
 	if config.readAPIWasSet {
 		return nil, errors.New("storage: GRPC is incompatible with any option that specifies an API for reads")
 	}
