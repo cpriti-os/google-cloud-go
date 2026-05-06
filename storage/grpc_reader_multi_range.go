@@ -22,6 +22,8 @@ import (
 	"io"
 	"sync"
 
+	"time"
+
 	"cloud.google.com/go/storage/internal/apiv2/storagepb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -113,6 +115,7 @@ type mrdStream struct {
 	// distribution of ranges on different streams.
 	statsRanges     uint
 	statsRangeBytes int64
+	backoff         *gax.Backoff
 }
 
 func (s *mrdStream) updateCapacity(m *multiRangeDownloaderManager, deltaRanges int, deltaBytes int64) {
@@ -923,6 +926,12 @@ func (m *multiRangeDownloaderManager) processSessionResult(result mrdSessionResu
 		return
 	}
 
+	// We received a successful response from the server, meaning the stream
+	// is healthy and not being throttled. Reset backoff state.
+	if mrdStream != nil {
+		mrdStream.backoff = nil
+	}
+
 	resp := result.decoder.msg
 	if handle := resp.GetReadHandle().GetHandle(); len(handle) > 0 {
 		m.lastReadHandle = handle
@@ -987,7 +996,7 @@ func (m *multiRangeDownloaderManager) processDataRanges(result mrdSessionResult,
 }
 
 // ensureSession is now only for reconnecting *after* the initial session is up.
-func (m *multiRangeDownloaderManager) ensureSession(ctx context.Context, stream *mrdStream) {
+func (m *multiRangeDownloaderManager) ensureSession(ctx context.Context, stream *mrdStream, pause time.Duration) {
 	if stream.session != nil || stream.reconnecting {
 		return
 	}
@@ -999,6 +1008,14 @@ func (m *multiRangeDownloaderManager) ensureSession(ctx context.Context, stream 
 	// Clone the spec within the event loop.
 	clonedSpec := proto.Clone(m.readSpec).(*storagepb.BidiReadObjectSpec)
 	go func(id int, readSpec *storagepb.BidiReadObjectSpec) {
+		if pause > 0 {
+			select {
+			case <-time.After(pause):
+			case <-ctx.Done():
+				return
+			}
+		}
+
 		session, finalSpec, err := m.createNewSession(id, readSpec, false)
 		select {
 		case <-ctx.Done():
@@ -1029,7 +1046,7 @@ func (m *multiRangeDownloaderManager) handleStreamEnd(result mrdSessionResult, s
 	if result.redirect != nil {
 		m.readSpec.RoutingToken = result.redirect.RoutingToken
 		m.readSpec.ReadHandle = result.redirect.ReadHandle
-		m.ensureSession(m.ctx, stream)
+		m.ensureSession(m.ctx, stream, 0)
 		return
 	}
 
@@ -1064,7 +1081,16 @@ func (m *multiRangeDownloaderManager) handleStreamEnd(result mrdSessionResult, s
 	}
 
 	if streamRetryable {
-		m.ensureSession(m.ctx, stream)
+		if stream.backoff == nil {
+			stream.backoff = &gax.Backoff{}
+			if m.settings.retry != nil && m.settings.retry.backoff != nil {
+				stream.backoff.Multiplier = m.settings.retry.backoff.Multiplier
+				stream.backoff.Initial = m.settings.retry.backoff.Initial
+				stream.backoff.Max = m.settings.retry.backoff.Max
+			}
+		}
+		pause := stream.backoff.Pause()
+		m.ensureSession(m.ctx, stream, pause)
 	} else {
 		m.failStream(stream, err)
 		if len(m.streams) == 0 && !m.streamCreating {
