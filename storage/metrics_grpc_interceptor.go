@@ -44,6 +44,7 @@ func unaryMetricsInterceptor(instruments *metricInstruments) grpc.UnaryClientInt
 
 		instruments.rpcClientCallDuration.Record(ctx, duration, metric.WithAttributes(
 			attribute.String("rpc.system", "grpc"),
+			attribute.String("rpc.system.name", "grpc"),
 			attribute.String("rpc.service", "storage.v2.Storage"), // approximate
 			attribute.String("rpc.method", method),
 			attribute.String("rpc.response.status_code", statusCode),

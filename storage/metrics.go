@@ -45,20 +45,20 @@ func initializeMetrics(meter metric.Meter) (*metricInstruments, error) {
 	var err error
 	var insts metricInstruments
 
-	insts.rpcClientCallDuration, err = meter.Float64Histogram("rpc.client.call.duration",
+	insts.rpcClientCallDuration, err = meter.Float64Histogram("rpc.client.duration",
 		metric.WithUnit("s"), metric.WithDescription("Duration of one gRPC request."))
 	if err != nil {
 		return nil, err
 	}
 
-	insts.httpClientRequestDuration, err = meter.Float64Histogram("http.client.request.duration",
+	insts.httpClientRequestDuration, err = meter.Float64Histogram("http.client.duration",
 		metric.WithUnit("s"), metric.WithDescription("Duration of one HTTP client request."))
 	if err != nil {
 		return nil, err
 	}
 
-	insts.gcsStorageClientOperationDuration, err = meter.Float64Histogram("gcp.storage.client.operation.duration",
-		metric.WithUnit("s"), metric.WithDescription("Logical Latency: Duration of one GCS SDK API request including retries."))
+	insts.gcsStorageClientOperationDuration, err = meter.Float64Histogram("gcp.client.request.duration",
+		metric.WithUnit("s"), metric.WithDescription("Duration of one GCS SDK API request including retries."))
 	if err != nil {
 		return nil, err
 	}
@@ -99,8 +99,8 @@ func initializeMetrics(meter metric.Meter) (*metricInstruments, error) {
 		return nil, err
 	}
 
-	insts.gcsStorageClientOperationFirstByteDuration, err = meter.Float64Histogram("gcp.storage.client.operation.first_byte.duration",
-		metric.WithUnit("s"), metric.WithDescription("Time to first response byte; critical for streaming."))
+	insts.gcsStorageClientOperationFirstByteDuration, err = meter.Float64Histogram("gcp.storage.client.operation.ttfb",
+		metric.WithUnit("s"), metric.WithDescription("Time to first response byte; critical for streaming and AI/ML pipelines."))
 	if err != nil {
 		return nil, err
 	}

@@ -109,6 +109,7 @@ type storageClient interface {
 	DeleteNotification(ctx context.Context, bucket string, id string, opts ...storageOption) error
 
 	NewMultiRangeDownloader(ctx context.Context, params *newMultiRangeDownloaderParams, opts ...storageOption) (*MultiRangeDownloader, error)
+	getSettings() *settings
 }
 
 // settings contains transport-agnostic configuration for API calls made via

@@ -230,7 +230,7 @@ func NewClient(ctx context.Context, opts ...option.ClientOption) (*Client, error
 		scheme:  u.Scheme,
 		xmlHost: u.Host,
 		creds:   creds,
-		tc:      tc,
+		tc:      wrapWithMetrics(tc),
 	}, nil
 }
 
@@ -252,7 +252,7 @@ func NewGRPCClient(ctx context.Context, opts ...option.ClientOption) (*Client, e
 		return nil, err
 	}
 	return &Client{
-		tc:                    tc,
+		tc:                    wrapWithMetrics(tc),
 		grpcAppendableUploads: tc.config.grpcAppendableUploads,
 	}, nil
 }

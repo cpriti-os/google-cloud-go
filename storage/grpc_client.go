@@ -133,17 +133,20 @@ type grpcStorageClient struct {
 }
 
 func enableClientMetrics(ctx context.Context, s *settings, config storageConfig) (*metricsContext, error) {
-	var project string
-	// TODO: use new auth client
-	c, err := transport.Creds(ctx, s.clientOption...)
-	if err == nil {
-		project = c.ProjectID
+	project := config.projectID
+	if project == "" {
+		// TODO: use new auth client
+		c, err := transport.Creds(ctx, s.clientOption...)
+		if err == nil {
+			project = c.ProjectID
+		}
 	}
 	metricsContext, err := newGRPCMetricContext(ctx, metricsConfig{
-		project:       project,
-		interval:      config.metricInterval,
-		manualReader:  config.manualReader,
-		meterProvider: config.meterProvider,
+		project:        project,
+		interval:       config.metricInterval,
+		customExporter: config.metricExporter,
+		manualReader:   config.manualReader,
+		meterProvider:  config.meterProvider,
 	},
 	)
 	if err != nil {
@@ -278,6 +281,10 @@ func (c *grpcStorageClient) Close() error {
 		c.settings.metricsContext.close()
 	}
 	return c.raw.Close()
+}
+
+func (c *grpcStorageClient) getSettings() *settings {
+	return c.settings
 }
 
 // Top-level methods.
@@ -1413,6 +1420,10 @@ func (c *grpcStorageClient) NewRangeReader(ctx context.Context, params *newRange
 	}
 
 	metadata := obj.GetMetadata()
+	var instruments *metricInstruments
+	if s != nil && s.metricsContext != nil && s.metricsContext.instruments != nil {
+		instruments = s.metricsContext.instruments
+	}
 	r = &Reader{
 		Attrs: ReaderObjectAttrs{
 			Size:            size,
@@ -1426,6 +1437,7 @@ func (c *grpcStorageClient) NewRangeReader(ctx context.Context, params *newRange
 			CRC32C:          wantCRC,
 		},
 		objectMetadata: &metadata,
+		instruments:    instruments,
 		reader: &gRPCReader{
 			stream: res.stream,
 			reopen: reopen,
@@ -1441,6 +1453,8 @@ func (c *grpcStorageClient) NewRangeReader(ctx context.Context, params *newRange
 			checkCRC:        checkCRC,
 			finalized:       finalized,
 			negativeOffset:  negativeOffset,
+			ctx:             ctx,
+			instruments:    instruments,
 		},
 		checkCRC:    checkCRC,
 		handle:      &handle,
@@ -1599,6 +1613,8 @@ type gRPCReader struct {
 	wantCRC         uint32 // the CRC32c value the server sent in the header
 	gotCRC          uint32 // running crc
 	gotChunkCRC     uint32 // running crc32c of chunk
+	ctx             context.Context
+	instruments     *metricInstruments
 }
 
 // Update the running CRC with the data in the slice, if CRC checking was enabled.
@@ -1614,12 +1630,8 @@ func (r *gRPCReader) updateCRC(b []byte) {
 // Checks whether the CRC matches at the conclusion of a read, if CRC checking was enabled.
 func (r *gRPCReader) runCRCCheck() error {
 	if r.checkCRC && r.gotCRC != r.wantCRC {
-		var instruments *metricInstruments
-		if r.settings != nil && r.settings.metricsContext != nil && r.settings.metricsContext.instruments != nil {
-			instruments = r.settings.metricsContext.instruments
-		}
-		if instruments != nil {
-			instruments.gcsStorageClientChecksumMismatchCount.Add(context.Background(), 1, metric.WithAttributes(
+		if r.instruments != nil {
+			r.instruments.gcsStorageClientChecksumMismatchCount.Add(r.ctx, 1, metric.WithAttributes(
 				attribute.String("gcp.client.service", "storage"),
 				attribute.String("rpc.method", "ReadObject"),
 			))
@@ -1667,12 +1679,6 @@ func (r *gRPCReader) Read(p []byte) (int, error) {
 			})
 			if found {
 				r.seen += int64(n)
-
-				var instruments *metricInstruments
-				if r.settings != nil && r.settings.metricsContext != nil && r.settings.metricsContext.instruments != nil {
-					instruments = r.settings.metricsContext.instruments
-				}
-				recordReadBodySize(context.Background(), instruments, "ReadObject", int64(n))
 			}
 			// If we are done reading the current msg, validate chunk checksum and free buffers.
 			if r.currMsg.done {

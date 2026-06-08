@@ -89,17 +89,33 @@ type storageConfig struct {
 	grpcBidiReads          bool
 	grpcAppendableUploads  bool
 	grpcDirectPathEnforced bool
+	projectID              string
 }
 
 // newStorageConfig generates a new storageConfig with all the given
 // storageClientOptions applied.
+var enableMetricsDevelopmentGate = false
+
 func newStorageConfig(opts ...option.ClientOption) storageConfig {
 	var conf storageConfig
+	conf.disableClientMetrics = true // Disabled by default in development/production
+
+	if val, ok := os.LookupEnv("STORAGE_ENABLE_CLIENT_METRICS"); ok {
+		if enabled, err := strconv.ParseBool(val); err == nil {
+			conf.disableClientMetrics = !enabled
+		}
+	}
+
 	for _, opt := range opts {
 		if storageOpt, ok := opt.(storageClientOption); ok {
 			storageOpt.ApplyStorageOpt(&conf)
 		}
 	}
+
+	if !enableMetricsDevelopmentGate {
+		conf.disableClientMetrics = true
+	}
+
 	return conf
 }
 
@@ -183,6 +199,35 @@ func WithDisabledClientMetrics() option.ClientOption {
 
 func (w *withDisabledClientMetrics) ApplyStorageOpt(c *storageConfig) {
 	c.disableClientMetrics = w.disabledClientMetrics
+}
+
+// TelemetryOptions configures client-side telemetry (metrics and traces).
+//
+// Experimental.
+type TelemetryOptions struct {
+	// MetricsEnabled specifies whether client-side metrics should be enabled and exported.
+	MetricsEnabled bool
+
+	// ProjectID is the Google Cloud project ID where telemetry data should be sent.
+	// If empty, the project ID is auto-detected from credentials.
+	ProjectID string
+}
+
+type withTelemetryOptions struct {
+	internaloption.EmbeddableAdapter
+	telemetry TelemetryOptions
+}
+
+func (w *withTelemetryOptions) ApplyStorageOpt(c *storageConfig) {
+	c.disableClientMetrics = !w.telemetry.MetricsEnabled
+	c.projectID = w.telemetry.ProjectID
+}
+
+// WithTelemetryOptions returns a ClientOption that configures GCS client-side observability.
+//
+// Experimental.
+func WithTelemetryOptions(opts TelemetryOptions) option.ClientOption {
+	return &withTelemetryOptions{telemetry: opts}
 }
 
 type withMeterOptions struct {

@@ -25,12 +25,31 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 )
 
+func init() {
+	enableMetricsDevelopmentGate = true
+}
+
 func TestMetricFormatter(t *testing.T) {
-	want := "storage.googleapis.com/client/metric/name"
-	s := metricdata.Metrics{Name: "metric.name"}
-	got := metricFormatter(s)
-	if want != got {
-		t.Errorf("got: %v, want %v", got, want)
+	for _, tc := range []struct {
+		name string
+		want string
+	}{
+		{"rpc.client.duration", "storage.googleapis.com/client/rpc_client_call_duration"},
+		{"http.client.duration", "storage.googleapis.com/client/http_client_request_duration"},
+		{"gcp.client.request.duration", "storage.googleapis.com/client/request_duration"},
+		{"gcp.storage.client.operations", "storage.googleapis.com/client/operations"},
+		{"gcp.storage.client.attempts", "storage.googleapis.com/client/attempts"},
+		{"gcp.storage.client.request.body.size", "storage.googleapis.com/client/request_bytes"},
+		{"gcp.storage.client.response.body.size", "storage.googleapis.com/client/response_bytes"},
+		{"gcp.storage.client.operation.ttfb", "storage.googleapis.com/client/ttfb"},
+		{"gcp.storage.client.errors", "storage.googleapis.com/client/errors"},
+		{"some.custom.metric", "storage.googleapis.com/client/some/custom/metric"},
+	} {
+		s := metricdata.Metrics{Name: tc.name}
+		got := metricFormatter(s)
+		if tc.want != got {
+			t.Errorf("metricFormatter(%q) = %q, want %q", tc.name, got, tc.want)
+		}
 	}
 }
 

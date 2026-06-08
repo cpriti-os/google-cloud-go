@@ -270,7 +270,8 @@ func (s *pcuState) uploadPart(task uploadTask) (*ObjectHandle, *ObjectAttrs, err
 	partName := newPartName(s.w.o.bucket, tmpObjectPrefix, s.w.o.object, task.partNumber)
 	partHandle := s.w.o.c.Bucket(s.w.o.bucket).Object(partName)
 
-	pw := partHandle.NewWriter(s.ctx)
+	ctx := context.WithValue(s.ctx, metricInstrumentsKey, nil)
+	pw := partHandle.NewWriter(ctx)
 	pw.ObjectAttrs.Name = partName
 	pw.ObjectAttrs.Size = task.size
 	pw.DisableAutoChecksum = s.w.DisableAutoChecksum
@@ -523,7 +524,7 @@ func (s *pcuState) composeParts() error {
 				interHandle := s.w.o.c.Bucket(s.w.o.bucket).Object(compName)
 				composer := interHandle.ComposerFrom(finalComps[start:end]...)
 
-				_, err := s.composeFn(s.ctx, composer)
+				_, err := s.composeFn(context.WithValue(s.ctx, metricInstrumentsKey, nil), composer)
 				if err != nil {
 					errOnce.Do(func() { levelErr = err })
 					return
@@ -553,7 +554,7 @@ func (s *pcuState) composeParts() error {
 	composer.KMSKeyName = s.w.ObjectAttrs.KMSKeyName
 	composer.SendCRC32C = s.w.SendCRC32C
 
-	attrs, err := s.composeFn(s.ctx, composer)
+	attrs, err := s.composeFn(context.WithValue(s.ctx, metricInstrumentsKey, nil), composer)
 	if err != nil {
 		return err
 	}

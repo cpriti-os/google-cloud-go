@@ -198,6 +198,7 @@ func run(ctx context.Context, call func(ctx context.Context) error, retry *retry
 
 		instruments.gcsStorageClientOperationDuration.Record(ctx, duration, metric.WithAttributes(
 			attribute.String("gcp.client.service", "storage"),
+			attribute.String("gcp.client.version", sinternal.Version),
 			attribute.String("rpc.method", options.operation),
 			attribute.String("status", status),
 			attribute.String("error.type", errorType),

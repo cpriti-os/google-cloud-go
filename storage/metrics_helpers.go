@@ -9,6 +9,8 @@ import (
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
+	"google.golang.org/api/googleapi"
+	"google.golang.org/grpc/status"
 )
 
 func recordWriteBodySize(ctx context.Context, instruments *metricInstruments, operation string, bytes int64) {
@@ -37,11 +39,28 @@ func recordAttemptMetrics(ctx context.Context, instruments *metricInstruments, o
 	}
 
 	duration := time.Since(start).Seconds()
-	statusCode := "OK"
+	isGRPC, _ := ctx.Value(transportKey).(bool)
+	statusCode := "200"
+	if isGRPC {
+		statusCode = "OK"
+	}
 	errorType := "OK"
 
 	if err != nil {
-		statusCode = "ERROR"
+		if isGRPC {
+			if s, ok := status.FromError(err); ok {
+				statusCode = s.Code().String()
+			} else {
+				statusCode = "UNKNOWN"
+			}
+		} else {
+			if gErr, ok := err.(*googleapi.Error); ok {
+				statusCode = strconv.Itoa(gErr.Code)
+			} else {
+				statusCode = "UNKNOWN"
+			}
+		}
+
 		errorType = "UNKNOWN"
 		if strings.Contains(err.Error(), "timeout") || strings.Contains(err.Error(), "deadline") {
 			errorType = "TIMEOUT"
@@ -53,7 +72,7 @@ func recordAttemptMetrics(ctx context.Context, instruments *metricInstruments, o
 	instruments.gcsStorageClientOperationAttemptDuration.Record(ctx, duration, metric.WithAttributes(
 		attribute.String("gcp.client.service", "storage"),
 		attribute.String("rpc.method", operation),
-		attribute.String("status", statusCode),
+		attribute.String("status", statusCode), // Use actual statusCode here
 		attribute.String("error.type", errorType),
 	))
 

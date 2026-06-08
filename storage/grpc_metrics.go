@@ -40,6 +40,10 @@ const (
 )
 
 // Added to help with tests
+var (
+	CleanName = metricFormatter
+)
+
 type storageMonitoredResource struct {
 	project       string
 	api           string
@@ -135,29 +139,27 @@ type metricsConfig struct {
 }
 
 func newGRPCMetricContext(ctx context.Context, cfg metricsConfig) (*metricsContext, error) {
-	var exporter metric.Exporter
+	var gcmExporter metric.Exporter
 	meterOpts := []metric.Option{}
-	if cfg.customExporter == nil {
-		var ropts []resource.Option
-		if cfg.resourceOpts != nil {
-			ropts = cfg.resourceOpts
-		} else {
-			ropts = []resource.Option{resource.WithDetectors(gcp.NewDetector())}
-		}
-		smr, err := newStorageMonitoredResource(ctx, cfg.project, "grpc", ropts...)
+
+	var ropts []resource.Option
+	if cfg.resourceOpts != nil {
+		ropts = cfg.resourceOpts
+	} else {
+		ropts = []resource.Option{resource.WithDetectors(gcp.NewDetector())}
+	}
+	smr, err := newStorageMonitoredResource(ctx, cfg.project, "grpc", ropts...)
+	if err != nil {
+		return nil, err
+	}
+	if !cfg.disableExporter {
+		gcmExporter, err = smr.exporter()
 		if err != nil {
 			return nil, err
 		}
-		if !cfg.disableExporter {
-			exporter, err = smr.exporter()
-			if err != nil {
-				return nil, err
-			}
-		}
-		meterOpts = append(meterOpts, metric.WithResource(smr.resource))
-	} else if cfg.customExporter != nil {
-		exporter = *cfg.customExporter
 	}
+	meterOpts = append(meterOpts, metric.WithResource(smr.resource))
+
 	interval := time.Minute
 	if cfg.interval > 0 {
 		interval = cfg.interval
@@ -173,9 +175,13 @@ func newGRPCMetricContext(ctx context.Context, cfg metricsConfig) (*metricsConte
 	if cfg.manualReader != nil {
 		meterOpts = append(meterOpts, metric.WithReader(cfg.manualReader))
 	}
-	if !cfg.disableExporter && exporter != nil {
+	if !cfg.disableExporter && gcmExporter != nil {
 		meterOpts = append(meterOpts, metric.WithReader(
-			metric.NewPeriodicReader(&exporterLogSuppressor{Exporter: exporter}, metric.WithInterval(interval))))
+			metric.NewPeriodicReader(&exporterLogSuppressor{Exporter: gcmExporter}, metric.WithInterval(interval))))
+	}
+	if cfg.customExporter != nil {
+		meterOpts = append(meterOpts, metric.WithReader(
+			metric.NewPeriodicReader(*cfg.customExporter, metric.WithInterval(interval))))
 	}
 	provider := cfg.meterProvider
 	if provider == nil {
@@ -295,6 +301,21 @@ func createHistogramView(name string, boundaries []float64) metric.View {
 	})
 }
 
+var metricNameMapping = map[string]string{
+	"rpc.client.duration":                  "rpc_client_call_duration",
+	"http.client.duration":                 "http_client_request_duration",
+	"gcp.client.request.duration":          "request_duration",
+	"gcp.storage.client.operations":        "operations",
+	"gcp.storage.client.attempts":          "attempts",
+	"gcp.storage.client.request.body.size":  "request_bytes",
+	"gcp.storage.client.response.body.size": "response_bytes",
+	"gcp.storage.client.operation.ttfb":    "ttfb",
+	"gcp.storage.client.errors":            "errors",
+}
+
 func metricFormatter(m metricdata.Metrics) string {
+	if mappedName, ok := metricNameMapping[m.Name]; ok {
+		return metricPrefix + mappedName
+	}
 	return metricPrefix + strings.ReplaceAll(string(m.Name), ".", "/")
 }
