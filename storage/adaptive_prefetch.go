@@ -99,6 +99,59 @@ func (o *ObjectHandle) NewAdaptiveReader(ctx context.Context, cfg *AutoTuningCon
 	return NewAdaptivePrefetchReader(ctx, totalSize, fetcher, prefetchCfg), nil
 }
 
+// NewAdaptiveRangeReader creates an io.ReadCloser that wraps a specific sub-range
+// of a GCS object with adaptive prefetching and memory bounding.
+// If cfg is nil or !cfg.Enabled, it falls back to standard NewRangeReader.
+func (o *ObjectHandle) NewAdaptiveRangeReader(ctx context.Context, offset, length int64, cfg *AutoTuningConfig, opts ...ReaderOption) (io.ReadCloser, error) {
+	if cfg == nil || !cfg.Enabled {
+		return o.NewRangeReader(ctx, offset, length, opts...)
+	}
+	normCfg := cfg.Normalize()
+	guardrail := NewMemoryGuardrail(normCfg.MaxMemoryBudget)
+
+	targetEnd := offset + length
+	fetcher := func(fetchCtx context.Context, off, size int64, dest []byte) (int, error) {
+		if off >= targetEnd {
+			return 0, io.EOF
+		}
+		fetchLen := size
+		if off+fetchLen > targetEnd {
+			fetchLen = targetEnd - off
+		}
+		if fetchLen <= 0 {
+			return 0, io.EOF
+		}
+		r, err := o.NewRangeReader(fetchCtx, off, fetchLen, opts...)
+		if err != nil {
+			var gerr *googleapi.Error
+			if errors.As(err, &gerr) && gerr.Code == 416 {
+				return 0, io.EOF
+			}
+			if strings.Contains(err.Error(), "416") || strings.Contains(err.Error(), "InvalidRange") {
+				return 0, io.EOF
+			}
+			return 0, err
+		}
+		defer r.Close()
+		n, err := io.ReadFull(r, dest[:fetchLen])
+		if err == io.ErrUnexpectedEOF {
+			return n, io.EOF
+		}
+		return n, err
+	}
+
+	aiAgent := GetGlobalAIAgent()
+	policy := aiAgent.PredictReadPolicy(length, guardrail.Limit())
+
+	prefetchCfg := AdaptivePrefetchConfig{
+		ChunkSize: policy.InitialChunkSize,
+		Depth:     policy.PrefetchDepth,
+		Guardrail: guardrail,
+	}
+
+	return NewAdaptivePrefetchReader(ctx, targetEnd, fetcher, prefetchCfg), nil
+}
+
 type prefetchBlock struct {
 	offset int64
 	data   []byte
@@ -142,23 +195,22 @@ type AdaptivePrefetchReader struct {
 
 // NewAdaptivePrefetchReader creates a new AdaptivePrefetchReader.
 func NewAdaptivePrefetchReader(ctx context.Context, totalSize int64, fetcher RangeFetcher, cfg AdaptivePrefetchConfig) *AdaptivePrefetchReader {
-	if cfg.ChunkSize <= 0 {
-		cfg.ChunkSize = DefaultPrefetchChunkSize
-	}
-	if cfg.Depth <= 0 {
-		cfg.Depth = DefaultPrefetchDepth
-	}
 	guardrail := cfg.Guardrail
 	if guardrail == nil {
 		guardrail = NewMemoryGuardrail(DefaultGlobalMemoryLimit)
 	}
 
-	readerCtx, cancel := context.WithCancel(ctx)
+	aiAgent := GetGlobalAIAgent()
+	policy := aiAgent.PredictReadPolicy(totalSize, guardrail.Limit())
 
-	maxChunk := 64 * 1024 * 1024
-	if guardrail.Limit() >= 512*1024*1024 {
-		maxChunk = 128 * 1024 * 1024
+	if cfg.ChunkSize <= 0 {
+		cfg.ChunkSize = policy.InitialChunkSize
 	}
+	if cfg.Depth <= 0 {
+		cfg.Depth = policy.PrefetchDepth
+	}
+
+	readerCtx, cancel := context.WithCancel(ctx)
 
 	r := &AdaptivePrefetchReader{
 		ctx:              readerCtx,
@@ -168,7 +220,7 @@ func NewAdaptivePrefetchReader(ctx context.Context, totalSize int64, fetcher Ran
 		cfg:              cfg,
 		guardrail:        guardrail,
 		currentChunkSize: cfg.ChunkSize,
-		maxChunkSize:     maxChunk,
+		maxChunkSize:     policy.MaxChunkSize,
 		dynamicDepth:     cfg.Depth,
 		blocksRead:       0,
 		queue:            make(chan prefetchFuture, 8),
