@@ -113,3 +113,41 @@ func TestAdaptiveAIAgent_FeedbackReward(t *testing.T) {
 		t.Errorf("Expected positive reward for 150MB/s and 50ms latency, got %f", agent.rewardEwma)
 	}
 }
+
+func TestAdaptiveAIAgent_ProducerInflowTracking(t *testing.T) {
+	agent := NewAdaptiveAIAgent(nil)
+
+	// Simulate slow producer (e.g., 2 MB/s)
+	for i := 0; i < 10; i++ {
+		agent.RecordWriteInflow(2*1024*1024, 1000*time.Millisecond)
+	}
+	slowPolicy := agent.PredictUploadPolicy(0, 256*1024*1024)
+	if slowPolicy.ChunkSize > 4*1024*1024 {
+		t.Errorf("Expected small chunk <= 4MB for slow producer, got %d", slowPolicy.ChunkSize)
+	}
+
+	// Simulate fast producer (e.g., 200 MB/s)
+	for i := 0; i < 10; i++ {
+		agent.RecordWriteInflow(64*1024*1024, 300*time.Millisecond)
+	}
+	fastPolicy := agent.PredictUploadPolicy(0, 256*1024*1024)
+	if fastPolicy.ChunkSize < 32*1024*1024 {
+		t.Errorf("Expected large chunk >= 32MB for fast producer, got %d", fastPolicy.ChunkSize)
+	}
+}
+
+func TestAdaptiveAIAgent_PrefetchSelfHealing(t *testing.T) {
+	agent := NewAdaptiveAIAgent(nil)
+
+	// Simulate high prefetch waste (e.g., app requested 1MB but 50MB was discarded)
+	agent.RecordPrefetchFeedback(1*1024*1024, 50*1024*1024, false)
+	policy := agent.PredictReadPolicy(100*1024*1024, 256*1024*1024)
+
+	// Should disable or throttle prefetching when hit ratio is low (< 40%)
+	if policy.Strategy != PrefetchStrategyDisabled {
+		t.Errorf("Expected PrefetchStrategyDisabled when waste ratio > 60%%, got %v", policy.Strategy)
+	}
+	if policy.PrefetchDepth != 0 {
+		t.Errorf("Expected PrefetchDepth=0 when prefetch is unhelpful, got %d", policy.PrefetchDepth)
+	}
+}

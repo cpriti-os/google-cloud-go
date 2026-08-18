@@ -417,7 +417,9 @@ func (r *AdaptivePrefetchReader) Seek(offset int64, whence int) (int64, error) {
 	}
 
 	// Non-sequential seek: purge current block and queued prefetches
+	var discardedBytes int64
 	if r.currentBlock != nil {
+		discardedBytes += int64(len(r.currentBlock) - r.currentBlockPos)
 		r.guardrail.PutBuffer(r.currentBlock)
 		r.currentBlock = nil
 	}
@@ -433,6 +435,7 @@ DRAIN:
 				select {
 				case b := <-future:
 					if b != nil && b.data != nil {
+						discardedBytes += int64(b.n)
 						r.guardrail.PutBuffer(b.data)
 					}
 				default:
@@ -443,12 +446,21 @@ DRAIN:
 		}
 	}
 
+	if discardedBytes > 0 {
+		GetGlobalAIAgent().RecordPrefetchFeedback(0, discardedBytes, false)
+	}
+
 	r.readOffset = newOffset
 	r.nextFetchOff = newOffset
-	r.currentChunkSize = r.cfg.ChunkSize
+
+	// Check updated AI policy: if prefetch effectiveness is low, throttle prefetch
+	aiAgent := GetGlobalAIAgent()
+	policy := aiAgent.PredictReadPolicy(r.totalSize, r.guardrail.Limit())
+	r.currentChunkSize = policy.InitialChunkSize
+	r.dynamicDepth = policy.PrefetchDepth
 	r.blocksRead = 0
 
-	// Restart prefetch from new offset
+	// Restart prefetch from new offset if prefetching is enabled
 	for i := 0; i < r.dynamicDepth; i++ {
 		r.scheduleNextPrefetchLocked()
 	}
