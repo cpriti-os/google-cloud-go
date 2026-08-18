@@ -476,6 +476,9 @@ func (w *Writer) openWriter() (err error) {
 	if w.AutoTuning != nil && w.AutoTuning.Enabled {
 		if w.AutoTuning.InitialUploadChunkSize > 0 {
 			effectiveChunkSize = w.AutoTuning.InitialUploadChunkSize
+		} else {
+			sizer := NewDynamicChunkSizer(DefaultDynamicChunkConfig(), nil)
+			effectiveChunkSize = sizer.RecommendInitialChunkSize(w.ObjectAttrs.Size)
 		}
 	}
 	params := &openWriterParams{

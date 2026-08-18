@@ -117,3 +117,31 @@ func TestWriter_OptInBehavior(t *testing.T) {
 	}
 }
 
+func TestCalculateDynamicPCUConfig(t *testing.T) {
+	tests := []struct {
+		name         string
+		totalSize    int64
+		smoothedMBps float64
+		budget       int64
+		wantPartMB   int
+		wantWorkers  int
+	}{
+		{"Small 100MB object", 100 * 1024 * 1024, 20.0, 256 * 1024 * 1024, 16, 4},
+		{"Medium 512MB object", 512 * 1024 * 1024, 50.0, 256 * 1024 * 1024, 32, 4},
+		{"Large 2GB object on 100MBps link", 2 * 1024 * 1024 * 1024, 150.0, 512 * 1024 * 1024, 64, 8},
+		{"Memory constrained 2GB object", 2 * 1024 * 1024 * 1024, 150.0, 128 * 1024 * 1024, 64, 2},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			partSize, workers := CalculateDynamicPCUConfig(tt.totalSize, tt.smoothedMBps, tt.budget)
+			if partSize != tt.wantPartMB*1024*1024 {
+				t.Errorf("got partSize %d, want %d", partSize, tt.wantPartMB*1024*1024)
+			}
+			if workers != tt.wantWorkers {
+				t.Errorf("got workers %d, want %d", workers, tt.wantWorkers)
+			}
+		})
+	}
+}
+

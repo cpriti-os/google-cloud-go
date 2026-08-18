@@ -110,7 +110,8 @@ type prefetchFuture chan *prefetchBlock
 
 // AdaptivePrefetchReader provides an intelligent read-ahead stream wrapper over GCS objects.
 // It overlaps network I/O with application compute, detects sequential access patterns,
-// enforces global memory limits, and prevents GC churn via buffer recycling.
+// enforces global memory limits, dynamically ramps up chunk sizes to saturate NICs,
+// and prevents GC churn via buffer recycling.
 type AdaptivePrefetchReader struct {
 	ctx       context.Context
 	cancel    context.CancelFunc
@@ -118,6 +119,12 @@ type AdaptivePrefetchReader struct {
 	totalSize int64
 	cfg       AdaptivePrefetchConfig
 	guardrail *MemoryGuardrail
+
+	// Dynamic sizing state
+	currentChunkSize int
+	maxChunkSize     int
+	dynamicDepth     int
+	blocksRead       int
 
 	// Stream state
 	readOffset      int64
@@ -148,20 +155,29 @@ func NewAdaptivePrefetchReader(ctx context.Context, totalSize int64, fetcher Ran
 
 	readerCtx, cancel := context.WithCancel(ctx)
 
+	maxChunk := 64 * 1024 * 1024
+	if guardrail.Limit() >= 512*1024*1024 {
+		maxChunk = 128 * 1024 * 1024
+	}
+
 	r := &AdaptivePrefetchReader{
-		ctx:          readerCtx,
-		cancel:       cancel,
-		fetcher:      fetcher,
-		totalSize:    totalSize,
-		cfg:          cfg,
-		guardrail:    guardrail,
-		queue:        make(chan prefetchFuture, cfg.Depth+1),
-		nextFetchOff: 0,
+		ctx:              readerCtx,
+		cancel:           cancel,
+		fetcher:          fetcher,
+		totalSize:        totalSize,
+		cfg:              cfg,
+		guardrail:        guardrail,
+		currentChunkSize: cfg.ChunkSize,
+		maxChunkSize:     maxChunk,
+		dynamicDepth:     cfg.Depth,
+		blocksRead:       0,
+		queue:            make(chan prefetchFuture, 8),
+		nextFetchOff:     0,
 	}
 
 	// Trigger initial prefetches
 	r.mu.Lock()
-	for i := 0; i < cfg.Depth; i++ {
+	for i := 0; i < r.dynamicDepth; i++ {
 		r.scheduleNextPrefetchLocked()
 	}
 	r.mu.Unlock()
@@ -175,12 +191,19 @@ func (r *AdaptivePrefetchReader) scheduleNextPrefetchLocked() {
 	}
 
 	offset := r.nextFetchOff
-	chunkSize := r.cfg.ChunkSize
+	chunkSize := r.currentChunkSize
 	if r.totalSize > 0 && offset+int64(chunkSize) > r.totalSize {
 		chunkSize = int(r.totalSize - offset)
 	}
 	if chunkSize <= 0 {
 		return
+	}
+
+	// Clamp to available guardrail memory if constrained
+	if available := int(r.guardrail.Available()); available > 0 && available < chunkSize {
+		if available >= 1024*1024 {
+			chunkSize = available
+		}
 	}
 
 	r.nextFetchOff += int64(chunkSize)
@@ -236,6 +259,15 @@ func (r *AdaptivePrefetchReader) Read(p []byte) (int, error) {
 		r.currentBlock = nil
 	}
 
+	// Dynamic scaling: ramp up chunk size on sequential reads
+	r.blocksRead++
+	if r.blocksRead > 1 && r.currentChunkSize < r.maxChunkSize {
+		r.currentChunkSize *= 2
+		if r.currentChunkSize > r.maxChunkSize {
+			r.currentChunkSize = r.maxChunkSize
+		}
+	}
+
 	// Fetch next future from prefetch queue
 	var future prefetchFuture
 	select {
@@ -247,11 +279,16 @@ func (r *AdaptivePrefetchReader) Read(p []byte) (int, error) {
 		}
 		future = fut
 	default:
-		// Queue was empty; if we have reached totalSize, EOF
+		// Consumer read starvation detected (queue was drained before next block arrived).
+		// Scale up prefetch depth and jump chunk size to max to saturate the pipe!
+		if r.dynamicDepth < 4 {
+			r.dynamicDepth++
+		}
+		r.currentChunkSize = r.maxChunkSize
+
 		if r.totalSize > 0 && r.readOffset >= r.totalSize {
 			return 0, io.EOF
 		}
-		// Otherwise schedule and wait
 		r.scheduleNextPrefetchLocked()
 		select {
 		case <-r.ctx.Done():
@@ -273,7 +310,7 @@ func (r *AdaptivePrefetchReader) Read(p []byte) (int, error) {
 		return 0, io.EOF
 	}
 
-	// Schedule following prefetch chunk to maintain lookahead depth
+	// Schedule following prefetch chunk to maintain dynamic lookahead depth
 	r.scheduleNextPrefetchLocked()
 
 	if block.err != nil && block.n == 0 {
@@ -356,9 +393,11 @@ DRAIN:
 
 	r.readOffset = newOffset
 	r.nextFetchOff = newOffset
+	r.currentChunkSize = r.cfg.ChunkSize
+	r.blocksRead = 0
 
 	// Restart prefetch from new offset
-	for i := 0; i < r.cfg.Depth; i++ {
+	for i := 0; i < r.dynamicDepth; i++ {
 		r.scheduleNextPrefetchLocked()
 	}
 

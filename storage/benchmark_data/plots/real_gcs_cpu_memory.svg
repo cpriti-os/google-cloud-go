@@ -15,20 +15,20 @@
   <text x="50" y="85" style="font-size: 14px; font-weight: bold; fill: #111827;">Total CPU Time (ms) [User + Sys CPU]</text>
   <line x1="50" y1="320" x2="400" y2="320" class="axis" />
   <line x1="50" y1="100" x2="50" y2="320" class="axis" />
-  <rect x="70" y="263.4" width="40" height="56.6" fill="#f59e0b" rx="3" />
-  <text x="90" y="258.4" text-anchor="middle" class="val" fill="#b45309">2266ms</text>
-  <rect x="114" y="268.6" width="40" height="51.4" fill="#10b981" rx="3" />
-  <text x="134" y="263.6" text-anchor="middle" class="val" fill="#047857">2055ms</text>
+  <rect x="70" y="261.9" width="40" height="58.1" fill="#f59e0b" rx="3" />
+  <text x="90" y="256.9" text-anchor="middle" class="val" fill="#b45309">2323ms</text>
+  <rect x="114" y="261.9" width="40" height="58.1" fill="#10b981" rx="3" />
+  <text x="134" y="256.9" text-anchor="middle" class="val" fill="#047857">2323ms</text>
   <text x="112" y="340" text-anchor="middle" class="label">256 MB (4x64)</text>
-  <rect x="180" y="210.9" width="40" height="109.1" fill="#f59e0b" rx="3" />
-  <text x="200" y="205.9" text-anchor="middle" class="val" fill="#b45309">4364ms</text>
-  <rect x="224" y="214.5" width="40" height="105.5" fill="#10b981" rx="3" />
-  <text x="244" y="209.5" text-anchor="middle" class="val" fill="#047857">4221ms</text>
+  <rect x="180" y="197.5" width="40" height="122.5" fill="#f59e0b" rx="3" />
+  <text x="200" y="192.5" text-anchor="middle" class="val" fill="#b45309">4902ms</text>
+  <rect x="224" y="197.5" width="40" height="122.5" fill="#10b981" rx="3" />
+  <text x="244" y="192.5" text-anchor="middle" class="val" fill="#047857">4902ms</text>
   <text x="222" y="340" text-anchor="middle" class="label">512 MB (4x128)</text>
-  <rect x="290" y="126.9" width="40" height="193.1" fill="#f59e0b" rx="3" />
-  <text x="310" y="121.9" text-anchor="middle" class="val" fill="#b45309">7723ms</text>
-  <rect x="334" y="123.9" width="40" height="196.1" fill="#10b981" rx="3" />
-  <text x="354" y="118.9" text-anchor="middle" class="val" fill="#047857">7844ms</text>
+  <rect x="290" y="100.8" width="40" height="219.2" fill="#f59e0b" rx="3" />
+  <text x="310" y="95.8" text-anchor="middle" class="val" fill="#b45309">8767ms</text>
+  <rect x="334" y="100.8" width="40" height="219.2" fill="#10b981" rx="3" />
+  <text x="354" y="95.8" text-anchor="middle" class="val" fill="#047857">8767ms</text>
   <text x="332" y="340" text-anchor="middle" class="label">1024 MB (4x256)</text>
 
   <!-- Right Panel: Heap Memory (MB) -->
@@ -37,18 +37,18 @@
   <line x1="470" y1="100" x2="470" y2="320" class="axis" />
   <rect x="490" y="137.7" width="40" height="182.3" fill="#6366f1" rx="3" />
   <text x="510" y="132.7" text-anchor="middle" class="val" fill="#4338ca">137.1M</text>
-  <rect x="534" y="59.6" width="40" height="260.4" fill="#06b6d4" rx="3" />
-  <text x="554" y="54.6" text-anchor="middle" class="val" fill="#0e7490">195.8M</text>
+  <rect x="534" y="137.7" width="40" height="182.3" fill="#06b6d4" rx="3" />
+  <text x="554" y="132.7" text-anchor="middle" class="val" fill="#0e7490">137.1M</text>
   <text x="532" y="340" text-anchor="middle" class="label">256 MB (4x64)</text>
-  <rect x="600" y="58.5" width="40" height="261.5" fill="#6366f1" rx="3" />
-  <text x="620" y="53.5" text-anchor="middle" class="val" fill="#4338ca">196.6M</text>
-  <rect x="644" y="-26.3" width="40" height="346.3" fill="#06b6d4" rx="3" />
-  <text x="664" y="-31.3" text-anchor="middle" class="val" fill="#0e7490">260.4M</text>
+  <rect x="600" y="58.7" width="40" height="261.3" fill="#6366f1" rx="3" />
+  <text x="620" y="53.7" text-anchor="middle" class="val" fill="#4338ca">196.5M</text>
+  <rect x="644" y="58.7" width="40" height="261.3" fill="#06b6d4" rx="3" />
+  <text x="664" y="53.7" text-anchor="middle" class="val" fill="#0e7490">196.5M</text>
   <text x="642" y="340" text-anchor="middle" class="label">512 MB (4x128)</text>
   <rect x="710" y="-112.8" width="40" height="432.8" fill="#6366f1" rx="3" />
   <text x="730" y="-117.8" text-anchor="middle" class="val" fill="#4338ca">325.4M</text>
-  <rect x="754" y="-197.5" width="40" height="517.5" fill="#06b6d4" rx="3" />
-  <text x="774" y="-202.5" text-anchor="middle" class="val" fill="#0e7490">389.1M</text>
+  <rect x="754" y="-112.8" width="40" height="432.8" fill="#06b6d4" rx="3" />
+  <text x="774" y="-117.8" text-anchor="middle" class="val" fill="#0e7490">325.4M</text>
   <text x="752" y="340" text-anchor="middle" class="label">1024 MB (4x256)</text>
 
   <!-- Legend -->

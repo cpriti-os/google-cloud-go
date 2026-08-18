@@ -215,3 +215,68 @@ func (s *DynamicChunkSizer) SmoothedThroughputMBps() float64 {
 	defer s.mu.RUnlock()
 	return (s.smoothedBps / (1024 * 1024))
 }
+
+// CalculateBDPChunkSize computes the optimal chunk size to fill the bandwidth-delay product
+// for a given target network latency without exceeding the memory budget.
+func (s *DynamicChunkSizer) CalculateBDPChunkSize(targetLatency time.Duration) int {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	if targetLatency <= 0 {
+		targetLatency = s.cfg.TargetLatency
+	}
+	if s.smoothedBps <= 0 {
+		return s.currentChunkSize
+	}
+
+	targetBytes := int(s.smoothedBps * targetLatency.Seconds())
+	return s.clampChunkSize(targetBytes)
+}
+
+// CalculateDynamicPCUConfig determines the optimal part size and worker concurrency
+// for Parallel Composite Uploads based on total payload size, measured network velocity,
+// and client memory budget.
+func CalculateDynamicPCUConfig(totalSize int64, smoothedMBps float64, memoryBudget int64) (partSize int, workerCount int) {
+	if totalSize <= 0 {
+		return 32 * 1024 * 1024, 4
+	}
+	if memoryBudget <= 0 {
+		memoryBudget = DefaultGlobalMemoryLimit
+	}
+
+	// Base part sizing from payload
+	if totalSize < 256*1024*1024 {
+		partSize = 16 * 1024 * 1024
+		workerCount = 4
+	} else if totalSize < 1024*1024*1024 {
+		partSize = 32 * 1024 * 1024
+		workerCount = 4
+	} else if totalSize < 4*1024*1024*1024 {
+		partSize = 64 * 1024 * 1024
+		workerCount = 8
+	} else {
+		partSize = 128 * 1024 * 1024
+		workerCount = 16
+	}
+
+	// Scale worker count dynamically if measured network throughput is high
+	if smoothedMBps > 100.0 && totalSize >= 512*1024*1024 {
+		workerCount *= 2
+		if workerCount > 32 {
+			workerCount = 32
+		}
+	}
+
+	// Enforce memory guardrail: workers * partSize <= memoryBudget
+	requiredMemory := int64(workerCount * partSize)
+	for requiredMemory > memoryBudget && workerCount > 2 {
+		workerCount /= 2
+		requiredMemory = int64(workerCount * partSize)
+	}
+	for requiredMemory > memoryBudget && partSize > 16*1024*1024 {
+		partSize /= 2
+		requiredMemory = int64(workerCount * partSize)
+	}
+
+	return partSize, workerCount
+}
