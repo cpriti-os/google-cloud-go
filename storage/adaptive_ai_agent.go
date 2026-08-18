@@ -381,8 +381,8 @@ func (a *AdaptiveAIAgent) PredictUploadPolicy(payloadSizeHint int64, memoryBudge
 
 		return UploadPolicy{
 			ChunkSize:      chunkSize,
-			PCUPartSize:    32 * 1024 * 1024,
-			Concurrency:    4,
+			PCUPartSize:    64 * 1024 * 1024,
+			Concurrency:    int(math.Max(4, math.Min(32, inflow/10))),
 			DirectUpload:   false,
 			CoalesceWindow: 5 * time.Millisecond,
 			FlushDeadline:  flushDeadline,
@@ -495,4 +495,11 @@ func (a *AdaptiveAIAgent) UpdateFeedback(throughputMBps float64, p99LatencySec f
 
 	const alpha = 0.1
 	a.rewardEwma = (alpha * reward) + ((1 - alpha) * a.rewardEwma)
+}
+
+// GetMetricsSnapshot exposes the internal EWMA metrics for live dashboard plotting.
+func (a *AdaptiveAIAgent) GetMetricsSnapshot() (inflow float64, net float64) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	return a.producerInflowMBpsEwma, a.observedMBpsEwma
 }

@@ -316,7 +316,7 @@ func (o *ObjectHandle) NewAdaptivePCUWriter(ctx context.Context, cfg *AutoTuning
 	guardrail := NewMemoryGuardrail(cfg.MaxMemoryBudget)
 
 	aiAgent := GetGlobalAIAgent()
-	policy := aiAgent.PredictUploadPolicy(o.conds.GenerationMatch, guardrail.Limit())
+	policy := aiAgent.PredictUploadPolicy(0, guardrail.Limit())
 
 	partSize := policy.PCUPartSize
 	if partSize <= 0 {
@@ -338,12 +338,13 @@ func (o *ObjectHandle) NewAdaptivePCUWriter(ctx context.Context, cfg *AutoTuning
 		dynamicPartSz:  partSize,
 		concurrency:    concurrency,
 		currentPartBuf: make([]byte, partSize),
-		uploadSem:      make(chan struct{}, concurrency),
+		uploadSem:      make(chan struct{}, 64),
 	}
 }
 
 // Write writes data to the PCU stream, automatically partitioning into dynamic parts.
 func (w *AdaptivePCUWriter) Write(p []byte) (int, error) {
+	startTimer := time.Now()
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
@@ -369,10 +370,12 @@ func (w *AdaptivePCUWriter) Write(p []byte) (int, error) {
 			w.flushCurrentPartLocked()
 		}
 	}
-
-	return total, nil
+	
+	// TELEMETRY BUG FIX: Inform AI Agent of incoming velocities!
+	GetGlobalAIAgent().RecordWriteInflow(total, time.Since(startTimer))
+	
+	return total, nil 
 }
-
 func (w *AdaptivePCUWriter) flushCurrentPartLocked() {
 	if w.currentPartPos == 0 || w.err != nil {
 		return
@@ -396,7 +399,7 @@ func (w *AdaptivePCUWriter) flushCurrentPartLocked() {
 		}()
 
 		pw := obj.NewWriter(w.ctx)
-		pw.ChunkSize = 16 * 1024 * 1024
+		pw.ChunkSize = 64 * 1024 * 1024
 		if _, err := pw.Write(data); err != nil {
 			w.mu.Lock()
 			if w.err == nil {

@@ -1,0 +1,11 @@
+Workload,Mode,DurationSec,ThroughputMBps,IOPS,P50Ms,P90Ms,P99Ms,BytesFetched,BytesUsed,WasteRatioPct,UserCPUMs,SysCPUMs,TotalCPUMs,HeapAllocMB,TotalAllocMB,GCCycles
+Slow Producer Inflow (2 MB/s),Without Smart Tuning (Static 16MB),16.874,1.90,30.34,32.27,32.33,32.55,0,0,0.00,59.07,68.64,127.71,18.16,16.01,1
+Slow Producer Inflow (2 MB/s),With Dynamic AI Auto-Tuning,22.270,1.44,22.99,43.55,43.65,43.93,0,0,0.00,99.85,135.52,235.36,2.30,0.14,0
+Burst Checkpoint (1 GB Upload),Without Smart Tuning (Static 16MB),5.785,177.00,11.06,90.31,90.36,95.21,0,0,0.00,0.78,15.58,16.35,2.19,0.02,0
+Burst Checkpoint (1 GB Upload),With Dynamic AI Auto-Tuning,1.322,774.54,12.10,330.55,330.68,330.69,0,0,0.00,0.00,1.59,1.59,2.17,0.01,0
+Random Sparse Reads (Self-Healing),Without Smart Tuning (Naive 16MB),6.263,0.50,7.98,125.12,126.19,127.33,838860800,3276800,99.61,747.27,21.91,769.18,34.18,800.03,25
+Random Sparse Reads (Self-Healing),With Dynamic AI Auto-Tuning,0.497,6.29,100.57,6.35,6.43,66.99,28246016,3276800,88.40,44.93,0.42,45.35,13.13,26.95,2
+Strided Columnar Scan (Parquet),Without Smart Tuning (Sync Range),0.459,10.89,87.13,11.46,11.58,11.79,5242880,5242880,0.00,18.88,3.39,22.27,4.81,5.01,1
+Strided Columnar Scan (Parquet),With Dynamic AI Auto-Tuning,0.463,10.81,86.46,11.54,11.71,12.11,5242880,5242880,0.00,21.95,6.20,28.15,4.82,5.02,1
+Streaming DataLoader (500 MB),Without Smart Tuning (Sync Read),10.515,47.55,47.55,20.95,21.68,22.42,0,0,0.00,1030.04,444.78,1474.82,4.20,500.14,125
+Streaming DataLoader (500 MB),With Dynamic AI Auto-Tuning,2.122,235.65,235.65,2.34,2.43,74.97,0,0,0.00,464.38,68.61,532.99,419.21,465.04,4
