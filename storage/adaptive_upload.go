@@ -1,0 +1,217 @@
+// Copyright 2026 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package storage
+
+import (
+	"sync"
+	"time"
+)
+
+const (
+	// GoogleAPIBaseChunkMultiple is 256 KiB, required by GCS resumable upload chunking.
+	GoogleAPIBaseChunkMultiple = 256 * 1024
+
+	// DefaultMinUploadChunkSize is the minimum chunk size (256 KiB).
+	DefaultMinUploadChunkSize = 256 * 1024
+
+	// DefaultMaxUploadChunkSize is the maximum chunk size (64 MiB).
+	DefaultMaxUploadChunkSize = 64 * 1024 * 1024
+
+	// DefaultInitialUploadChunkSize is the standard 16 MiB default.
+	DefaultInitialUploadChunkSize = 16 * 1024 * 1024
+
+	// DefaultUploadTargetLatency is the ideal transfer duration per chunk.
+	DefaultUploadTargetLatency = 500 * time.Millisecond
+
+	// DefaultUploadAlpha is the EWMA smoothing factor for bandwidth estimation.
+	DefaultUploadAlpha = 0.3
+)
+
+// DynamicChunkConfig configures the dynamic upload chunk and part sizer.
+type DynamicChunkConfig struct {
+	MinChunkSize     int
+	MaxChunkSize     int
+	InitialChunkSize int
+	TargetLatency    time.Duration
+	Alpha            float64
+}
+
+// DefaultDynamicChunkConfig returns the default configuration.
+func DefaultDynamicChunkConfig() DynamicChunkConfig {
+	return DynamicChunkConfig{
+		MinChunkSize:     DefaultMinUploadChunkSize,
+		MaxChunkSize:     DefaultMaxUploadChunkSize,
+		InitialChunkSize: DefaultInitialUploadChunkSize,
+		TargetLatency:    DefaultUploadTargetLatency,
+		Alpha:            DefaultUploadAlpha,
+	}
+}
+
+// DynamicChunkSizer dynamically adjusts upload chunk and shard sizes based on
+// object size hints, observed network throughput, and retry/stall feedback using
+// an AIMD (Additive Increase / Multiplicative Decrease) control loop.
+type DynamicChunkSizer struct {
+	cfg              DynamicChunkConfig
+	currentChunkSize int
+	smoothedBps      float64 // smoothed bytes per second (EWMA)
+	guardrail        *MemoryGuardrail
+	mu               sync.RWMutex
+}
+
+// NewDynamicChunkSizer creates a new DynamicChunkSizer.
+func NewDynamicChunkSizer(cfg DynamicChunkConfig, guardrail *MemoryGuardrail) *DynamicChunkSizer {
+	if cfg.MinChunkSize <= 0 {
+		cfg.MinChunkSize = DefaultMinUploadChunkSize
+	}
+	if cfg.MaxChunkSize < cfg.MinChunkSize {
+		cfg.MaxChunkSize = DefaultMaxUploadChunkSize
+	}
+	if cfg.InitialChunkSize < cfg.MinChunkSize {
+		cfg.InitialChunkSize = cfg.MinChunkSize
+	}
+	if cfg.InitialChunkSize > cfg.MaxChunkSize {
+		cfg.InitialChunkSize = cfg.MaxChunkSize
+	}
+	if cfg.TargetLatency <= 0 {
+		cfg.TargetLatency = DefaultUploadTargetLatency
+	}
+	if cfg.Alpha <= 0 || cfg.Alpha > 1.0 {
+		cfg.Alpha = DefaultUploadAlpha
+	}
+
+	return &DynamicChunkSizer{
+		cfg:              cfg,
+		currentChunkSize: roundToChunkMultiple(cfg.InitialChunkSize),
+		guardrail:        guardrail,
+	}
+}
+
+func roundToChunkMultiple(size int) int {
+	if size <= 0 {
+		return 0
+	}
+	rem := size % GoogleAPIBaseChunkMultiple
+	if rem != 0 {
+		size += (GoogleAPIBaseChunkMultiple - rem)
+	}
+	return size
+}
+
+// RecommendInitialChunkSize calculates the initial chunk size for an upload
+// based on the object size hint and current network state.
+// If objectSizeHint <= 8 MiB, it returns 0 to recommend single-shot media upload.
+func (s *DynamicChunkSizer) RecommendInitialChunkSize(objectSizeHint int64) int {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	// For small objects under 8 MiB, bypass resumable upload protocol to eliminate 1-2 RTTs.
+	if objectSizeHint > 0 && objectSizeHint <= 8*1024*1024 {
+		return 0
+	}
+
+	if objectSizeHint > 0 {
+		if objectSizeHint <= 32*1024*1024 {
+			return 8 * 1024 * 1024
+		}
+		if objectSizeHint <= 128*1024*1024 {
+			return 16 * 1024 * 1024
+		}
+		if objectSizeHint <= 512*1024*1024 {
+			return 32 * 1024 * 1024
+		}
+		// For massive objects (> 512 MiB, ML checkpoints), scale up initial chunk.
+		return s.clampChunkSize(64 * 1024 * 1024)
+	}
+
+	return s.currentChunkSize
+}
+
+// RecordChunkTransfer updates throughput metrics and adjusts chunk size for subsequent chunks.
+func (s *DynamicChunkSizer) RecordChunkTransfer(bytesTransferred int64, duration time.Duration, isErrorOrStall bool) int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if bytesTransferred <= 0 || duration <= 0 {
+		if isErrorOrStall {
+			s.currentChunkSize = s.clampChunkSize(s.currentChunkSize / 2)
+		}
+		return s.currentChunkSize
+	}
+
+	instantBps := float64(bytesTransferred) / duration.Seconds()
+	if s.smoothedBps == 0 {
+		s.smoothedBps = instantBps
+	} else {
+		s.smoothedBps = s.cfg.Alpha*instantBps + (1.0-s.cfg.Alpha)*s.smoothedBps
+	}
+
+	if isErrorOrStall {
+		// Multiplicative decrease: halve the chunk size to reduce retry retransmission cost and memory lockup.
+		s.currentChunkSize = s.clampChunkSize(s.currentChunkSize / 2)
+	} else {
+		// If transfer finished faster than target latency and network throughput is high, scale up chunk size.
+		if duration < s.cfg.TargetLatency {
+			// Estimate bandwidth-delay product for target latency.
+			targetChunk := int(s.smoothedBps * s.cfg.TargetLatency.Seconds())
+			if targetChunk > s.currentChunkSize {
+				// Additive / bounded ramp-up
+				growth := (targetChunk - s.currentChunkSize) / 2
+				if growth < GoogleAPIBaseChunkMultiple {
+					growth = GoogleAPIBaseChunkMultiple
+				}
+				s.currentChunkSize = s.clampChunkSize(s.currentChunkSize + growth)
+			}
+		} else if duration > 2*s.cfg.TargetLatency {
+			// Transfer was slow: moderate downscale
+			s.currentChunkSize = s.clampChunkSize(int(float64(s.currentChunkSize) * 0.75))
+		}
+	}
+
+	return s.currentChunkSize
+}
+
+func (s *DynamicChunkSizer) clampChunkSize(size int) int {
+	rounded := roundToChunkMultiple(size)
+	if rounded < s.cfg.MinChunkSize {
+		rounded = s.cfg.MinChunkSize
+	}
+	if rounded > s.cfg.MaxChunkSize {
+		rounded = s.cfg.MaxChunkSize
+	}
+
+	// If memory guardrail is configured and available budget is constrained, clamp further.
+	if s.guardrail != nil {
+		available := int(s.guardrail.Available())
+		if available > s.cfg.MinChunkSize && rounded > available {
+			rounded = roundToChunkMultiple(available)
+		}
+	}
+
+	return rounded
+}
+
+// CurrentChunkSize returns the current chunk size setting.
+func (s *DynamicChunkSizer) CurrentChunkSize() int {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.currentChunkSize
+}
+
+// SmoothedThroughputMBps returns the current smoothed throughput estimate in MB/s.
+func (s *DynamicChunkSizer) SmoothedThroughputMBps() float64 {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return (s.smoothedBps / (1024 * 1024))
+}
