@@ -297,6 +297,7 @@ type AdaptivePCUWriter struct {
 	guardrail     *MemoryGuardrail
 	dynamicPartSz int
 	concurrency   int
+	activeWorkers int
 
 	currentPartBuf []byte
 	currentPartPos int
@@ -357,7 +358,14 @@ func (w *AdaptivePCUWriter) Write(p []byte) (int, error) {
 
 	total := len(p)
 	for len(p) > 0 {
-		avail := len(w.currentPartBuf) - w.currentPartPos
+		if w.currentPartPos >= w.dynamicPartSz {
+			w.flushCurrentPartLocked()
+		}
+		
+		avail := w.dynamicPartSz - w.currentPartPos
+		if avail <= 0 {
+			avail = 1 // Emergency catch if AI shrunk violently below current buffer
+		}
 		toCopy := len(p)
 		if toCopy > avail {
 			toCopy = avail
@@ -365,16 +373,29 @@ func (w *AdaptivePCUWriter) Write(p []byte) (int, error) {
 		copy(w.currentPartBuf[w.currentPartPos:], p[:toCopy])
 		w.currentPartPos += toCopy
 		p = p[toCopy:]
-
-		if w.currentPartPos >= len(w.currentPartBuf) {
-			w.flushCurrentPartLocked()
-		}
 	}
-	
+
 	// TELEMETRY BUG FIX: Inform AI Agent of incoming velocities!
 	GetGlobalAIAgent().RecordWriteInflow(total, time.Since(startTimer))
-	
-	return total, nil 
+
+	// MID-STREAM ADAPTATION
+	policy := GetGlobalAIAgent().PredictUploadPolicy(0, w.guardrail.Limit())
+	w.dynamicPartSz = policy.PCUPartSize
+	if w.dynamicPartSz < 4*1024*1024 {
+		w.dynamicPartSz = 4 * 1024 * 1024
+	}
+	if w.dynamicPartSz < w.currentPartPos {
+		w.dynamicPartSz = w.currentPartPos // Refuse to shrink below what we already staged!
+	}
+	w.concurrency = policy.Concurrency
+	if len(w.currentPartBuf) < w.dynamicPartSz {
+		// Expand buffer seamlessly if AI mandates larger chunks
+		newBuf := make([]byte, w.dynamicPartSz)
+		copy(newBuf, w.currentPartBuf[:w.currentPartPos])
+		w.currentPartBuf = newBuf
+	}
+
+	return total, nil
 }
 func (w *AdaptivePCUWriter) flushCurrentPartLocked() {
 	if w.currentPartPos == 0 || w.err != nil {
@@ -390,10 +411,21 @@ func (w *AdaptivePCUWriter) flushCurrentPartLocked() {
 	w.partObjects = append(w.partObjects, partObj)
 	w.partIndex++
 
+	for w.activeWorkers >= w.concurrency {
+		// Mid-stream throttling: Block if we exceed the AI's dynamic concurrency limit
+		w.mu.Unlock()
+		time.Sleep(10 * time.Millisecond)
+		w.mu.Lock()
+	}
+	w.activeWorkers++
+
 	w.uploadSem <- struct{}{}
 	w.wg.Add(1)
 	go func(obj *ObjectHandle, data []byte) {
 		defer func() {
+			w.mu.Lock()
+			w.activeWorkers--
+			w.mu.Unlock()
 			<-w.uploadSem
 			w.wg.Done()
 		}()

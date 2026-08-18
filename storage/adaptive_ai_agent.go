@@ -122,6 +122,7 @@ type AdaptiveAIAgent struct {
 	producerInflowMBpsEwma float64
 	lastWriteTime          time.Time
 	totalBytesWritten      int64
+	lastInflowTimestamp    time.Time
 
 	// Consumer read telemetry (Read path)
 	lastOffset                 int64
@@ -175,21 +176,26 @@ func NewAdaptiveAIAgent(guardrail *MemoryGuardrail) *AdaptiveAIAgent {
 
 // RecordWriteInflow records how fast the caller application is feeding bytes into the Writer.
 func (a *AdaptiveAIAgent) RecordWriteInflow(bytesWritten int, dt time.Duration) {
-	if bytesWritten <= 0 {
-		return
-	}
+	if bytesWritten <= 0 { return }
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
 	a.totalBytesWritten += int64(bytesWritten)
-	durSec := dt.Seconds()
-	if durSec > 0.0001 {
-		currInflowMBps := (float64(bytesWritten) / (1024 * 1024)) / durSec
-		const alpha = 0.2
+	
+	now := time.Now()
+	if a.lastInflowTimestamp.IsZero() {
+		a.lastInflowTimestamp = now
+		return
+	}
+	realDt := now.Sub(a.lastInflowTimestamp).Seconds()
+	
+	if realDt >= 0.25 { // Calculate rolling window every 250ms
+		currInflowMBps := (float64(bytesWritten) / (1024 * 1024)) / realDt
+		const alpha = 0.3
 		a.producerInflowMBpsEwma = (alpha * currInflowMBps) + ((1 - alpha) * a.producerInflowMBpsEwma)
+		a.lastInflowTimestamp = now
 	}
 }
-
 // RecordRead records a completed read operation into the online telemetry state.
 func (a *AdaptiveAIAgent) RecordRead(offset int64, length int64, duration time.Duration, isStarved bool) {
 	if length <= 0 {
@@ -362,7 +368,7 @@ func (a *AdaptiveAIAgent) PredictUploadPolicy(payloadSizeHint int64, memoryBudge
 			ChunkSize:      chunkSize,
 			PCUPartSize:    pcuPart,
 			Concurrency:    pcuWorkers,
-			DirectUpload:   false,
+			DirectUpload:   (payloadSizeHint > 0 && payloadSizeHint <= 32*1024*1024),
 			CoalesceWindow: 0,
 			FlushDeadline:  100 * time.Millisecond,
 		}
@@ -379,11 +385,16 @@ func (a *AdaptiveAIAgent) PredictUploadPolicy(payloadSizeHint int64, memoryBudge
 			chunkSize = 16 * 1024 * 1024
 		}
 
+		workers := int(math.Max(1, math.Min(32, inflow/10)))
+		dynamicPart := int(memoryBudget) / workers
+		if dynamicPart < 16*1024*1024 { dynamicPart = 16*1024*1024 }
+		if dynamicPart > 256*1024*1024 { dynamicPart = 256*1024*1024 }
+		
 		return UploadPolicy{
 			ChunkSize:      chunkSize,
-			PCUPartSize:    64 * 1024 * 1024,
-			Concurrency:    int(math.Max(4, math.Min(32, inflow/10))),
-			DirectUpload:   false,
+			PCUPartSize:    dynamicPart,
+			Concurrency:    workers,
+			DirectUpload:   (payloadSizeHint > 0 && payloadSizeHint <= 32*1024*1024),
 			CoalesceWindow: 5 * time.Millisecond,
 			FlushDeadline:  flushDeadline,
 		}
