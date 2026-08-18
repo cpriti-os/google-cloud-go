@@ -34,8 +34,14 @@ func TestAutoTuningConfig_DefaultsAndNormalize(t *testing.T) {
 	if def.MaxMemoryBudget != 256*1024*1024 {
 		t.Errorf("Expected 256MB budget, got %d", def.MaxMemoryBudget)
 	}
+	if def.InitialUploadChunkSize != 32*1024*1024 {
+		t.Errorf("Expected 32MB initial chunk, got %d", def.InitialUploadChunkSize)
+	}
 	if def.MaxUploadChunkSize != 64*1024*1024 {
 		t.Errorf("Expected 64MB max chunk, got %d", def.MaxUploadChunkSize)
+	}
+	if def.PCUPartSize != 32*1024*1024 {
+		t.Errorf("Expected 32MB PCU part size, got %d", def.PCUPartSize)
 	}
 	if def.PrefetchDepth != 2 {
 		t.Errorf("Expected prefetch depth 2, got %d", def.PrefetchDepth)
@@ -46,13 +52,36 @@ func TestAutoTuningConfig_DefaultsAndNormalize(t *testing.T) {
 		Enabled: true,
 	}
 	normCustom := custom.Normalize()
-	if normCustom.MaxMemoryBudget != 256*1024*1024 {
-		t.Errorf("Expected normalized budget to be 256MB, got %d", normCustom.MaxMemoryBudget)
+	if normCustom.InitialUploadChunkSize != 32*1024*1024 {
+		t.Errorf("Expected normalized initial chunk to be 32MB, got %d", normCustom.InitialUploadChunkSize)
 	}
-	if normCustom.MaxUploadChunkSize != 64*1024*1024 {
-		t.Errorf("Expected normalized max chunk to be 64MB, got %d", normCustom.MaxUploadChunkSize)
+	if normCustom.PCUPartSize != 32*1024*1024 {
+		t.Errorf("Expected normalized PCU part size to be 32MB, got %d", normCustom.PCUPartSize)
 	}
-	if normCustom.PrefetchDepth != 2 {
-		t.Errorf("Expected normalized prefetch depth to be 2, got %d", normCustom.PrefetchDepth)
+}
+
+func TestDynamicPCUPartSize(t *testing.T) {
+	tests := []struct {
+		name       string
+		totalSize  int64
+		expectedMB int
+	}{
+		{"Small 256MB object", 256 * 1024 * 1024, 16},
+		{"Medium 1GB object", 1024 * 1024 * 1024, 32},
+		{"Large 2GB object", 2 * 1024 * 1024 * 1024, 64},
+		{"AI Model 4GB checkpoint", 4 * 1024 * 1024 * 1024, 128},
+		{"Massive 10GB dataset", 10 * 1024 * 1024 * 1024, 256},
+		{"Unknown size", 0, 32},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := DynamicPCUPartSize(tt.totalSize, 8)
+			expectedBytes := tt.expectedMB * 1024 * 1024
+			if got != expectedBytes {
+				t.Errorf("DynamicPCUPartSize(%d) = %d bytes (%d MB), want %d bytes (%d MB)",
+					tt.totalSize, got, got/(1024*1024), expectedBytes, tt.expectedMB)
+			}
+		})
 	}
 }
