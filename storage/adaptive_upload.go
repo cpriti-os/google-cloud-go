@@ -15,6 +15,9 @@
 package storage
 
 import (
+	"context"
+	"fmt"
+	"io"
 	"sync"
 	"time"
 )
@@ -279,4 +282,185 @@ func CalculateDynamicPCUConfig(totalSize int64, smoothedMBps float64, memoryBudg
 	}
 
 	return partSize, workerCount
+}
+
+// AdaptivePCUWriter provides a transparent, dynamic Parallel Composite Upload stream.
+// It automatically partitions incoming write streams into dynamically sized parts (e.g., 16MB - 128MB)
+// based on payload size and network bandwidth, uploads them concurrently across worker routines,
+// and atomically composes them into the destination object on Close().
+type AdaptivePCUWriter struct {
+	ctx           context.Context
+	cancel        context.CancelFunc
+	bucket        *BucketHandle
+	object        string
+	cfg           *AutoTuningConfig
+	guardrail     *MemoryGuardrail
+	dynamicPartSz int
+	concurrency   int
+
+	currentPartBuf []byte
+	currentPartPos int
+	partIndex      int
+	partObjects    []*ObjectHandle
+
+	err       error
+	mu        sync.Mutex
+	wg        sync.WaitGroup
+	uploadSem chan struct{}
+	closed    bool
+}
+
+// NewAdaptivePCUWriter creates a new AdaptivePCUWriter on the given object handle.
+func (o *ObjectHandle) NewAdaptivePCUWriter(ctx context.Context, cfg *AutoTuningConfig) *AdaptivePCUWriter {
+	cfg = cfg.Normalize()
+	guardrail := NewMemoryGuardrail(cfg.MaxMemoryBudget)
+
+	aiAgent := GetGlobalAIAgent()
+	policy := aiAgent.PredictUploadPolicy(o.conds.GenerationMatch, guardrail.Limit())
+
+	partSize := policy.PCUPartSize
+	if partSize <= 0 {
+		partSize = cfg.PCUPartSize
+	}
+	concurrency := policy.Concurrency
+	if concurrency <= 0 {
+		concurrency = 4
+	}
+
+	wCtx, cancel := context.WithCancel(ctx)
+	return &AdaptivePCUWriter{
+		ctx:            wCtx,
+		cancel:         cancel,
+		bucket:         o.c.Bucket(o.bucket),
+		object:         o.object,
+		cfg:            cfg,
+		guardrail:      guardrail,
+		dynamicPartSz:  partSize,
+		concurrency:    concurrency,
+		currentPartBuf: make([]byte, partSize),
+		uploadSem:      make(chan struct{}, concurrency),
+	}
+}
+
+// Write writes data to the PCU stream, automatically partitioning into dynamic parts.
+func (w *AdaptivePCUWriter) Write(p []byte) (int, error) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+
+	if w.closed {
+		return 0, io.ErrClosedPipe
+	}
+	if w.err != nil {
+		return 0, w.err
+	}
+
+	total := len(p)
+	for len(p) > 0 {
+		avail := len(w.currentPartBuf) - w.currentPartPos
+		toCopy := len(p)
+		if toCopy > avail {
+			toCopy = avail
+		}
+		copy(w.currentPartBuf[w.currentPartPos:], p[:toCopy])
+		w.currentPartPos += toCopy
+		p = p[toCopy:]
+
+		if w.currentPartPos >= len(w.currentPartBuf) {
+			w.flushCurrentPartLocked()
+		}
+	}
+
+	return total, nil
+}
+
+func (w *AdaptivePCUWriter) flushCurrentPartLocked() {
+	if w.currentPartPos == 0 || w.err != nil {
+		return
+	}
+
+	partData := make([]byte, w.currentPartPos)
+	copy(partData, w.currentPartBuf[:w.currentPartPos])
+	w.currentPartPos = 0
+
+	partName := fmt.Sprintf("%s.tmp_part_%d_%d", w.object, time.Now().UnixNano(), w.partIndex)
+	partObj := w.bucket.Object(partName)
+	w.partObjects = append(w.partObjects, partObj)
+	w.partIndex++
+
+	w.uploadSem <- struct{}{}
+	w.wg.Add(1)
+	go func(obj *ObjectHandle, data []byte) {
+		defer func() {
+			<-w.uploadSem
+			w.wg.Done()
+		}()
+
+		pw := obj.NewWriter(w.ctx)
+		pw.ChunkSize = 16 * 1024 * 1024
+		if _, err := pw.Write(data); err != nil {
+			w.mu.Lock()
+			if w.err == nil {
+				w.err = err
+			}
+			w.mu.Unlock()
+			_ = pw.Close()
+			return
+		}
+		if err := pw.Close(); err != nil {
+			w.mu.Lock()
+			if w.err == nil {
+				w.err = err
+			}
+			w.mu.Unlock()
+		}
+	}(partObj, partData)
+}
+
+// Close finalizes all pending parts and composes them into the destination object.
+func (w *AdaptivePCUWriter) Close() error {
+	w.mu.Lock()
+	if w.closed {
+		w.mu.Unlock()
+		return nil
+	}
+	w.closed = true
+
+	// Flush remaining bytes
+	if w.currentPartPos > 0 && w.err == nil {
+		w.flushCurrentPartLocked()
+	}
+	w.mu.Unlock()
+
+	// Wait for all concurrent part uploads
+	w.wg.Wait()
+
+	if w.err != nil {
+		w.cleanupParts(w.partObjects)
+		return w.err
+	}
+
+	if len(w.partObjects) == 0 {
+		// Empty object write
+		emptyW := w.bucket.Object(w.object).NewWriter(w.ctx)
+		return emptyW.Close()
+	}
+
+	if len(w.partObjects) == 1 {
+		// Single part: rename/copy directly
+		_, err := w.bucket.Object(w.object).CopierFrom(w.partObjects[0]).Run(w.ctx)
+		_ = w.partObjects[0].Delete(w.ctx)
+		return err
+	}
+
+	// Compose parts
+	composer := w.bucket.Object(w.object).ComposerFrom(w.partObjects...)
+	composer.DeleteSourceObjects = true
+	_, err := composer.Run(w.ctx)
+	return err
+}
+
+func (w *AdaptivePCUWriter) cleanupParts(parts []*ObjectHandle) {
+	for _, p := range parts {
+		_ = p.Delete(context.Background())
+	}
 }
