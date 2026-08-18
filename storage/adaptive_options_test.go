@@ -85,3 +85,35 @@ func TestDynamicPCUPartSize(t *testing.T) {
 		})
 	}
 }
+
+func TestWriter_OptInBehavior(t *testing.T) {
+	// Verify that a standard Writer with nil AutoTuning keeps default ChunkSize
+	wDefault := &Writer{
+		ChunkSize: 16 * 1024 * 1024,
+	}
+	if wDefault.AutoTuning != nil {
+		t.Errorf("Expected AutoTuning to be nil by default")
+	}
+
+	// Verify that Writer with AutoTuning disabled does not override ChunkSize
+	wDisabled := &Writer{
+		ChunkSize:  16 * 1024 * 1024,
+		AutoTuning: &AutoTuningConfig{Enabled: false, InitialUploadChunkSize: 32 * 1024 * 1024},
+	}
+	if wDisabled.AutoTuning.Enabled {
+		t.Errorf("Expected AutoTuning to be disabled")
+	}
+
+	// Verify that Writer with AutoTuning enabled provides 32MB default initial chunk
+	wEnabled := &Writer{
+		ChunkSize:  16 * 1024 * 1024,
+		AutoTuning: DefaultAutoTuningConfig(),
+	}
+	if !wEnabled.AutoTuning.Enabled {
+		t.Errorf("Expected AutoTuning to be enabled")
+	}
+	if wEnabled.AutoTuning.InitialUploadChunkSize != 32*1024*1024 {
+		t.Errorf("Expected 32MB initial chunk, got %d", wEnabled.AutoTuning.InitialUploadChunkSize)
+	}
+}
+

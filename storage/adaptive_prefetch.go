@@ -18,7 +18,10 @@ import (
 	"context"
 	"errors"
 	"io"
+	"strings"
 	"sync"
+
+	"google.golang.org/api/googleapi"
 )
 
 const (
@@ -46,6 +49,54 @@ func DefaultAdaptivePrefetchConfig() AdaptivePrefetchConfig {
 		Depth:     DefaultPrefetchDepth,
 		Guardrail: nil,
 	}
+}
+
+// NewAdaptiveReader creates an io.ReadCloser that wraps standard GCS range fetches
+// with client-side lookahead prefetching and memory guardrails when enabled.
+// If cfg is nil or cfg.Enabled is false, it falls back to standard NewReader.
+func (o *ObjectHandle) NewAdaptiveReader(ctx context.Context, cfg *AutoTuningConfig, opts ...ReaderOption) (io.ReadCloser, error) {
+	if cfg == nil || !cfg.Enabled {
+		return o.NewReader(ctx, opts...)
+	}
+	normCfg := cfg.Normalize()
+	guardrail := NewMemoryGuardrail(normCfg.MaxMemoryBudget)
+	chunkSize := DefaultPrefetchChunkSize
+
+	var totalSize int64
+	if attrs, err := o.Attrs(ctx); err == nil && attrs != nil {
+		totalSize = attrs.Size
+	}
+
+	fetcher := func(fetchCtx context.Context, offset, length int64, dest []byte) (int, error) {
+		if totalSize > 0 && offset >= totalSize {
+			return 0, io.EOF
+		}
+		r, err := o.NewRangeReader(fetchCtx, offset, length, opts...)
+		if err != nil {
+			var gerr *googleapi.Error
+			if errors.As(err, &gerr) && gerr.Code == 416 {
+				return 0, io.EOF
+			}
+			if strings.Contains(err.Error(), "416") || strings.Contains(err.Error(), "InvalidRange") {
+				return 0, io.EOF
+			}
+			return 0, err
+		}
+		defer r.Close()
+		n, err := io.ReadFull(r, dest)
+		if err == io.ErrUnexpectedEOF {
+			return n, io.EOF
+		}
+		return n, err
+	}
+
+	prefetchCfg := AdaptivePrefetchConfig{
+		ChunkSize: chunkSize,
+		Depth:     normCfg.PrefetchDepth,
+		Guardrail: guardrail,
+	}
+
+	return NewAdaptivePrefetchReader(ctx, totalSize, fetcher, prefetchCfg), nil
 }
 
 type prefetchBlock struct {

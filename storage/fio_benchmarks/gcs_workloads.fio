@@ -1,55 +1,52 @@
-; FIO Benchmark Suite for GCS Go SDK & GCSFuse Workload Profiling
-; Replicating AI/ML Training, Checkpointing, and Columnar Analytics
+; FIO Benchmark Suite for GCS Go SDK & GCSFuse Live Cloud Workloads
+; Running Live Against GCS Prod Bucket Mounted via GCSFuse
 
 [global]
 ioengine=sync
 direct=1
-runtime=20
+runtime=15
 time_based=1
 group_reporting=1
-filename_format=fio_test_file_$jobnum_$filenum.dat
+filename_format=fio_live_gcs_$jobnum_$filenum.dat
+directory=/usr/local/google/home/cpriti/gcs_bench_mount
 
 ; -----------------------------------------------------------------------------
 ; Profile 1: AI/ML Dataloader Sequential Read (Large Batch Shards)
 ; -----------------------------------------------------------------------------
 [ai_dataloader_seq_read]
-description=Simulates PyTorch/TensorFlow DataLoader streaming training shards
+description=Live GCS Read: PyTorch/TensorFlow DataLoader streaming training shards
 rw=read
 bs=1M
-size=512M
-numjobs=8
-directory=/tmp/fio_bench_dir
+size=128M
+numjobs=4
 
 ; -----------------------------------------------------------------------------
 ; Profile 2: Orbax / Model Checkpoint Large Sequential Write
 ; -----------------------------------------------------------------------------
 [orbax_checkpoint_seq_write]
-description=Simulates Orbax multi-node model checkpointing
+description=Live GCS Write: Orbax multi-node model checkpointing
 rw=write
 bs=16M
-size=1G
+size=256M
 numjobs=4
-directory=/tmp/fio_bench_dir
 
 ; -----------------------------------------------------------------------------
 ; Profile 3: Columnar Parquet / Analytics Strided Range Scans
 ; -----------------------------------------------------------------------------
 [columnar_parquet_scan]
-description=Simulates BigQuery / DuckDB column projection scans
+description=Live GCS Range Scan: BigQuery / DuckDB column projections
 rw=randread
 bs=256k
-size=256M
-numjobs=8
-directory=/tmp/fio_bench_dir
+size=64M
+numjobs=4
 
 ; -----------------------------------------------------------------------------
 ; Profile 4: Microservices / Small File Ingestion
 ; -----------------------------------------------------------------------------
 [small_file_high_qps]
-description=Simulates high-concurrency small file ingestion
+description=Live GCS Ingestion: High-concurrency small file ingestion
 rw=randrw
 rwmixread=70
 bs=64k
-size=64M
-numjobs=16
-directory=/tmp/fio_bench_dir
+size=32M
+numjobs=8

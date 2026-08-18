@@ -1,31 +1,31 @@
 {
   "fio version" : "fio-3.42",
-  "timestamp" : 1787037131,
-  "timestamp_ms" : 1787037131121,
-  "time" : "Tue Aug 18 07:12:11 2026",
+  "timestamp" : 1787038559,
+  "timestamp_ms" : 1787038559013,
+  "time" : "Tue Aug 18 07:35:59 2026",
   "global options" : {
     "ioengine" : "sync",
     "direct" : "1",
-    "runtime" : "20",
+    "runtime" : "15",
     "time_based" : "1",
     "group_reporting" : "1",
-    "filename_format" : "fio_test_file_$jobnum_$filenum.dat"
+    "directory" : "/usr/local/google/home/cpriti/gcs_bench_mount",
+    "filename_format" : "fio_live_gcs_$jobnum_$filenum.dat"
   },
   "jobs" : [
     {
       "jobname" : "orbax_checkpoint_seq_write",
       "groupid" : 0,
-      "job_start" : 1787037111086,
+      "job_start" : 1787038433326,
       "error" : 0,
       "eta" : 0,
-      "elapsed" : 21,
+      "elapsed" : 126,
       "job options" : {
-        "description" : "Simulates Orbax multi-node model checkpointing",
+        "description" : "Live GCS Write: Orbax multi-node model checkpointing",
         "rw" : "write",
         "bs" : "16M",
-        "size" : "1G",
-        "numjobs" : "4",
-        "directory" : "/tmp/fio_bench_dir"
+        "size" : "256M",
+        "numjobs" : "4"
       },
       "read" : {
         "io_bytes" : 0,
@@ -71,13 +71,13 @@
         "iops_samples" : 0
       },
       "write" : {
-        "io_bytes" : 244494368768,
-        "io_kbytes" : 238764032,
-        "bw_bytes" : 12219830506,
-        "bw" : 11933428,
-        "iops" : 728.358657,
-        "runtime" : 20008,
-        "total_ios" : 14573,
+        "io_bytes" : 41473277952,
+        "io_kbytes" : 40501248,
+        "bw_bytes" : 561717361,
+        "bw" : 548552,
+        "iops" : 33.480964,
+        "runtime" : 73833,
+        "total_ios" : 2472,
         "short_ios" : 0,
         "drop_ios" : 0,
         "slat_ns" : {
@@ -88,49 +88,49 @@
           "N" : 0
         },
         "clat_ns" : {
-          "min" : 2871191,
-          "max" : 15678735,
-          "mean" : 4968499.360393,
-          "stddev" : 1107099.319644,
-          "N" : 14573,
+          "min" : 11702893,
+          "max" : 68531920595,
+          "mean" : 47519799.060275,
+          "stddev" : 1378701040.189568,
+          "N" : 2472,
           "percentile" : {
-            "1.000000" : 3325952,
-            "5.000000" : 3620864,
-            "10.000000" : 3850240,
-            "20.000000" : 4112384,
-            "30.000000" : 4358144,
-            "40.000000" : 4554752,
-            "50.000000" : 4751360,
-            "60.000000" : 5013504,
-            "70.000000" : 5275648,
-            "80.000000" : 5734400,
-            "90.000000" : 6324224,
-            "95.000000" : 7045120,
-            "99.000000" : 8585216,
-            "99.500000" : 9240576,
-            "99.900000" : 12386304,
-            "99.950000" : 13434880,
-            "99.990000" : 15007744
+            "1.000000" : 13434880,
+            "5.000000" : 13959168,
+            "10.000000" : 14352384,
+            "20.000000" : 14876672,
+            "30.000000" : 15400960,
+            "40.000000" : 16056320,
+            "50.000000" : 16580608,
+            "60.000000" : 17432576,
+            "70.000000" : 18743296,
+            "80.000000" : 19791872,
+            "90.000000" : 22151168,
+            "95.000000" : 25296896,
+            "99.000000" : 57409536,
+            "99.500000" : 61603840,
+            "99.900000" : 1283457024,
+            "99.950000" : 1283457024,
+            "99.990000" : 17112760320
           }
         },
         "lat_ns" : {
-          "min" : 3211582,
-          "max" : 16497206,
-          "mean" : 5483383.809374,
-          "stddev" : 1208994.037773,
-          "N" : 14573
+          "min" : 12209734,
+          "max" : 68532488265,
+          "mean" : 48065542.148058,
+          "stddev" : 1378701485.687098,
+          "N" : 2472
         },
-        "bw_min" : 9633792,
-        "bw_max" : 13697024,
+        "bw_min" : 688128,
+        "bw_max" : 4227072,
         "bw_agg" : 100.000000,
-        "bw_mean" : 11954096.692308,
-        "bw_dev" : 238485.350616,
-        "bw_samples" : 156,
-        "iops_min" : 588,
-        "iops_max" : 836,
-        "iops_mean" : 729.179487,
-        "iops_stddev" : 14.603579,
-        "iops_samples" : 156
+        "bw_mean" : 3300021.142857,
+        "bw_dev" : 213594.810408,
+        "bw_samples" : 96,
+        "iops_min" : 42,
+        "iops_max" : 258,
+        "iops_mean" : 201.321429,
+        "iops_stddev" : 13.037900,
+        "iops_samples" : 96
       },
       "trim" : {
         "io_bytes" : 0,
@@ -185,12 +185,12 @@
           "N" : 0
         }
       },
-      "job_runtime" : 80015,
-      "usr_cpu" : 9.545710,
-      "sys_cpu" : 90.435543,
-      "ctx" : 259,
+      "job_runtime" : 118844,
+      "usr_cpu" : 1.240281,
+      "sys_cpu" : 1.637441,
+      "ctx" : 39597,
       "majf" : 0,
-      "minf" : 21,
+      "minf" : 31,
       "iodepth_level" : {
         "1" : 100.000000,
         "2" : 0.000000,
@@ -244,17 +244,17 @@
       },
       "latency_ms" : {
         "2" : 0.000000,
-        "4" : 15.693406,
-        "10" : 83.970356,
-        "20" : 0.336238,
-        "50" : 0.000000,
-        "100" : 0.000000,
+        "4" : 0.000000,
+        "10" : 0.000000,
+        "20" : 80.703883,
+        "50" : 17.597087,
+        "100" : 1.496764,
         "250" : 0.000000,
-        "500" : 0.000000,
+        "500" : 0.040453,
         "750" : 0.000000,
         "1000" : 0.000000,
-        "2000" : 0.000000,
-        ">=2000" : 0.000000
+        "2000" : 0.121359,
+        ">=2000" : 0.040453
       },
       "latency_depth" : 1,
       "latency_target" : 0,
@@ -262,7 +262,7 @@
       "latency_percentile" : 100.000000,
       "latency_window" : 0,
       "latency_window_us" : 0,
-      "desc" : "Simulates Orbax multi-node model checkpointing"
+      "desc" : "Live GCS Write: Orbax multi-node model checkpointing"
     }
   ]
 }

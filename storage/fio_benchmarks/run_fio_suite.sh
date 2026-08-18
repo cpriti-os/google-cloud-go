@@ -16,26 +16,26 @@
 set -euo pipefail
 
 FIO_BIN="/tmp/fio_bin/bin/fio"
-WORK_DIR="/tmp/fio_bench_dir"
+MOUNT_DIR="/usr/local/google/home/cpriti/gcs_bench_mount"
 OUT_DIR="/usr/local/google/home/cpriti/GO_SDK_Repos/cpriti-google-cloud-go/storage/fio_benchmarks/results"
 
-mkdir -p "${WORK_DIR}" "${OUT_DIR}"
+mkdir -p "${MOUNT_DIR}" "${OUT_DIR}"
 
 echo "================================================================================"
-echo "Running Comprehensive FIO Workload Benchmark Suite for GCS & GCSFuse"
+echo "Running LIVE FIO Workload Benchmark Suite against Google Cloud Storage (Prod)"
+echo "Bucket Mount: ${MOUNT_DIR}"
 echo "Binary: ${FIO_BIN} ($(${FIO_BIN} --version))"
 echo "Output Directory: ${OUT_DIR}"
 echo "================================================================================"
 
-PROFILES=("ai_dataloader_seq_read" "orbax_checkpoint_seq_write" "columnar_parquet_scan" "small_file_high_qps")
+PROFILES=("orbax_checkpoint_seq_write" "ai_dataloader_seq_read" "columnar_parquet_scan" "small_file_high_qps")
 
 for PROFILE in "${PROFILES[@]}"; do
     echo ""
     echo "--------------------------------------------------------------------------------"
-    echo "Executing FIO Profile: [${PROFILE}]"
+    echo "Executing Live GCS FIO Profile: [${PROFILE}]"
     echo "--------------------------------------------------------------------------------"
     
-    # Run FIO with JSON+ output format
     ${FIO_BIN} storage/fio_benchmarks/gcs_workloads.fio \
         --section="${PROFILE}" \
         --output-format=json \
@@ -45,12 +45,12 @@ for PROFILE in "${PROFILES[@]}"; do
 done
 
 echo ""
-echo "Cleaning up scratch files in ${WORK_DIR}..."
-rm -rf "${WORK_DIR:?}"/*
+echo "Cleaning up benchmark files in GCS bucket mount (${MOUNT_DIR})..."
+rm -f "${MOUNT_DIR}"/fio_live_gcs_*.dat || true
 
 echo "================================================================================"
-echo "Parsing FIO Results and Generating Report..."
+echo "Parsing Live GCS FIO Results and Generating Report..."
 echo "================================================================================"
 /tmp/bench_env/bin/python3 storage/fio_benchmarks/parse_fio_results.py "${OUT_DIR}"
 
-echo "FIO benchmark suite completed successfully!"
+echo "Live GCS FIO benchmark suite completed successfully!"

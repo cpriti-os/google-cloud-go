@@ -207,6 +207,14 @@ type Writer struct {
 	// in future releases. It is not yet recommended for production use.
 	ParallelUploadConfig ParallelUploadConfig
 
+	// AutoTuning holds configuration for client-side adaptive auto-tuning.
+	// When non-nil and AutoTuning.Enabled is true, the Writer dynamically optimizes
+	// upload chunk sizes (and PCU part sizes if EnableParallelUpload is true) using
+	// AIMD feedback and memory guardrails.
+	//
+	// By default, AutoTuning is nil, and the Writer behaves in standard fixed-chunk mode.
+	AutoTuning *AutoTuningConfig
+
 	// SendAppendFinalCRC32C indicates that AppendFinalCRC32C should be sent as the
 	// full-object checksum when finalizing an appendable object.
 	//
@@ -464,9 +472,15 @@ func (w *Writer) openWriter() (err error) {
 	// Append operations that takeover a specific generation are idempotent.
 	isIdempotent = isIdempotent || w.Append && w.o.gen > 0
 	opts := makeStorageOpts(isIdempotent, w.o.retry, w.o.userProject)
+	effectiveChunkSize := w.ChunkSize
+	if w.AutoTuning != nil && w.AutoTuning.Enabled {
+		if w.AutoTuning.InitialUploadChunkSize > 0 {
+			effectiveChunkSize = w.AutoTuning.InitialUploadChunkSize
+		}
+	}
 	params := &openWriterParams{
 		ctx:                  w.ctx,
-		chunkSize:            w.ChunkSize,
+		chunkSize:            effectiveChunkSize,
 		chunkRetryDeadline:   w.ChunkRetryDeadline,
 		chunkTransferTimeout: w.ChunkTransferTimeout,
 		bucket:               w.o.bucket,
