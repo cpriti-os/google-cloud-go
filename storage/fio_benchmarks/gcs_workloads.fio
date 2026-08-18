@@ -1,0 +1,55 @@
+; FIO Benchmark Suite for GCS Go SDK & GCSFuse Workload Profiling
+; Replicating AI/ML Training, Checkpointing, and Columnar Analytics
+
+[global]
+ioengine=sync
+direct=1
+runtime=20
+time_based=1
+group_reporting=1
+filename_format=fio_test_file_$jobnum_$filenum.dat
+
+; -----------------------------------------------------------------------------
+; Profile 1: AI/ML Dataloader Sequential Read (Large Batch Shards)
+; -----------------------------------------------------------------------------
+[ai_dataloader_seq_read]
+description=Simulates PyTorch/TensorFlow DataLoader streaming training shards
+rw=read
+bs=1M
+size=512M
+numjobs=8
+directory=/tmp/fio_bench_dir
+
+; -----------------------------------------------------------------------------
+; Profile 2: Orbax / Model Checkpoint Large Sequential Write
+; -----------------------------------------------------------------------------
+[orbax_checkpoint_seq_write]
+description=Simulates Orbax multi-node model checkpointing
+rw=write
+bs=16M
+size=1G
+numjobs=4
+directory=/tmp/fio_bench_dir
+
+; -----------------------------------------------------------------------------
+; Profile 3: Columnar Parquet / Analytics Strided Range Scans
+; -----------------------------------------------------------------------------
+[columnar_parquet_scan]
+description=Simulates BigQuery / DuckDB column projection scans
+rw=randread
+bs=256k
+size=256M
+numjobs=8
+directory=/tmp/fio_bench_dir
+
+; -----------------------------------------------------------------------------
+; Profile 4: Microservices / Small File Ingestion
+; -----------------------------------------------------------------------------
+[small_file_high_qps]
+description=Simulates high-concurrency small file ingestion
+rw=randrw
+rwmixread=70
+bs=64k
+size=64M
+numjobs=16
+directory=/tmp/fio_bench_dir
