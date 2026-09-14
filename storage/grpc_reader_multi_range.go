@@ -1308,7 +1308,7 @@ func (s *bidiReadStreamSession) Shutdown() {
 	s.manualShutdown = true
 	s.mu.Unlock()
 
-	// Close reqC to tell sendLoop to exit cleanly and invoke CloseSend()
+	// Close reqC to tell sendLoop to exit cleanly and invoke CloseSend().
 	close(s.reqC)
 
 	done := make(chan struct{})
