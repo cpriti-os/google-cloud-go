@@ -174,6 +174,13 @@ func NewClient(ctx context.Context, opts ...option.ClientOption) (*Client, error
 		c, err := internaloption.AuthCreds(ctx, opts)
 		if err == nil {
 			creds = c
+			// The http.Client below is built before the metrics pipeline
+			// exists (it is created in newHTTPStorageClient). Install a token
+			// provider now; newHTTPStorageClient attaches the metrics to it so
+			// that credential refreshes on this transport are recorded.
+			if cfg := newStorageConfig(opts...); isOtelMetricsEnabled(&cfg) || isOtelDebugMetricsEnabled(&cfg) {
+				creds, _ = deferredMetricsCredentials(creds)
+			}
 			opts = append(opts, option.WithAuthCredentials(creds))
 		}
 	} else {
