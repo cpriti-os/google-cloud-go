@@ -72,6 +72,7 @@ type clientMetrics struct {
 	attempts                  metric.Int64Counter
 	requestBodySize           metric.Int64Histogram
 	responseBodySize          metric.Int64Histogram
+	throughput                metric.Float64Histogram
 	ttfb                      metric.Float64Histogram
 	errors                    metric.Int64Counter
 	retries                   metric.Int64Counter
@@ -350,6 +351,16 @@ func initMetrics(ctx context.Context, projectID string, config *storageConfig) (
 		return nil, nil, err
 	}
 
+	throughput, err := meter.Float64Histogram(
+		"gcp.storage.client.operation.throughput",
+		metric.WithDescription("Effective throughput of a successful upload or download operation: object bytes divided by the operation duration, including retries and time the application spends between reads or writes. Recorded once per operation that transferred at least 1 MiB, by "+throughputSizeClassKey+"."),
+		metric.WithUnit("By/s"),
+		metric.WithExplicitBucketBoundaries(throughputHistogramBoundaries()...),
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	ttfb, err := meter.Float64Histogram(
 		"gcp.storage.client.operation.ttfb",
 		metric.WithDescription("Time from the start of an attempt until the first byte of the response was received. Not recorded for attempts that received no response."),
@@ -489,6 +500,7 @@ func initMetrics(ctx context.Context, projectID string, config *storageConfig) (
 		attempts:                  attempts,
 		requestBodySize:           requestBodySize,
 		responseBodySize:          responseBodySize,
+		throughput:                throughput,
 		ttfb:                      ttfb,
 		errors:                    errors,
 		retries:                   retries,
@@ -1510,6 +1522,14 @@ type metricsState struct {
 	composite bool
 	// parent is the composite operation this operation belongs to.
 	parent *metricsState
+	// bodyBytes is the number of object bytes the operation transferred, set
+	// when the body size is recorded. hasBody reports whether it was set.
+	bodyBytes atomic.Int64
+	hasBody   atomic.Bool
+	// noThroughput excludes the operation from the throughput metric, for
+	// operations whose duration is not dominated by transferring data
+	// (e.g. a MultiRangeDownloader that stays open between ranges).
+	noThroughput bool
 }
 
 // recordResponseBodySize records the number of object bytes delivered to the
@@ -1537,12 +1557,69 @@ func (s *metricsState) recordBodySize(ctx context.Context, h metric.Int64Histogr
 		return
 	}
 	s.sizeOnce.Do(func() {
+		s.bodyBytes.Store(n)
+		s.hasBody.Store(true)
 		h.Record(ctx, n, metric.WithAttributes(injectAPIMethod(ctx, []attribute.KeyValue{
 			attribute.String("rpc.system.name", s.getSystemName()),
 			attribute.String("rpc.method", s.method),
 			attribute.String("server.address", stripPort(s.getTarget())),
 		})...))
 	})
+}
+
+// recordThroughput records the effective throughput of a successful operation
+// that transferred at least minThroughputBytes.
+func (s *metricsState) recordThroughput(ctx context.Context, err error, duration float64) {
+	if err != nil || s.noThroughput || !s.hasBody.Load() || duration <= 0 || s.metrics.throughput == nil {
+		return
+	}
+	n := s.bodyBytes.Load()
+	if n < minThroughputBytes {
+		return
+	}
+	s.metrics.throughput.Record(ctx, float64(n)/duration, metric.WithAttributes(injectAPIMethod(ctx, []attribute.KeyValue{
+		attribute.String("rpc.system.name", s.getSystemName()),
+		attribute.String("rpc.method", s.method),
+		attribute.String("server.address", stripPort(s.getTarget())),
+		attribute.String(throughputSizeClassKey, throughputSizeClass(n)),
+	})...))
+}
+
+const (
+	// minThroughputBytes is the smallest transfer recorded in the throughput
+	// metric. Smaller transfers are dominated by request latency, which the
+	// duration metric already captures.
+	minThroughputBytes = 1 << 20
+	// throughputSizeClassKey is the attribute that groups throughput by
+	// transfer size. Larger transfers amortize per-request latency and reach
+	// higher throughput, so throughput is only comparable within a class.
+	throughputSizeClassKey = "gcp.storage.transfer.size_class"
+)
+
+// throughputSizeClass returns the transfer size class of an operation that
+// transferred n >= minThroughputBytes bytes. Each class spans at most a 16x
+// range of sizes.
+func throughputSizeClass(n int64) string {
+	switch {
+	case n < 16<<20:
+		return "1MiB-16MiB"
+	case n < 256<<20:
+		return "16MiB-256MiB"
+	case n < 4<<30:
+		return "256MiB-4GiB"
+	default:
+		return "4GiB+"
+	}
+}
+
+// throughputHistogramBoundaries returns exponential bucket boundaries from
+// 64 KiB/s to 32 GiB/s, doubling each bucket.
+func throughputHistogramBoundaries() []float64 {
+	var b []float64
+	for v := float64(64 << 10); v <= float64(32<<30); v *= 2 {
+		b = append(b, v)
+	}
+	return b
 }
 
 func (s *metricsState) setTarget(t string) {
@@ -1622,6 +1699,7 @@ func (cm *clientMetrics) startOperation(ctx context.Context, method string, isHT
 			opts := metric.WithAttributes(injectAPIMethod(ctx, attrs)...)
 			cm.duration.Record(ctx, duration, opts)
 			cm.operations.Add(ctx, 1, opts)
+			state.recordThroughput(ctx, err, duration)
 		})
 	}
 	state.record = record
@@ -1794,6 +1872,11 @@ func (mc *metricsStorageClient) OpenWriter(params *openWriterParams, opts ...sto
 
 func (mc *metricsStorageClient) NewMultiRangeDownloader(ctx context.Context, params *newMultiRangeDownloaderParams, opts ...storageOption) (*MultiRangeDownloader, error) {
 	ctx, _ = mc.metrics.startOperation(ctx, "ReadObject", mc.isHTTP)
+	if state := metricsStateFromContext(ctx); state != nil {
+		// A MultiRangeDownloader stays open between ranges, so its duration
+		// does not measure transfer speed.
+		state.noThroughput = true
+	}
 	return mc.storageClient.NewMultiRangeDownloader(ctx, params, opts...)
 }
 
