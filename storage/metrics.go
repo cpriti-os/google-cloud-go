@@ -2275,10 +2275,10 @@ func (cm *clientMetrics) recordStallDuration(ctx context.Context, duration time.
 	if cm == nil || cm.stallDuration == nil {
 		return
 	}
-	attrs := []attribute.KeyValue{
+	attrs := injectBucket(ctx, []attribute.KeyValue{
 		attribute.String("rpc.system.name", systemName),
 		attribute.String("rpc.method", method),
 		attribute.String("server.address", target),
-	}
+	})
 	cm.stallDuration.Record(ctx, duration.Seconds(), metric.WithAttributes(attrs...))
 }
