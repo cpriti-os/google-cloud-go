@@ -513,3 +513,53 @@ func TestStripPort(t *testing.T) {
 		}
 	}
 }
+
+func TestBucketAttributeOnOperationAndAttemptMetrics(t *testing.T) {
+	cm, mr := accuracyMetrics(t)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("{}"))
+	}))
+	defer srv.Close()
+	rt := &metricsRoundTripper{base: http.DefaultTransport, metrics: cm}
+
+	mock := &mockStorageClient{getObjectFn: func(ctx context.Context, params *getObjectParams, opts ...storageOption) (*ObjectAttrs, error) {
+		req, _ := http.NewRequestWithContext(ctx, "GET", srv.URL+"/storage/v1/b/my-bucket/o/obj", nil)
+		resp, err := rt.RoundTrip(req)
+		if err != nil {
+			return nil, err
+		}
+		io.ReadAll(resp.Body)
+		resp.Body.Close()
+		return &ObjectAttrs{}, nil
+	}}
+	mc := &metricsStorageClient{storageClient: mock, metrics: cm, isHTTP: true}
+	if _, err := mc.GetObject(context.Background(), &getObjectParams{bucket: "my-bucket", object: "obj"}); err != nil {
+		t.Fatalf("GetObject: %v", err)
+	}
+
+	want := map[string]string{bucketAttrKey: "my-bucket"}
+	for _, name := range []string{
+		"gcp.client.request.duration",
+		"gcp.storage.client.operations",
+		"gcp.storage.client.attempts",
+		"gcp.storage.client.operation.ttfb",
+	} {
+		if c, _ := metricPoints(t, mr, name, want); c != 1 {
+			t.Errorf("%s with bucket attribute: count = %d, want 1", name, c)
+		}
+	}
+}
+
+func TestContextWithMetricsBucketKeepsOuterBucket(t *testing.T) {
+	ctx := contextWithMetricsBucket(context.Background(), "outer")
+	ctx = contextWithMetricsBucket(ctx, "inner")
+	ctx = contextWithMetricsBucket(ctx, "")
+	got := attrLookup(injectAPIMethod(ctx, nil))
+	if got[bucketAttrKey] != "outer" {
+		t.Errorf("bucket = %q, want %q", got[bucketAttrKey], "outer")
+	}
+	if _, ok := attrLookup(injectAPIMethod(context.Background(), nil))[bucketAttrKey]; ok {
+		t.Error("bucket attribute set without a bucket in context")
+	}
+}

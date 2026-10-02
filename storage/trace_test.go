@@ -17,7 +17,9 @@ package storage
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -348,5 +350,55 @@ func TestEndSpanEviction(t *testing.T) {
 				t.Errorf("expected bucket to remain in cache")
 			}
 		})
+	}
+}
+
+func TestReaderSpanCoversReadUntilClose(t *testing.T) {
+	ctx := context.Background()
+	te := testutil.NewOpenTelemetryTestExporter()
+	t.Cleanup(func() { te.Unregister(ctx) })
+	t.Setenv("GO_STORAGE_DEV_OTEL_TRACING", "true")
+
+	mock := &mockStorageClient{newReaderFn: func(ctx context.Context, params *newRangeReaderParams, opts ...storageOption) (*Reader, error) {
+		return &Reader{reader: io.NopCloser(strings.NewReader("hello")), remain: 5, size: 5}, nil
+	}}
+	c := &Client{tc: mock}
+	r, err := c.Bucket("b").Object("o").NewReader(ctx)
+	if err != nil {
+		t.Fatalf("NewReader: %v", err)
+	}
+	if n := len(te.Spans()); n != 0 {
+		t.Fatalf("Object.Reader span ended before Close: got %d spans", n)
+	}
+	const readTime = 50 * time.Millisecond
+	time.Sleep(readTime)
+	io.ReadAll(r)
+	r.Close()
+
+	spans := te.Spans()
+	if len(spans) != 1 {
+		t.Fatalf("got %d spans, want 1", len(spans))
+	}
+	if d := spans[0].EndTime.Sub(spans[0].StartTime); d < readTime {
+		t.Errorf("Object.Reader span duration %v does not cover the read (>= %v)", d, readTime)
+	}
+}
+
+func TestReaderSpanEndedOnError(t *testing.T) {
+	ctx := context.Background()
+	te := testutil.NewOpenTelemetryTestExporter()
+	t.Cleanup(func() { te.Unregister(ctx) })
+	t.Setenv("GO_STORAGE_DEV_OTEL_TRACING", "true")
+
+	mock := &mockStorageClient{newReaderFn: func(ctx context.Context, params *newRangeReaderParams, opts ...storageOption) (*Reader, error) {
+		return nil, ErrObjectNotExist
+	}}
+	c := &Client{tc: mock}
+	if _, err := c.Bucket("b").Object("o").NewReader(ctx); err == nil {
+		t.Fatal("NewReader: want error")
+	}
+	spans := te.Spans()
+	if len(spans) != 1 || spans[0].Status.Code != otcodes.Error {
+		t.Fatalf("got %d spans (status %v), want 1 errored span", len(spans), spans)
 	}
 }

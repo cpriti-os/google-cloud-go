@@ -851,7 +851,7 @@ func (cm *clientMetrics) recordAttempt(ctx context.Context, system, method, serv
 		cm.errors.Add(ctx, 1, metric.WithAttributes(injectAPIMethod(ctx, base)...))
 	}
 	if attemptNumber > 1 && cm.retries != nil {
-		cm.retries.Add(ctx, 1, metric.WithAttributes(injectAPIMethod(ctx, base[:3])...))
+		cm.retries.Add(ctx, 1, metric.WithAttributes(injectAPIMethod(ctx, base[:3:3])...))
 	}
 }
 
@@ -1488,9 +1488,38 @@ type metricsKey struct{}
 
 type apiMethodKey struct{}
 
+// metricsBucketKey is the context key for the bucket an operation targets.
+type metricsBucketKey struct{}
+
+// bucketAttrKey is the metric attribute that identifies the bucket an
+// operation targets.
+const bucketAttrKey = "gcp.storage.bucket"
+
+// contextWithMetricsBucket returns ctx annotated with the bucket that the
+// operation targets. Empty bucket names are ignored. An existing bucket is
+// not overridden so that operations nested in another operation (for example
+// the parts of a parallel composite upload) keep the outer bucket.
+func contextWithMetricsBucket(ctx context.Context, bucket string) context.Context {
+	if bucket == "" {
+		return ctx
+	}
+	if b, ok := ctx.Value(metricsBucketKey{}).(string); ok && b != "" {
+		return ctx
+	}
+	return context.WithValue(ctx, metricsBucketKey{}, bucket)
+}
+
+// injectAPIMethod appends the operation-scoped attributes held in ctx
+// (gcp.client.method and gcp.storage.bucket) to attrs.
 func injectAPIMethod(ctx context.Context, attrs []attribute.KeyValue) []attribute.KeyValue {
+	if ctx == nil {
+		return attrs
+	}
 	if apiMethod, ok := ctx.Value(apiMethodKey{}).(string); ok {
-		return append(attrs, attribute.String("gcp.client.method", apiMethod))
+		attrs = append(attrs, attribute.String("gcp.client.method", apiMethod))
+	}
+	if bucket, ok := ctx.Value(metricsBucketKey{}).(string); ok && bucket != "" {
+		attrs = append(attrs, attribute.String(bucketAttrKey, bucket))
 	}
 	return attrs
 }
@@ -1680,6 +1709,7 @@ func (mc *metricsStorageClient) GetServiceAccount(ctx context.Context, project s
 }
 
 func (mc *metricsStorageClient) CreateBucket(ctx context.Context, project, bucket string, attrs *BucketAttrs, enableObjectRetention *bool, opts ...storageOption) (*BucketAttrs, error) {
+	ctx = contextWithMetricsBucket(ctx, bucket)
 	ctx, record := mc.metrics.startOperation(ctx, "CreateBucket", mc.isHTTP)
 	res, err := mc.storageClient.CreateBucket(ctx, project, bucket, attrs, enableObjectRetention, opts...)
 	record(err)
@@ -1692,6 +1722,7 @@ func (mc *metricsStorageClient) ListBuckets(ctx context.Context, project string,
 }
 
 func (mc *metricsStorageClient) DeleteBucket(ctx context.Context, bucket string, conds *BucketConditions, opts ...storageOption) error {
+	ctx = contextWithMetricsBucket(ctx, bucket)
 	ctx, record := mc.metrics.startOperation(ctx, "DeleteBucket", mc.isHTTP)
 	err := mc.storageClient.DeleteBucket(ctx, bucket, conds, opts...)
 	record(err)
@@ -1699,6 +1730,7 @@ func (mc *metricsStorageClient) DeleteBucket(ctx context.Context, bucket string,
 }
 
 func (mc *metricsStorageClient) GetBucket(ctx context.Context, bucket string, conds *BucketConditions, opts ...storageOption) (*BucketAttrs, error) {
+	ctx = contextWithMetricsBucket(ctx, bucket)
 	ctx, record := mc.metrics.startOperation(ctx, "GetBucket", mc.isHTTP)
 	res, err := mc.storageClient.GetBucket(ctx, bucket, conds, opts...)
 	record(err)
@@ -1706,6 +1738,7 @@ func (mc *metricsStorageClient) GetBucket(ctx context.Context, bucket string, co
 }
 
 func (mc *metricsStorageClient) UpdateBucket(ctx context.Context, bucket string, uattrs *BucketAttrsToUpdate, conds *BucketConditions, opts ...storageOption) (*BucketAttrs, error) {
+	ctx = contextWithMetricsBucket(ctx, bucket)
 	ctx, record := mc.metrics.startOperation(ctx, "UpdateBucket", mc.isHTTP)
 	res, err := mc.storageClient.UpdateBucket(ctx, bucket, uattrs, conds, opts...)
 	record(err)
@@ -1713,6 +1746,7 @@ func (mc *metricsStorageClient) UpdateBucket(ctx context.Context, bucket string,
 }
 
 func (mc *metricsStorageClient) LockBucketRetentionPolicy(ctx context.Context, bucket string, conds *BucketConditions, opts ...storageOption) error {
+	ctx = contextWithMetricsBucket(ctx, bucket)
 	ctx, record := mc.metrics.startOperation(ctx, "LockBucketRetentionPolicy", mc.isHTTP)
 	err := mc.storageClient.LockBucketRetentionPolicy(ctx, bucket, conds, opts...)
 	record(err)
@@ -1720,11 +1754,13 @@ func (mc *metricsStorageClient) LockBucketRetentionPolicy(ctx context.Context, b
 }
 
 func (mc *metricsStorageClient) ListObjects(ctx context.Context, bucket string, q *Query, opts ...storageOption) *ObjectIterator {
+	ctx = contextWithMetricsBucket(ctx, bucket)
 	ctx, _ = mc.metrics.startOperation(ctx, "ListObjects", mc.isHTTP)
 	return mc.storageClient.ListObjects(ctx, bucket, q, opts...)
 }
 
 func (mc *metricsStorageClient) DeleteObject(ctx context.Context, bucket, object string, gen int64, conds *Conditions, opts ...storageOption) error {
+	ctx = contextWithMetricsBucket(ctx, bucket)
 	ctx, record := mc.metrics.startOperation(ctx, "DeleteObject", mc.isHTTP)
 	err := mc.storageClient.DeleteObject(ctx, bucket, object, gen, conds, opts...)
 	record(err)
@@ -1732,6 +1768,7 @@ func (mc *metricsStorageClient) DeleteObject(ctx context.Context, bucket, object
 }
 
 func (mc *metricsStorageClient) GetObject(ctx context.Context, params *getObjectParams, opts ...storageOption) (*ObjectAttrs, error) {
+	ctx = contextWithMetricsBucket(ctx, params.bucket)
 	ctx, record := mc.metrics.startOperation(ctx, "GetObject", mc.isHTTP)
 	res, err := mc.storageClient.GetObject(ctx, params, opts...)
 	record(err)
@@ -1739,6 +1776,7 @@ func (mc *metricsStorageClient) GetObject(ctx context.Context, params *getObject
 }
 
 func (mc *metricsStorageClient) UpdateObject(ctx context.Context, params *updateObjectParams, opts ...storageOption) (*ObjectAttrs, error) {
+	ctx = contextWithMetricsBucket(ctx, params.bucket)
 	ctx, record := mc.metrics.startOperation(ctx, "UpdateObject", mc.isHTTP)
 	res, err := mc.storageClient.UpdateObject(ctx, params, opts...)
 	record(err)
@@ -1746,6 +1784,7 @@ func (mc *metricsStorageClient) UpdateObject(ctx context.Context, params *update
 }
 
 func (mc *metricsStorageClient) RestoreObject(ctx context.Context, params *restoreObjectParams, opts ...storageOption) (*ObjectAttrs, error) {
+	ctx = contextWithMetricsBucket(ctx, params.bucket)
 	ctx, record := mc.metrics.startOperation(ctx, "RestoreObject", mc.isHTTP)
 	res, err := mc.storageClient.RestoreObject(ctx, params, opts...)
 	record(err)
@@ -1753,6 +1792,7 @@ func (mc *metricsStorageClient) RestoreObject(ctx context.Context, params *resto
 }
 
 func (mc *metricsStorageClient) MoveObject(ctx context.Context, params *moveObjectParams, opts ...storageOption) (*ObjectAttrs, error) {
+	ctx = contextWithMetricsBucket(ctx, params.bucket)
 	ctx, record := mc.metrics.startOperation(ctx, "MoveObject", mc.isHTTP)
 	res, err := mc.storageClient.MoveObject(ctx, params, opts...)
 	record(err)
@@ -1760,6 +1800,7 @@ func (mc *metricsStorageClient) MoveObject(ctx context.Context, params *moveObje
 }
 
 func (mc *metricsStorageClient) ComposeObject(ctx context.Context, req *composeObjectRequest, opts ...storageOption) (*ObjectAttrs, error) {
+	ctx = contextWithMetricsBucket(ctx, req.dstBucket)
 	ctx, record := mc.metrics.startOperation(ctx, "ComposeObject", mc.isHTTP)
 	res, err := mc.storageClient.ComposeObject(ctx, req, opts...)
 	record(err)
@@ -1767,6 +1808,7 @@ func (mc *metricsStorageClient) ComposeObject(ctx context.Context, req *composeO
 }
 
 func (mc *metricsStorageClient) RewriteObject(ctx context.Context, req *rewriteObjectRequest, opts ...storageOption) (*rewriteObjectResponse, error) {
+	ctx = contextWithMetricsBucket(ctx, req.dstObject.bucket)
 	ctx, record := mc.metrics.startOperation(ctx, "RewriteObject", mc.isHTTP)
 	res, err := mc.storageClient.RewriteObject(ctx, req, opts...)
 	record(err)
@@ -1774,6 +1816,7 @@ func (mc *metricsStorageClient) RewriteObject(ctx context.Context, req *rewriteO
 }
 
 func (mc *metricsStorageClient) NewRangeReader(ctx context.Context, params *newRangeReaderParams, opts ...storageOption) (*Reader, error) {
+	ctx = contextWithMetricsBucket(ctx, params.bucket)
 	ctx, record := mc.metrics.startOperation(ctx, "ReadObject", mc.isHTTP)
 	r, err := mc.storageClient.NewRangeReader(ctx, params, opts...)
 	if err != nil {
@@ -1787,17 +1830,19 @@ func (mc *metricsStorageClient) NewRangeReader(ctx context.Context, params *newR
 }
 
 func (mc *metricsStorageClient) OpenWriter(params *openWriterParams, opts ...storageOption) (internalWriter, error) {
-	ctx, _ := mc.metrics.startOperation(params.ctx, "WriteObject", mc.isHTTP)
+	ctx, _ := mc.metrics.startOperation(contextWithMetricsBucket(params.ctx, params.bucket), "WriteObject", mc.isHTTP)
 	params.ctx = ctx
 	return mc.storageClient.OpenWriter(params, opts...)
 }
 
 func (mc *metricsStorageClient) NewMultiRangeDownloader(ctx context.Context, params *newMultiRangeDownloaderParams, opts ...storageOption) (*MultiRangeDownloader, error) {
+	ctx = contextWithMetricsBucket(ctx, params.bucket)
 	ctx, _ = mc.metrics.startOperation(ctx, "ReadObject", mc.isHTTP)
 	return mc.storageClient.NewMultiRangeDownloader(ctx, params, opts...)
 }
 
 func (mc *metricsStorageClient) GetIamPolicy(ctx context.Context, resource string, version int32, opts ...storageOption) (*iampb.Policy, error) {
+	ctx = contextWithMetricsBucket(ctx, resource)
 	ctx, record := mc.metrics.startOperation(ctx, "GetIamPolicy", mc.isHTTP)
 	res, err := mc.storageClient.GetIamPolicy(ctx, resource, version, opts...)
 	record(err)
@@ -1805,6 +1850,7 @@ func (mc *metricsStorageClient) GetIamPolicy(ctx context.Context, resource strin
 }
 
 func (mc *metricsStorageClient) SetIamPolicy(ctx context.Context, resource string, policy *iampb.Policy, opts ...storageOption) error {
+	ctx = contextWithMetricsBucket(ctx, resource)
 	ctx, record := mc.metrics.startOperation(ctx, "SetIamPolicy", mc.isHTTP)
 	err := mc.storageClient.SetIamPolicy(ctx, resource, policy, opts...)
 	record(err)
@@ -1812,6 +1858,7 @@ func (mc *metricsStorageClient) SetIamPolicy(ctx context.Context, resource strin
 }
 
 func (mc *metricsStorageClient) TestIamPermissions(ctx context.Context, resource string, permissions []string, opts ...storageOption) ([]string, error) {
+	ctx = contextWithMetricsBucket(ctx, resource)
 	ctx, record := mc.metrics.startOperation(ctx, "TestIamPermissions", mc.isHTTP)
 	res, err := mc.storageClient.TestIamPermissions(ctx, resource, permissions, opts...)
 	record(err)
@@ -1852,6 +1899,7 @@ func (mc *metricsStorageClient) DeleteHMACKey(ctx context.Context, project, acce
 }
 
 func (mc *metricsStorageClient) ListNotifications(ctx context.Context, bucket string, opts ...storageOption) (map[string]*Notification, error) {
+	ctx = contextWithMetricsBucket(ctx, bucket)
 	ctx, record := mc.metrics.startOperation(ctx, "ListNotifications", mc.isHTTP)
 	res, err := mc.storageClient.ListNotifications(ctx, bucket, opts...)
 	record(err)
@@ -1859,6 +1907,7 @@ func (mc *metricsStorageClient) ListNotifications(ctx context.Context, bucket st
 }
 
 func (mc *metricsStorageClient) CreateNotification(ctx context.Context, bucket string, n *Notification, opts ...storageOption) (*Notification, error) {
+	ctx = contextWithMetricsBucket(ctx, bucket)
 	ctx, record := mc.metrics.startOperation(ctx, "CreateNotification", mc.isHTTP)
 	res, err := mc.storageClient.CreateNotification(ctx, bucket, n, opts...)
 	record(err)
@@ -1866,6 +1915,7 @@ func (mc *metricsStorageClient) CreateNotification(ctx context.Context, bucket s
 }
 
 func (mc *metricsStorageClient) DeleteNotification(ctx context.Context, bucket string, id string, opts ...storageOption) error {
+	ctx = contextWithMetricsBucket(ctx, bucket)
 	ctx, record := mc.metrics.startOperation(ctx, "DeleteNotification", mc.isHTTP)
 	err := mc.storageClient.DeleteNotification(ctx, bucket, id, opts...)
 	record(err)
@@ -1873,6 +1923,7 @@ func (mc *metricsStorageClient) DeleteNotification(ctx context.Context, bucket s
 }
 
 func (mc *metricsStorageClient) DeleteDefaultObjectACL(ctx context.Context, bucket string, entity ACLEntity, opts ...storageOption) error {
+	ctx = contextWithMetricsBucket(ctx, bucket)
 	ctx, record := mc.metrics.startOperation(ctx, "DeleteDefaultObjectACL", mc.isHTTP)
 	err := mc.storageClient.DeleteDefaultObjectACL(ctx, bucket, entity, opts...)
 	record(err)
@@ -1880,6 +1931,7 @@ func (mc *metricsStorageClient) DeleteDefaultObjectACL(ctx context.Context, buck
 }
 
 func (mc *metricsStorageClient) ListDefaultObjectACLs(ctx context.Context, bucket string, opts ...storageOption) ([]ACLRule, error) {
+	ctx = contextWithMetricsBucket(ctx, bucket)
 	ctx, record := mc.metrics.startOperation(ctx, "ListDefaultObjectACLs", mc.isHTTP)
 	res, err := mc.storageClient.ListDefaultObjectACLs(ctx, bucket, opts...)
 	record(err)
@@ -1887,6 +1939,7 @@ func (mc *metricsStorageClient) ListDefaultObjectACLs(ctx context.Context, bucke
 }
 
 func (mc *metricsStorageClient) UpdateDefaultObjectACL(ctx context.Context, bucket string, entity ACLEntity, role ACLRole, opts ...storageOption) error {
+	ctx = contextWithMetricsBucket(ctx, bucket)
 	ctx, record := mc.metrics.startOperation(ctx, "UpdateDefaultObjectACL", mc.isHTTP)
 	err := mc.storageClient.UpdateDefaultObjectACL(ctx, bucket, entity, role, opts...)
 	record(err)
@@ -1894,6 +1947,7 @@ func (mc *metricsStorageClient) UpdateDefaultObjectACL(ctx context.Context, buck
 }
 
 func (mc *metricsStorageClient) DeleteBucketACL(ctx context.Context, bucket string, entity ACLEntity, opts ...storageOption) error {
+	ctx = contextWithMetricsBucket(ctx, bucket)
 	ctx, record := mc.metrics.startOperation(ctx, "DeleteBucketACL", mc.isHTTP)
 	err := mc.storageClient.DeleteBucketACL(ctx, bucket, entity, opts...)
 	record(err)
@@ -1901,6 +1955,7 @@ func (mc *metricsStorageClient) DeleteBucketACL(ctx context.Context, bucket stri
 }
 
 func (mc *metricsStorageClient) ListBucketACLs(ctx context.Context, bucket string, opts ...storageOption) ([]ACLRule, error) {
+	ctx = contextWithMetricsBucket(ctx, bucket)
 	ctx, record := mc.metrics.startOperation(ctx, "ListBucketACLs", mc.isHTTP)
 	res, err := mc.storageClient.ListBucketACLs(ctx, bucket, opts...)
 	record(err)
@@ -1908,6 +1963,7 @@ func (mc *metricsStorageClient) ListBucketACLs(ctx context.Context, bucket strin
 }
 
 func (mc *metricsStorageClient) UpdateBucketACL(ctx context.Context, bucket string, entity ACLEntity, role ACLRole, opts ...storageOption) error {
+	ctx = contextWithMetricsBucket(ctx, bucket)
 	ctx, record := mc.metrics.startOperation(ctx, "UpdateBucketACL", mc.isHTTP)
 	err := mc.storageClient.UpdateBucketACL(ctx, bucket, entity, role, opts...)
 	record(err)
@@ -1915,6 +1971,7 @@ func (mc *metricsStorageClient) UpdateBucketACL(ctx context.Context, bucket stri
 }
 
 func (mc *metricsStorageClient) DeleteObjectACL(ctx context.Context, bucket, object string, entity ACLEntity, opts ...storageOption) error {
+	ctx = contextWithMetricsBucket(ctx, bucket)
 	ctx, record := mc.metrics.startOperation(ctx, "DeleteObjectACL", mc.isHTTP)
 	err := mc.storageClient.DeleteObjectACL(ctx, bucket, object, entity, opts...)
 	record(err)
@@ -1922,6 +1979,7 @@ func (mc *metricsStorageClient) DeleteObjectACL(ctx context.Context, bucket, obj
 }
 
 func (mc *metricsStorageClient) ListObjectACLs(ctx context.Context, bucket, object string, opts ...storageOption) ([]ACLRule, error) {
+	ctx = contextWithMetricsBucket(ctx, bucket)
 	ctx, record := mc.metrics.startOperation(ctx, "ListObjectACLs", mc.isHTTP)
 	res, err := mc.storageClient.ListObjectACLs(ctx, bucket, object, opts...)
 	record(err)
@@ -1929,6 +1987,7 @@ func (mc *metricsStorageClient) ListObjectACLs(ctx context.Context, bucket, obje
 }
 
 func (mc *metricsStorageClient) UpdateObjectACL(ctx context.Context, bucket, object string, entity ACLEntity, role ACLRole, opts ...storageOption) error {
+	ctx = contextWithMetricsBucket(ctx, bucket)
 	ctx, record := mc.metrics.startOperation(ctx, "UpdateObjectACL", mc.isHTTP)
 	err := mc.storageClient.UpdateObjectACL(ctx, bucket, object, entity, role, opts...)
 	record(err)

@@ -117,7 +117,11 @@ func (o *ObjectHandle) NewRangeReader(ctx context.Context, offset, length int64,
 	// This span covers the life of the reader. It is closed via the context
 	// in Reader.Close.
 	ctx, _ = startSpanWithBucket(ctx, o.c, o.bucket, "Object.Reader")
-	defer func() { endSpan(ctx, err) }()
+	defer func() {
+		if err != nil {
+			endSpan(ctx, err)
+		}
+	}()
 
 	if err := o.validate(); err != nil {
 		return nil, err
