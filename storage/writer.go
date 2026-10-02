@@ -24,6 +24,8 @@ import (
 	"sync/atomic"
 	"time"
 	"unicode/utf8"
+
+	"go.opentelemetry.io/otel/attribute"
 )
 
 // Interface internalWriter wraps low-level implementations which may vary
@@ -450,7 +452,10 @@ func (w *Writer) markClosed(err error) error {
 	}
 	closingErr := w.err
 	total := atomic.LoadInt64(&w.bytesWritten)
+	isParallel := w.pcu != nil
 	w.mu.Unlock()
+
+	w.setCloseSpanAttributes(total, isParallel)
 
 	if state := metricsStateFromContext(w.ctx); state != nil {
 		state.recordRequestBodySize(w.ctx, total)
@@ -580,4 +585,40 @@ func (w *Writer) error(err error) {
 	w.mu.Lock()
 	w.err = err
 	w.mu.Unlock()
+}
+
+// setCloseSpanAttributes records the upload strategy, checksum and size of
+// the upload on the Object.Writer span.
+func (w *Writer) setCloseSpanAttributes(total int64, isParallel bool) {
+	if !isOTelTracingDevEnabled() {
+		return
+	}
+	mode := writeModeResumable
+	switch {
+	case isParallel:
+		mode = writeModeParallel
+	case w.Append:
+		mode = writeModeAppendable
+	case w.ChunkSize <= 0 || total < int64(w.ChunkSize):
+		// Uploads that fit in a single chunk are sent in one request.
+		mode = writeModeOneshot
+	}
+	checksum := "none"
+	switch {
+	case w.SendCRC32C || !w.DisableAutoChecksum:
+		checksum = "crc32c"
+	case len(w.MD5) > 0:
+		checksum = "md5"
+	}
+	attrs := []attribute.KeyValue{
+		attribute.String(attrWriteMode, mode),
+		attribute.String(attrChecksumType, checksum),
+		attribute.Int64(attrPayloadSize, total),
+	}
+	if isParallel {
+		attrs = append(attrs,
+			attribute.Int(attrPartSize, w.ParallelUploadConfig.PartSize),
+			attribute.Int(attrConcurrency, w.ParallelUploadConfig.MaxConcurrency))
+	}
+	setSpanAttributes(w.ctx, attrs...)
 }

@@ -46,6 +46,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
+	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 	"google.golang.org/api/option/internaloption"
@@ -1287,7 +1288,9 @@ type MoveObjectDestination struct {
 // It is the caller's responsibility to call Close when writing is done. To
 // stop writing without saving the data, cancel the context.
 func (o *ObjectHandle) NewWriter(ctx context.Context) *Writer {
-	ctx, _ = startSpanWithBucket(ctx, o.c, o.bucket, "Object.Writer")
+	ctx, _ = startSpanWithBucket(ctx, o.c, o.bucket, "Object.Writer", trace.WithAttributes(
+		attribute.String(attrStorageURI, storageURI(o.bucket, o.object)),
+	))
 	return &Writer{
 		ctx:         ctx,
 		o:           o,

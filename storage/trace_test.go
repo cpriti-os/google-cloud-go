@@ -402,3 +402,96 @@ func TestReaderSpanEndedOnError(t *testing.T) {
 		t.Fatalf("got %d spans (status %v), want 1 errored span", len(spans), spans)
 	}
 }
+
+func spanAttrMap(s tracetest.SpanStub) map[string]string {
+	m := map[string]string{}
+	for _, kv := range s.Attributes {
+		m[string(kv.Key)] = kv.Value.Emit()
+	}
+	return m
+}
+
+func TestReaderSpanStorageAttributes(t *testing.T) {
+	ctx := context.Background()
+	te := testutil.NewOpenTelemetryTestExporter()
+	t.Cleanup(func() { te.Unregister(ctx) })
+	t.Setenv("GO_STORAGE_DEV_OTEL_TRACING", "true")
+
+	mock := &mockStorageClient{newReaderFn: func(ctx context.Context, params *newRangeReaderParams, opts ...storageOption) (*Reader, error) {
+		return &Reader{reader: io.NopCloser(strings.NewReader("hello")), remain: 5, size: 10}, nil
+	}}
+	c := &Client{tc: mock}
+	r, err := c.Bucket("b").Object("dir/o").NewRangeReader(ctx, 5, 5)
+	if err != nil {
+		t.Fatalf("NewRangeReader: %v", err)
+	}
+	io.ReadAll(r)
+	r.Close()
+
+	got := spanAttrMap(te.Spans()[0])
+	for k, want := range map[string]string{
+		"gcp.storage.uri":                "gs://b/dir/o",
+		"gcp.storage.read.mode":          "range",
+		"gcp.storage.payload.offset":     "5",
+		"gcp.storage.payload.size_bytes": "5",
+		"gcp.client.service":             "storage",
+		"gcp.client.repo":                "googleapis/google-cloud-go",
+	} {
+		if got[k] != want {
+			t.Errorf("%s = %q, want %q", k, got[k], want)
+		}
+	}
+	if _, ok := got["error.type"]; ok {
+		t.Errorf("error.type set on successful span: %q", got["error.type"])
+	}
+}
+
+func TestEndSpanSetsErrorType(t *testing.T) {
+	ctx := context.Background()
+	te := testutil.NewOpenTelemetryTestExporter()
+	t.Cleanup(func() { te.Unregister(ctx) })
+	t.Setenv("GO_STORAGE_DEV_OTEL_TRACING", "true")
+
+	ctx, _ = startSpan(ctx, "storage.TestTrace.ErrorType")
+	endSpan(ctx, &googleapi.Error{Code: http.StatusTooManyRequests})
+	if got := spanAttrMap(te.Spans()[0])["error.type"]; got != "RESOURCE_EXHAUSTED" {
+		t.Errorf("error.type = %q, want RESOURCE_EXHAUSTED", got)
+	}
+}
+
+func TestWriterSpanStorageAttributes(t *testing.T) {
+	for _, tc := range []struct {
+		name      string
+		chunkSize int
+		data      int
+		wantMode  string
+	}{
+		{"oneshot when chunking disabled", 0, 10, "oneshot"},
+		{"oneshot when it fits in one chunk", 256 * 1024, 10, "oneshot"},
+		{"resumable", 256 * 1024, 300 * 1024, "resumable"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := context.Background()
+			te := testutil.NewOpenTelemetryTestExporter()
+			t.Cleanup(func() { te.Unregister(ctx) })
+			t.Setenv("GO_STORAGE_DEV_OTEL_TRACING", "true")
+
+			w := (&Client{}).Bucket("b").Object("o").NewWriter(ctx)
+			w.ChunkSize = tc.chunkSize
+			w.bytesWritten = int64(tc.data)
+			w.markClosed(nil)
+
+			got := spanAttrMap(te.Spans()[0])
+			for k, want := range map[string]string{
+				"gcp.storage.uri":                "gs://b/o",
+				"gcp.storage.write.mode":         tc.wantMode,
+				"gcp.storage.checksum.type":      "crc32c",
+				"gcp.storage.payload.size_bytes": fmt.Sprint(tc.data),
+			} {
+				if got[k] != want {
+					t.Errorf("%s = %q, want %q", k, got[k], want)
+				}
+			}
+		})
+	}
+}

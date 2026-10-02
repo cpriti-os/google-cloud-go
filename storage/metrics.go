@@ -846,6 +846,13 @@ func (cm *clientMetrics) recordAttempt(ctx context.Context, system, method, serv
 		attribute.String("error.type", errorType),
 	}
 	attemptAttrs := append(append(make([]attribute.KeyValue, 0, len(base)+2), base...), statusAttr)
+	if isOTelTracingDevEnabled() {
+		eventAttrs := append(append(make([]attribute.KeyValue, 0, len(base)+2), base...), statusAttr)
+		if attemptNumber > 0 {
+			eventAttrs = append(eventAttrs, attribute.Int(attrAttemptNumber, attemptNumber))
+		}
+		addSpanEvent(ctx, attemptSpanEvent, eventAttrs...)
+	}
 	cm.attempts.Add(ctx, 1, metric.WithAttributes(injectAPIMethod(ctx, attemptAttrs)...))
 	if errorType != errorTypeOK {
 		cm.errors.Add(ctx, 1, metric.WithAttributes(injectAPIMethod(ctx, base)...))
@@ -1014,11 +1021,11 @@ func (rt *metricsRoundTripper) RoundTrip(req *http.Request) (*http.Response, err
 	ctx := req.Context()
 	logicalMethod := httpLogicalMethod(ctx)
 	host := stripPort(req.URL.Host)
-	rpcAttrs := metric.WithAttributes(
+	rpcAttrs := metric.WithAttributes(injectBucket(ctx, []attribute.KeyValue{
 		attribute.String("rpc.method", logicalMethod),
 		attribute.String("rpc.system.name", "http"),
 		attribute.String("server.address", host),
-	)
+	})...)
 	if cm.activeRequests != nil {
 		cm.activeRequests.Add(ctx, 1, rpcAttrs)
 	}
@@ -1305,11 +1312,11 @@ func metricsInterceptors(cm *clientMetrics) (grpc.UnaryClientInterceptor, grpc.S
 
 		var rpcAttrs metric.MeasurementOption
 		if cm.activeRequests != nil {
-			rpcAttrs = metric.WithAttributes(
+			rpcAttrs = metric.WithAttributes(injectBucket(ctx, []attribute.KeyValue{
 				attribute.String("rpc.method", logicalMethod),
 				attribute.String("rpc.system.name", "grpc"),
 				attribute.String("server.address", stripPort(target)),
-			)
+			})...)
 			cm.activeRequests.Add(ctx, 1, rpcAttrs)
 			defer cm.activeRequests.Add(ctx, -1, rpcAttrs)
 		}
@@ -1339,11 +1346,11 @@ func metricsInterceptors(cm *clientMetrics) (grpc.UnaryClientInterceptor, grpc.S
 
 		var rpcAttrs metric.MeasurementOption
 		if cm.activeRequests != nil {
-			rpcAttrs = metric.WithAttributes(
+			rpcAttrs = metric.WithAttributes(injectBucket(ctx, []attribute.KeyValue{
 				attribute.String("rpc.method", logicalMethod),
 				attribute.String("rpc.system.name", "grpc"),
 				attribute.String("server.address", stripPort(target)),
-			)
+			})...)
 			cm.activeRequests.Add(ctx, 1, rpcAttrs)
 		}
 
@@ -1509,6 +1516,17 @@ func contextWithMetricsBucket(ctx context.Context, bucket string) context.Contex
 	return context.WithValue(ctx, metricsBucketKey{}, bucket)
 }
 
+// injectBucket appends gcp.storage.bucket from ctx to attrs, if present.
+func injectBucket(ctx context.Context, attrs []attribute.KeyValue) []attribute.KeyValue {
+	if ctx == nil {
+		return attrs
+	}
+	if bucket, ok := ctx.Value(metricsBucketKey{}).(string); ok && bucket != "" {
+		attrs = append(attrs, attribute.String(bucketAttrKey, bucket))
+	}
+	return attrs
+}
+
 // injectAPIMethod appends the operation-scoped attributes held in ctx
 // (gcp.client.method and gcp.storage.bucket) to attrs.
 func injectAPIMethod(ctx context.Context, attrs []attribute.KeyValue) []attribute.KeyValue {
@@ -1518,10 +1536,7 @@ func injectAPIMethod(ctx context.Context, attrs []attribute.KeyValue) []attribut
 	if apiMethod, ok := ctx.Value(apiMethodKey{}).(string); ok {
 		attrs = append(attrs, attribute.String("gcp.client.method", apiMethod))
 	}
-	if bucket, ok := ctx.Value(metricsBucketKey{}).(string); ok && bucket != "" {
-		attrs = append(attrs, attribute.String(bucketAttrKey, bucket))
-	}
-	return attrs
+	return injectBucket(ctx, attrs)
 }
 
 type metricsState struct {

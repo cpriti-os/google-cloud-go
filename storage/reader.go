@@ -25,6 +25,9 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 var crc32cTable = crc32.MakeTable(crc32.Castagnoli)
@@ -116,7 +119,11 @@ func (o *ObjectHandle) NewReader(ctx context.Context, opts ...ReaderOption) (*Re
 func (o *ObjectHandle) NewRangeReader(ctx context.Context, offset, length int64, opts ...ReaderOption) (r *Reader, err error) {
 	// This span covers the life of the reader. It is closed via the context
 	// in Reader.Close.
-	ctx, _ = startSpanWithBucket(ctx, o.c, o.bucket, "Object.Reader")
+	ctx, _ = startSpanWithBucket(ctx, o.c, o.bucket, "Object.Reader", trace.WithAttributes(
+		attribute.String(attrStorageURI, storageURI(o.bucket, o.object)),
+		attribute.String(attrReadMode, readMode(offset, length)),
+		attribute.Int64(attrPayloadOffset, offset),
+	))
 	defer func() {
 		if err != nil {
 			endSpan(ctx, err)
@@ -414,6 +421,7 @@ func (r *Reader) Close() error {
 			r.metricsState.record(err)
 		}
 	}
+	setSpanAttributes(r.ctx, attribute.Int64(attrPayloadSize, atomic.LoadInt64(&r.bytesRead)))
 	endSpan(r.ctx, err)
 	return err
 }

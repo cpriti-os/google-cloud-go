@@ -54,6 +54,8 @@ func traceAttributesFromContext(ctx context.Context) ([]attribute.KeyValue, bool
 const (
 	defaultTracerName = "cloud.google.com/go/storage"
 	gcpClientArtifact = "cloud.google.com/go/storage"
+	gcpClientService  = "storage"
+	gcpClientRepo     = "googleapis/google-cloud-go"
 )
 
 // isOTelTracingDevEnabled checks the development flag until experimental feature is launched.
@@ -152,6 +154,7 @@ func endSpan(ctx context.Context, err error) {
 	} else {
 		span := trace.SpanFromContext(ctx)
 		if err != nil {
+			span.SetAttributes(attribute.String("error.type", spanErrorType(err)))
 			span.SetStatus(otelcodes.Error, err.Error())
 			span.RecordError(err)
 		}
@@ -172,7 +175,69 @@ func getCommonAttributes() []attribute.KeyValue {
 	return []attribute.KeyValue{
 		attribute.String("gcp.client.version", internal.Version),
 		attribute.String("gcp.client.artifact", gcpClientArtifact),
+		attribute.String("gcp.client.service", gcpClientService),
+		attribute.String("gcp.client.repo", gcpClientRepo),
 	}
+}
+
+// Storage-specific span attributes. See the GCS client libraries trace
+// attributes review for definitions.
+const (
+	attrReadMode        = "gcp.storage.read.mode"
+	attrWriteMode       = "gcp.storage.write.mode"
+	attrPayloadOffset   = "gcp.storage.payload.offset"
+	attrPayloadSize     = "gcp.storage.payload.size_bytes"
+	attrChecksumType    = "gcp.storage.checksum.type"
+	attrStorageURI      = "gcp.storage.uri"
+	attrPartSize        = "gcp.storage.write.parallel.part_size"
+	attrConcurrency     = "gcp.storage.write.parallel.concurrency"
+	attrAttemptNumber   = "gcp.client.retry.attempt_number"
+	attemptSpanEvent    = "gcp.storage.attempt"
+	readModeFull        = "full"
+	readModeRange       = "range"
+	writeModeOneshot    = "oneshot"
+	writeModeResumable  = "resumable"
+	writeModeAppendable = "appendable"
+	writeModeParallel   = "parallel"
+)
+
+// storageURI returns the gs:// URI of an object.
+func storageURI(bucket, object string) string {
+	return "gs://" + bucket + "/" + object
+}
+
+// readMode reports whether a read of [offset, offset+length) covers the whole
+// object.
+func readMode(offset, length int64) string {
+	if offset == 0 && length < 0 {
+		return readModeFull
+	}
+	return readModeRange
+}
+
+// spanErrorType classifies err with the same low-cardinality values that are
+// used for the error.type metric attribute.
+func spanErrorType(err error) string {
+	var apiErr *googleapi.Error
+	return computeErrorType(err, errors.As(err, &apiErr), 0)
+}
+
+// setSpanAttributes sets attributes on the span in ctx when OpenTelemetry
+// tracing is enabled.
+func setSpanAttributes(ctx context.Context, attrs ...attribute.KeyValue) {
+	if ctx == nil || !isOTelTracingDevEnabled() {
+		return
+	}
+	trace.SpanFromContext(ctx).SetAttributes(attrs...)
+}
+
+// addSpanEvent adds an event to the span in ctx when OpenTelemetry tracing is
+// enabled.
+func addSpanEvent(ctx context.Context, name string, attrs ...attribute.KeyValue) {
+	if ctx == nil || !isOTelTracingDevEnabled() {
+		return
+	}
+	trace.SpanFromContext(ctx).AddEvent(name, trace.WithAttributes(attrs...))
 }
 
 func appendPackageName(spanName string) string {

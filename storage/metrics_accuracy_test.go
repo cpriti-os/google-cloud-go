@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/auth"
+	"cloud.google.com/go/internal/testutil"
 	"go.opentelemetry.io/otel/attribute"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
@@ -561,5 +562,88 @@ func TestContextWithMetricsBucketKeepsOuterBucket(t *testing.T) {
 	}
 	if _, ok := attrLookup(injectAPIMethod(context.Background(), nil))[bucketAttrKey]; ok {
 		t.Error("bucket attribute set without a bucket in context")
+	}
+}
+
+func TestAttemptSpanEvents(t *testing.T) {
+	te := testutil.NewOpenTelemetryTestExporter()
+	t.Cleanup(func() { te.Unregister(context.Background()) })
+	t.Setenv("GO_STORAGE_DEV_OTEL_TRACING", "true")
+
+	cm, _ := accuracyMetrics(t)
+	calls := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		if calls == 1 {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer srv.Close()
+	rt := &metricsRoundTripper{base: http.DefaultTransport, metrics: cm}
+
+	ctx, _ := startSpan(context.Background(), "Object.Attrs")
+	for attempt := 1; attempt <= 2; attempt++ {
+		req, _ := http.NewRequestWithContext(ctx, "GET", srv.URL+"/storage/v1/b/b/o/o", nil)
+		req.Header.Set(xGoogHeaderKey, fmt.Sprintf("gl-go/1 gccl-invocation-id/x gccl-attempt-count/%d", attempt))
+		resp, err := rt.RoundTrip(req)
+		if err != nil {
+			t.Fatalf("RoundTrip: %v", err)
+		}
+		io.ReadAll(resp.Body)
+		resp.Body.Close()
+	}
+	endSpan(ctx, nil)
+
+	events := te.Spans()[0].Events
+	if len(events) != 2 {
+		t.Fatalf("got %d attempt events, want 2", len(events))
+	}
+	for i, want := range []struct{ num, errType string }{{"1", "UNAVAILABLE"}, {"2", "OK"}} {
+		got := attrLookup(events[i].Attributes)
+		if events[i].Name != "gcp.storage.attempt" || got["gcp.client.retry.attempt_number"] != want.num || got["error.type"] != want.errType {
+			t.Errorf("event %d = %s %v, want attempt %s error.type %s", i, events[i].Name, got, want.num, want.errType)
+		}
+	}
+}
+
+func TestActiveRequestsCarryBucket(t *testing.T) {
+	cm, mr := accuracyMetrics(t)
+	release := make(chan struct{})
+	started := make(chan struct{}, 4)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		started <- struct{}{}
+		<-release
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer srv.Close()
+	rt := &metricsRoundTripper{base: http.DefaultTransport, metrics: cm}
+	ctx := contextWithMetricsBucket(context.Background(), "par-bucket")
+
+	const parallel = 4
+	done := make(chan struct{})
+	for i := 0; i < parallel; i++ {
+		go func() {
+			defer func() { done <- struct{}{} }()
+			req, _ := http.NewRequestWithContext(ctx, "GET", srv.URL+"/storage/v1/b/par-bucket/o/o", nil)
+			if resp, err := rt.RoundTrip(req); err == nil {
+				io.ReadAll(resp.Body)
+				resp.Body.Close()
+			}
+		}()
+	}
+	for i := 0; i < parallel; i++ {
+		<-started
+	}
+	if c, _ := metricPoints(t, mr, "gcp.storage.client.request.active", map[string]string{bucketAttrKey: "par-bucket"}); c != parallel {
+		t.Errorf("request.active during %d parallel requests = %d", parallel, c)
+	}
+	close(release)
+	for i := 0; i < parallel; i++ {
+		<-done
+	}
+	if c, _ := metricPoints(t, mr, "gcp.storage.client.request.active", map[string]string{bucketAttrKey: "par-bucket"}); c != 0 {
+		t.Errorf("request.active after completion = %d, want 0", c)
 	}
 }
