@@ -647,3 +647,18 @@ func TestActiveRequestsCarryBucket(t *testing.T) {
 		t.Errorf("request.active after completion = %d, want 0", c)
 	}
 }
+
+func TestMetricsResourceInstanceIDUniquePerClient(t *testing.T) {
+	id := func() string {
+		for _, kv := range metricsResourceAttributes() {
+			if kv.Key == "gcp.client.instance_id" {
+				return kv.Value.AsString()
+			}
+		}
+		return ""
+	}
+	a, b := id(), id()
+	if a == "" || a == b {
+		t.Errorf("gcp.client.instance_id = %q, %q; want two distinct non-empty values", a, b)
+	}
+}

@@ -39,6 +39,7 @@ import (
 	"cloud.google.com/go/iam/apiv1/iampb"
 	"cloud.google.com/go/storage/internal"
 	mexporter "github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric"
+	"github.com/google/uuid"
 	"github.com/googleapis/gax-go/v2/callctx"
 	"go.opentelemetry.io/contrib/detectors/gcp"
 	"go.opentelemetry.io/otel/attribute"
@@ -184,6 +185,21 @@ func detectMetricsProjectID(ctx context.Context) string {
 	return ""
 }
 
+// metricsResourceAttributes returns the static attributes of every client
+// metric. gcp.client.instance_id identifies the client instance: without it,
+// two clients on the same host (for example two processes, or two GKE pods
+// sharing a node) that call the same method on the same bucket write the same
+// time series, which Cloud Monitoring rejects. It matches the instance_id label
+// of the storage.googleapis.com/Client monitored resource.
+func metricsResourceAttributes() []attribute.KeyValue {
+	return []attribute.KeyValue{
+		attribute.String("gcp.client.version", internal.Version),
+		attribute.String("gcp.client.service", "storage"),
+		attribute.String("gcp.client.artifact", "cloud.google.com/go/storage"),
+		attribute.String("gcp.client.instance_id", uuid.New().String()),
+	}
+}
+
 // initMetrics initializes clientMetrics with a meter provider and registered exporter.
 func initMetrics(ctx context.Context, projectID string, config *storageConfig) (*clientMetrics, func(), error) {
 	var provider *sdkmetric.MeterProvider
@@ -221,11 +237,7 @@ func initMetrics(ctx context.Context, projectID string, config *storageConfig) (
 		// Static common attributes are defined as Resource Attributes.
 		res, err := resource.New(ctx,
 			resource.WithDetectors(gcp.NewDetector()),
-			resource.WithAttributes(
-				attribute.String("gcp.client.version", internal.Version),
-				attribute.String("gcp.client.service", "storage"),
-				attribute.String("gcp.client.artifact", "cloud.google.com/go/storage"),
-			),
+			resource.WithAttributes(metricsResourceAttributes()...),
 		)
 		if err != nil {
 			return nil, nil, fmt.Errorf("storage: creating metrics resource: %w", err)
