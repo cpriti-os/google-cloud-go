@@ -18,6 +18,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
@@ -1162,12 +1163,12 @@ func (cm *clientMetrics) recordHTTPGFEMetrics(ctx context.Context, resp *http.Re
 		headerVal = resp.Header.Get("X-Goog-Gfe-Service-Time")
 	}
 	if headerVal == "" {
-		cm.gfeHeaderMissing.Add(ctx, 1, metric.WithAttributes(
+		cm.gfeHeaderMissing.Add(ctx, 1, metric.WithAttributes(injectBucket(ctx, []attribute.KeyValue{
 			attribute.String("rpc.method", logicalMethod),
 			attribute.String("rpc.system.name", "http"),
 			attribute.String("server.address", host),
 			attribute.String("error.type", errorType),
-		))
+		})...))
 		return
 	}
 	if cm.gfeDuration != nil {
@@ -1271,9 +1272,11 @@ func grpcResponded(err error, headerMD, trailerMD metadata.MD, p *peer.Peer) boo
 	return p != nil && p.Addr != nil && !isClientSideErrorType(computeErrorType(err, false, 0))
 }
 
-// recordGFEMetrics records the GFE service time from the
-// x-goog-gfe-service-time response metadata, or counts a missing header.
-// DirectPath responses never carry the header and are not counted as missing.
+// recordGFEMetrics records the server-reported service time from the
+// x-goog-gfe-service-time response metadata or, when absent, from the
+// server elapsed time in the grpc-server-stats-bin trailer. Otherwise it
+// counts a missing header. DirectPath responses without either are not
+// counted as missing.
 func (cm *clientMetrics) recordGFEMetrics(ctx context.Context, headerMD, trailerMD metadata.MD, err error, logicalMethod, target string, p *peer.Peer) {
 	if cm.gfeHeaderMissing == nil {
 		return
@@ -1282,32 +1285,52 @@ func (cm *clientMetrics) recordGFEMetrics(ctx context.Context, headerMD, trailer
 	if len(headerVals) == 0 {
 		headerVals = trailerMD.Get("x-goog-gfe-service-time")
 	}
-	headerVal := ""
-	if len(headerVals) > 0 {
-		headerVal = headerVals[0]
+	seconds, ok := -1.0, false
+	if len(headerVals) > 0 && headerVals[0] != "" {
+		if ms, parseErr := strconv.ParseFloat(headerVals[0], 64); parseErr == nil {
+			seconds, ok = ms/1000.0, true
+		}
+	}
+	if !ok {
+		if d, found := grpcServerElapsed(trailerMD); found {
+			seconds, ok = d.Seconds(), true
+		}
 	}
 	server := stripPort(target)
-	if headerVal == "" {
+	if !ok {
 		if isDirectPathPeer(p) {
 			return
 		}
-		cm.gfeHeaderMissing.Add(ctx, 1, metric.WithAttributes(
+		cm.gfeHeaderMissing.Add(ctx, 1, metric.WithAttributes(injectBucket(ctx, []attribute.KeyValue{
 			attribute.String("rpc.method", logicalMethod),
 			attribute.String("rpc.system.name", "grpc"),
 			attribute.String("server.address", server),
 			attribute.String("error.type", computeErrorType(err, false, 0)),
-		))
+		})...))
 		return
 	}
 	if cm.gfeDuration != nil {
-		if ms, parseErr := strconv.ParseFloat(headerVal, 64); parseErr == nil {
-			cm.gfeDuration.Record(ctx, ms/1000.0, metric.WithAttributes(
-				attribute.String("rpc.method", logicalMethod),
-				attribute.String("rpc.system.name", "grpc"),
-				attribute.String("server.address", server),
-			))
-		}
+		cm.gfeDuration.Record(ctx, seconds, metric.WithAttributes(injectBucket(ctx, []attribute.KeyValue{
+			attribute.String("rpc.method", logicalMethod),
+			attribute.String("rpc.system.name", "grpc"),
+			attribute.String("server.address", server),
+		})...))
 	}
+}
+
+// grpcServerElapsed decodes the server elapsed time from the
+// grpc-server-stats-bin trailer: version byte 0, field ID 0, then the
+// elapsed time in nanoseconds as a little-endian uint64.
+func grpcServerElapsed(md metadata.MD) (time.Duration, bool) {
+	vals := md.Get("grpc-server-stats-bin")
+	if len(vals) == 0 {
+		return 0, false
+	}
+	b := []byte(vals[0])
+	if len(b) != 10 || b[0] != 0 || b[1] != 0 {
+		return 0, false
+	}
+	return time.Duration(binary.LittleEndian.Uint64(b[2:])), true
 }
 
 // metricsInterceptors returns gRPC client interceptors.

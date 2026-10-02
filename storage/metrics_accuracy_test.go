@@ -16,6 +16,7 @@ package storage
 
 import (
 	"context"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
@@ -660,5 +661,30 @@ func TestMetricsResourceInstanceIDUniquePerClient(t *testing.T) {
 	a, b := id(), id()
 	if a == "" || a == b {
 		t.Errorf("gcp.client.instance_id = %q, %q; want two distinct non-empty values", a, b)
+	}
+}
+
+func TestGRPCServerElapsedFallback(t *testing.T) {
+	b := make([]byte, 10)
+	binary.LittleEndian.PutUint64(b[2:], uint64(45*time.Millisecond))
+	md := metadata.Pairs("grpc-server-stats-bin", string(b))
+	d, ok := grpcServerElapsed(md)
+	if !ok || d != 45*time.Millisecond {
+		t.Fatalf("grpcServerElapsed = %v, %v; want 45ms, true", d, ok)
+	}
+	for _, bad := range []metadata.MD{nil, metadata.Pairs("grpc-server-stats-bin", "\x01\x00abcdefgh"), metadata.Pairs("grpc-server-stats-bin", "short")} {
+		if _, ok := grpcServerElapsed(bad); ok {
+			t.Errorf("grpcServerElapsed(%v) ok = true, want false", bad)
+		}
+	}
+
+	cm, mr := accuracyMetrics(t)
+	ctx := contextWithMetricsBucket(context.Background(), "b1")
+	cm.recordGFEMetrics(ctx, nil, md, nil, "ReadObject", "storage.googleapis.com:443", nil)
+	if c, sum := metricPoints(t, mr, "gcp.storage.client.gfe.duration", map[string]string{"gcp.storage.bucket": "b1"}); c != 1 || sum != 0.045 {
+		t.Errorf("gfe.duration count=%d sum=%v, want 1, 0.045", c, sum)
+	}
+	if c, _ := metricPoints(t, mr, "gcp.storage.client.gfe.header_missing", nil); c != 0 {
+		t.Errorf("gfe.header_missing = %d, want 0", c)
 	}
 }
