@@ -688,3 +688,16 @@ func TestGRPCServerElapsedFallback(t *testing.T) {
 		t.Errorf("gfe.header_missing = %d, want 0", c)
 	}
 }
+
+// Reader.Close records the response body size with the caller's context, not
+// the operation context. The bucket must still be attached.
+func TestBodySizeKeepsBucketWithCallerContext(t *testing.T) {
+	cm, mr := accuracyMetrics(t)
+	opCtx, record := cm.startOperation(contextWithMetricsBucket(context.Background(), "b1"), "ReadObject", true)
+	state := metricsStateFromContext(opCtx)
+	state.recordResponseBodySize(context.Background(), 1234) // caller's context: no bucket
+	record(nil)
+	if c, sum := metricPoints(t, mr, "gcp.storage.client.response.body.size", map[string]string{bucketAttrKey: "b1"}); c != 1 || sum != 1234 {
+		t.Errorf("response.body.size with bucket: count=%d sum=%v, want 1, 1234", c, sum)
+	}
+}

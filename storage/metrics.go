@@ -1589,6 +1589,9 @@ type metricsState struct {
 	composite bool
 	// parent is the composite operation this operation belongs to.
 	parent *metricsState
+	// opCtx is the operation context (with bucket and API method
+	// annotations); used when a record call only has the caller's context.
+	opCtx context.Context
 }
 
 // recordResponseBodySize records the number of object bytes delivered to the
@@ -1616,7 +1619,15 @@ func (s *metricsState) recordBodySize(ctx context.Context, h metric.Int64Histogr
 		return
 	}
 	s.sizeOnce.Do(func() {
-		h.Record(ctx, n, metric.WithAttributes(injectAPIMethod(ctx, []attribute.KeyValue{
+		// Reader.Close and Writer.Close pass the caller's context, which does
+		// not carry the operation-scoped annotations (bucket, API method)
+		// added by the metrics wrapper. Take the attributes from the
+		// operation context when it is available.
+		attrCtx := ctx
+		if s.opCtx != nil {
+			attrCtx = s.opCtx
+		}
+		h.Record(ctx, n, metric.WithAttributes(injectAPIMethod(attrCtx, []attribute.KeyValue{
 			attribute.String("rpc.system.name", s.getSystemName()),
 			attribute.String("rpc.method", s.method),
 			attribute.String("server.address", stripPort(s.getTarget())),
@@ -1706,6 +1717,7 @@ func (cm *clientMetrics) startOperation(ctx context.Context, method string, isHT
 	state.record = record
 
 	ctx = contextWithMetricsState(ctx, state)
+	state.opCtx = ctx
 	return ctx, record
 }
 
