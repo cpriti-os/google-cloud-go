@@ -26,7 +26,7 @@ flowchart LR
     Cgo --> Core["Rust core — google-cloud-storage crate<br/>Tokio runtime, reqwest HTTP/1.1, gRPC for list"]
 ```
 
-Three layers, all in [`storage/internal/rust-poc`](file:///usr/local/google/home/cpriti/thickthin_go_rust_poc):
+Three layers, all in [`storage/internal/rust-poc`](./):
 
 **(a) Rust core with a C interface** — [lib.rs](./gcs_core/src/lib.rs), [stream.rs](./gcs_core/src/stream.rs), ~800 lines on top of the unmodified [`google-cloud-storage` 1.20 crate](https://crates.io/crates/google-cloud-storage), compiled to a static library (`libgcs_core.a`).
 - One process‑wide [Tokio](https://tokio.rs) async runtime (Rust's equivalent of the Go scheduler).
