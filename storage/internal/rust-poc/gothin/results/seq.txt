@@ -1,0 +1,46 @@
+=== round 1 native (sequential) ===
+backend=go-json bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-json  write      1MiB         83ms     145ms    1.119s       12.0        5.2
+go-json  read       1MiB         44ms      63ms      81ms       22.5       21.0
+go-json  write      16MiB       291ms     333ms     633ms       55.0       50.0
+go-json  read       16MiB       142ms     202ms     445ms      112.5      101.4
+go-json  write      128MiB     1.416s     1.52s     1.53s       90.4       89.7
+go-json  read       128MiB      866ms    1.065s    1.247s      147.8      145.3
+go-json  list       -            78ms      82ms     100ms  (objects=1000)
+rss_max_kb=536304 user=11.25 sys=22.78 wall=53.26
+=== round 1 rust (sequential) ===
+client init: 59.518038ms
+backend=go-rust bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-rust  write      1MiB         93ms     114ms     422ms       10.8        7.8
+go-rust  read       1MiB         45ms      52ms      59ms       22.2       22.2
+go-rust  write      16MiB       276ms     297ms     328ms       58.1       57.3
+go-rust  read       16MiB       102ms     122ms     124ms      157.0      158.7
+go-rust  write      128MiB     1.515s    1.612s     1.63s       84.5       84.0
+go-rust  read       128MiB      515ms     624ms     658ms      248.4      249.2
+go-rust  list       -            79ms     102ms     118ms  (objects=1000)
+rss_max_kb=473920 user=7.55 sys=10.65 wall=40.46
+=== round 2 native (sequential) ===
+backend=go-json bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-json  write      1MiB        102ms     131ms     433ms        9.8        7.1
+go-json  read       1MiB         43ms      51ms      66ms       23.5       23.2
+go-json  write      16MiB       275ms     325ms     361ms       58.1       56.1
+go-json  read       16MiB       110ms     131ms     149ms      146.0      141.5
+go-json  write      128MiB      1.31s    1.543s     1.59s       97.7       95.0
+go-json  read       128MiB      578ms     771ms    1.107s      221.6      208.3
+go-json  list       -            79ms      96ms     111ms  (objects=1000)
+rss_max_kb=535968 user=9.94 sys=18.37 wall=42.15
+=== round 2 rust (sequential) ===
+client init: 58.991318ms
+backend=go-rust bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-rust  write      1MiB        106ms     108ms     456ms        9.5        7.3
+go-rust  read       1MiB         40ms      54ms      64ms       25.1       23.6
+go-rust  write      16MiB       267ms     297ms     301ms       59.9       59.5
+go-rust  read       16MiB        93ms     114ms     161ms      172.5      166.0
+go-rust  write      128MiB     1.548s    1.665s    1.752s       82.7       81.6
+go-rust  read       128MiB      451ms     537ms     642ms      284.1      282.4
+go-rust  list       -            85ms     135ms     135ms  (objects=1000)
+rss_max_kb=471632 user=7.53 sys=10.25 wall=38.97

@@ -1,0 +1,6 @@
+client init: 38.74388ms
+backend=go-rust bucket=cpriti-thickthin-poc-asse1 parallel=256
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-rust  write      16MiB      1.672s    2.589s    3.633s        9.6        9.3
+go-rust  read       16MiB       728ms    1.553s    3.077s       22.0       19.2
+go-rust  list       -              0s        0s        0s  (objects=0)

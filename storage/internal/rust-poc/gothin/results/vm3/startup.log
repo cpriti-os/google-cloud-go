@@ -1,0 +1,2401 @@
++ export HOME=/root PATH=/root/.cargo/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
++ HOME=/root
++ PATH=/root/.cargo/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
++ cd /opt/poc/gothin
++ stage seq-round3
+++ date -u
++ echo '=== STAGE: seq-round3 Tue Oct 13 06:53:41 UTC 2026 ==='
+=== STAGE: seq-round3 Tue Oct 13 06:53:41 UTC 2026 ===
++ echo seq-round3
++ gsutil -q cp /var/log/bench3/STAGE gs://cpriti-thickthin-poc-asse1/results/vm3/STAGE
++ SIZES=128MiB,512MiB
++ ITERS=15
++ run seq_native_h2_r3 ./bin/bench_native -sizes 128MiB,512MiB -iters 15 -list-iters 10
++ local name=seq_native_h2_r3
++ shift
+++ date -u
++ echo '##### seq_native_h2_r3 Tue Oct 13 06:53:43 UTC 2026'
+##### seq_native_h2_r3 Tue Oct 13 06:53:43 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./bin/bench_native -sizes 128MiB,512MiB -iters 15 -list-iters 10
++ tee /var/log/bench3/seq_native_h2_r3.txt
+backend=go-json bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-json  write      128MiB     1.424s    1.779s    1.856s       89.9       87.8
+go-json  read       128MiB      537ms     636ms     752ms      238.6      244.5
+go-json  write      512MiB     5.196s    5.528s    5.647s       98.5       99.1
+go-json  read       512MiB     1.766s    2.268s    4.121s      290.0      268.2
+go-json  list       -            64ms      77ms     136ms  (objects=1000)
+rss_max_kb=1613660 user=51.69 sys=36.40 wall=211.36
++ gsutil -q cp /var/log/bench3/seq_native_h2_r3.txt gs://cpriti-thickthin-poc-asse1/results/vm3/
++ run seq_native_h1_r3 env NATIVE_HTTP1=1 ./bin/bench_native -sizes 128MiB,512MiB -iters 15 -list-iters 10
++ local name=seq_native_h1_r3
++ shift
+++ date -u
++ echo '##### seq_native_h1_r3 Tue Oct 13 06:57:15 UTC 2026'
+##### seq_native_h1_r3 Tue Oct 13 06:57:15 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' env NATIVE_HTTP1=1 ./bin/bench_native -sizes 128MiB,512MiB -iters 15 -list-iters 10
++ tee /var/log/bench3/seq_native_h1_r3.txt
+backend=go-json-h1 bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-json-h1 write      128MiB     1.313s    1.396s    1.536s       97.5       97.0
+go-json-h1 read       128MiB      541ms     663ms     857ms      236.6      227.5
+go-json-h1 write      512MiB     5.002s     5.24s    5.343s      102.4      102.7
+go-json-h1 read       512MiB      1.93s    2.244s    2.925s      265.3      259.8
+go-json-h1 list       -            71ms      82ms      86ms  (objects=1000)
+rss_max_kb=1620568 user=31.56 sys=22.55 wall=211.09
++ gsutil -q cp /var/log/bench3/seq_native_h1_r3.txt gs://cpriti-thickthin-poc-asse1/results/vm3/
++ run seq_rust_block_r3 ./bin/bench_rust -sizes 128MiB,512MiB -iters 15 -list-iters 10
++ local name=seq_rust_block_r3
++ shift
+++ date -u
++ echo '##### seq_rust_block_r3 Tue Oct 13 07:00:47 UTC 2026'
+##### seq_rust_block_r3 Tue Oct 13 07:00:47 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./bin/bench_rust -sizes 128MiB,512MiB -iters 15 -list-iters 10
++ tee /var/log/bench3/seq_rust_block_r3.txt
+client init: 68.459518ms
+backend=go-rust bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-rust  write      128MiB     1.768s    1.923s    1.977s       72.4       72.8
+go-rust  read       128MiB      750ms    1.022s    1.319s      170.8      158.9
+go-rust  write      512MiB     6.732s    6.975s    7.856s       76.0       75.6
+go-rust  read       512MiB     3.288s    3.993s    5.637s      155.7      151.2
+go-rust  list       -            72ms      88ms     108ms  (objects=1000)
+rss_max_kb=1857036 user=53.33 sys=46.40 wall=319.13
++ gsutil -q cp /var/log/bench3/seq_rust_block_r3.txt gs://cpriti-thickthin-poc-asse1/results/vm3/
++ run seq_rust_async_r3 env RUST_ASYNC=1 ./bin/bench_rust -sizes 128MiB,512MiB -iters 15 -list-iters 10
++ local name=seq_rust_async_r3
++ shift
+++ date -u
++ echo '##### seq_rust_async_r3 Tue Oct 13 07:06:07 UTC 2026'
+##### seq_rust_async_r3 Tue Oct 13 07:06:07 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' env RUST_ASYNC=1 ./bin/bench_rust -sizes 128MiB,512MiB -iters 15 -list-iters 10
++ tee /var/log/bench3/seq_rust_async_r3.txt
+client init: 31.765208ms
+backend=go-rust-async bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-rust-async write      128MiB     1.614s    1.672s    1.821s       79.3       78.8
+go-rust-async read       128MiB      542ms     688ms    1.195s      236.2      221.8
+go-rust-async write      512MiB     6.235s    6.553s      6.7s       82.1       81.3
+go-rust-async read       512MiB     2.034s    2.445s    2.855s      251.8      245.8
+go-rust-async list       -            63ms      75ms      90ms  (objects=1000)
+rss_max_kb=1862296 user=31.56 sys=19.05 wall=240.97
++ gsutil -q cp /var/log/bench3/seq_rust_async_r3.txt gs://cpriti-thickthin-poc-asse1/results/vm3/
++ stage threadnames
+++ date -u
++ echo '=== STAGE: threadnames Tue Oct 13 07:10:09 UTC 2026 ==='
+=== STAGE: threadnames Tue Oct 13 07:10:09 UTC 2026 ===
++ echo threadnames
++ gsutil -q cp /var/log/bench3/STAGE gs://cpriti-thickthin-poc-asse1/results/vm3/STAGE
++ threadnames par256_rust_block_threads env
++ local name=par256_rust_block_threads
++ shift
++ local pid=2553
++ local max=0
++ kill -0 2553
++ env ./bin/bench_rust -sizes 16MiB -iters 512 -parallel 256 -list-iters 0
+++ ls /proc/2553/task
+++ wc -l
++ local t=1
++ '[' 1 -gt 0 ']'
++ max=1
++ sort
++ cat /proc/2553/task/2553/comm /proc/2553/task/2557/comm /proc/2553/task/2558/comm /proc/2553/task/2559/comm /proc/2553/task/2560/comm /proc/2553/task/2561/comm /proc/2553/task/2562/comm /proc/2553/task/2563/comm /proc/2553/task/2564/comm /proc/2553/task/2565/comm /proc/2553/task/2566/comm /proc/2553/task/2567/comm /proc/2553/task/2568/comm /proc/2553/task/2569/comm
++ uniq -c
++ sort -rn
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=64
++ '[' 64 -gt 1 ']'
++ max=64
++ sort
++ uniq -c
++ cat /proc/2553/task/2553/comm /proc/2553/task/2557/comm /proc/2553/task/2558/comm /proc/2553/task/2559/comm /proc/2553/task/2560/comm /proc/2553/task/2561/comm /proc/2553/task/2562/comm /proc/2553/task/2563/comm /proc/2553/task/2564/comm /proc/2553/task/2565/comm /proc/2553/task/2566/comm /proc/2553/task/2567/comm /proc/2553/task/2568/comm /proc/2553/task/2569/comm /proc/2553/task/2575/comm /proc/2553/task/2576/comm /proc/2553/task/2577/comm /proc/2553/task/2578/comm /proc/2553/task/2579/comm /proc/2553/task/2580/comm /proc/2553/task/2581/comm /proc/2553/task/2582/comm /proc/2553/task/2583/comm /proc/2553/task/2584/comm /proc/2553/task/2585/comm /proc/2553/task/2586/comm /proc/2553/task/2587/comm /proc/2553/task/2588/comm /proc/2553/task/2589/comm /proc/2553/task/2590/comm /proc/2553/task/2591/comm /proc/2553/task/2592/comm /proc/2553/task/2593/comm /proc/2553/task/2594/comm /proc/2553/task/2595/comm /proc/2553/task/2596/comm /proc/2553/task/2597/comm /proc/2553/task/2598/comm /proc/2553/task/2599/comm /proc/2553/task/2600/comm /proc/2553/task/2601/comm /proc/2553/task/2602/comm /proc/2553/task/2603/comm /proc/2553/task/2604/comm /proc/2553/task/2605/comm /proc/2553/task/2606/comm /proc/2553/task/2607/comm /proc/2553/task/2608/comm /proc/2553/task/2609/comm /proc/2553/task/2610/comm /proc/2553/task/2611/comm /proc/2553/task/2612/comm /proc/2553/task/2613/comm /proc/2553/task/2614/comm /proc/2553/task/2615/comm /proc/2553/task/2616/comm /proc/2553/task/2617/comm /proc/2553/task/2618/comm /proc/2553/task/2619/comm /proc/2553/task/2620/comm /proc/2553/task/2621/comm /proc/2553/task/2622/comm /proc/2553/task/2623/comm /proc/2553/task/2624/comm /proc/2553/task/2628/comm
++ sort -rn
++ sleep 0.2
++ kill -0 2553
+++ wc -l
+++ ls /proc/2553/task
++ local t=145
++ '[' 145 -gt 64 ']'
++ max=145
++ sort
++ sort -rn
++ uniq -c
++ cat /proc/2553/task/2553/comm /proc/2553/task/2557/comm /proc/2553/task/2558/comm /proc/2553/task/2559/comm /proc/2553/task/2560/comm /proc/2553/task/2561/comm /proc/2553/task/2562/comm /proc/2553/task/2563/comm /proc/2553/task/2564/comm /proc/2553/task/2565/comm /proc/2553/task/2566/comm /proc/2553/task/2567/comm /proc/2553/task/2568/comm /proc/2553/task/2569/comm /proc/2553/task/2575/comm /proc/2553/task/2576/comm /proc/2553/task/2577/comm /proc/2553/task/2578/comm /proc/2553/task/2579/comm /proc/2553/task/2580/comm /proc/2553/task/2581/comm /proc/2553/task/2582/comm /proc/2553/task/2583/comm /proc/2553/task/2584/comm /proc/2553/task/2585/comm /proc/2553/task/2586/comm /proc/2553/task/2587/comm /proc/2553/task/2588/comm /proc/2553/task/2589/comm /proc/2553/task/2590/comm /proc/2553/task/2591/comm /proc/2553/task/2592/comm /proc/2553/task/2593/comm /proc/2553/task/2594/comm /proc/2553/task/2595/comm /proc/2553/task/2596/comm /proc/2553/task/2597/comm /proc/2553/task/2598/comm /proc/2553/task/2599/comm /proc/2553/task/2600/comm /proc/2553/task/2601/comm /proc/2553/task/2602/comm /proc/2553/task/2603/comm /proc/2553/task/2604/comm /proc/2553/task/2605/comm /proc/2553/task/2606/comm /proc/2553/task/2607/comm /proc/2553/task/2608/comm /proc/2553/task/2609/comm /proc/2553/task/2610/comm /proc/2553/task/2611/comm /proc/2553/task/2612/comm /proc/2553/task/2613/comm /proc/2553/task/2614/comm /proc/2553/task/2615/comm /proc/2553/task/2616/comm /proc/2553/task/2617/comm /proc/2553/task/2618/comm /proc/2553/task/2619/comm /proc/2553/task/2620/comm /proc/2553/task/2621/comm /proc/2553/task/2622/comm /proc/2553/task/2623/comm /proc/2553/task/2624/comm /proc/2553/task/2628/comm /proc/2553/task/2633/comm /proc/2553/task/2634/comm /proc/2553/task/2635/comm /proc/2553/task/2637/comm /proc/2553/task/2638/comm /proc/2553/task/2639/comm /proc/2553/task/2640/comm /proc/2553/task/2641/comm /proc/2553/task/2642/comm /proc/2553/task/2643/comm /proc/2553/task/2644/comm /proc/2553/task/2645/comm /proc/2553/task/2646/comm /proc/2553/task/2647/comm /proc/2553/task/2648/comm /proc/2553/task/2649/comm /proc/2553/task/2650/comm /proc/2553/task/2651/comm /proc/2553/task/2652/comm /proc/2553/task/2653/comm /proc/2553/task/2654/comm /proc/2553/task/2655/comm /proc/2553/task/2656/comm /proc/2553/task/2657/comm /proc/2553/task/2658/comm /proc/2553/task/2659/comm /proc/2553/task/2660/comm /proc/2553/task/2661/comm /proc/2553/task/2662/comm /proc/2553/task/2663/comm /proc/2553/task/2664/comm /proc/2553/task/2665/comm /proc/2553/task/2666/comm /proc/2553/task/2667/comm /proc/2553/task/2668/comm /proc/2553/task/2669/comm /proc/2553/task/2670/comm /proc/2553/task/2671/comm /proc/2553/task/2672/comm /proc/2553/task/2673/comm /proc/2553/task/2674/comm /proc/2553/task/2675/comm /proc/2553/task/2676/comm /proc/2553/task/2677/comm /proc/2553/task/2678/comm /proc/2553/task/2679/comm /proc/2553/task/2680/comm /proc/2553/task/2681/comm /proc/2553/task/2682/comm /proc/2553/task/2683/comm /proc/2553/task/2684/comm /proc/2553/task/2685/comm /proc/2553/task/2686/comm /proc/2553/task/2687/comm /proc/2553/task/2688/comm /proc/2553/task/2689/comm /proc/2553/task/2690/comm /proc/2553/task/2691/comm /proc/2553/task/2692/comm /proc/2553/task/2693/comm /proc/2553/task/2694/comm /proc/2553/task/2695/comm /proc/2553/task/2696/comm /proc/2553/task/2697/comm /proc/2553/task/2698/comm /proc/2553/task/2699/comm /proc/2553/task/2700/comm /proc/2553/task/2701/comm /proc/2553/task/2702/comm /proc/2553/task/2703/comm /proc/2553/task/2704/comm /proc/2553/task/2705/comm /proc/2553/task/2706/comm /proc/2553/task/2707/comm /proc/2553/task/2708/comm /proc/2553/task/2709/comm /proc/2553/task/2710/comm /proc/2553/task/2711/comm /proc/2553/task/2712/comm /proc/2553/task/2713/comm /proc/2553/task/2717/comm /proc/2553/task/2719/comm /proc/2553/task/2723/comm /proc/2553/task/2724/comm
++ sleep 0.2
++ kill -0 2553
+++ wc -l
+++ ls /proc/2553/task
++ local t=243
++ '[' 243 -gt 145 ']'
++ max=243
++ sort
++ uniq -c
++ sort -rn
++ cat /proc/2553/task/2553/comm /proc/2553/task/2557/comm /proc/2553/task/2558/comm /proc/2553/task/2559/comm /proc/2553/task/2560/comm /proc/2553/task/2561/comm /proc/2553/task/2562/comm /proc/2553/task/2563/comm /proc/2553/task/2564/comm /proc/2553/task/2565/comm /proc/2553/task/2566/comm /proc/2553/task/2567/comm /proc/2553/task/2568/comm /proc/2553/task/2569/comm /proc/2553/task/2575/comm /proc/2553/task/2576/comm /proc/2553/task/2577/comm /proc/2553/task/2578/comm /proc/2553/task/2579/comm /proc/2553/task/2580/comm /proc/2553/task/2581/comm /proc/2553/task/2582/comm /proc/2553/task/2583/comm /proc/2553/task/2584/comm /proc/2553/task/2585/comm /proc/2553/task/2586/comm /proc/2553/task/2587/comm /proc/2553/task/2588/comm /proc/2553/task/2589/comm /proc/2553/task/2590/comm /proc/2553/task/2591/comm /proc/2553/task/2592/comm /proc/2553/task/2593/comm /proc/2553/task/2594/comm /proc/2553/task/2595/comm /proc/2553/task/2596/comm /proc/2553/task/2597/comm /proc/2553/task/2598/comm /proc/2553/task/2599/comm /proc/2553/task/2600/comm /proc/2553/task/2601/comm /proc/2553/task/2602/comm /proc/2553/task/2603/comm /proc/2553/task/2604/comm /proc/2553/task/2605/comm /proc/2553/task/2606/comm /proc/2553/task/2607/comm /proc/2553/task/2608/comm /proc/2553/task/2609/comm /proc/2553/task/2610/comm /proc/2553/task/2611/comm /proc/2553/task/2612/comm /proc/2553/task/2613/comm /proc/2553/task/2614/comm /proc/2553/task/2615/comm /proc/2553/task/2616/comm /proc/2553/task/2617/comm /proc/2553/task/2618/comm /proc/2553/task/2619/comm /proc/2553/task/2620/comm /proc/2553/task/2621/comm /proc/2553/task/2622/comm /proc/2553/task/2623/comm /proc/2553/task/2624/comm /proc/2553/task/2628/comm /proc/2553/task/2633/comm /proc/2553/task/2634/comm /proc/2553/task/2635/comm /proc/2553/task/2637/comm /proc/2553/task/2638/comm /proc/2553/task/2639/comm /proc/2553/task/2640/comm /proc/2553/task/2641/comm /proc/2553/task/2642/comm /proc/2553/task/2643/comm /proc/2553/task/2644/comm /proc/2553/task/2645/comm /proc/2553/task/2646/comm /proc/2553/task/2647/comm /proc/2553/task/2648/comm /proc/2553/task/2649/comm /proc/2553/task/2650/comm /proc/2553/task/2651/comm /proc/2553/task/2652/comm /proc/2553/task/2653/comm /proc/2553/task/2654/comm /proc/2553/task/2655/comm /proc/2553/task/2656/comm /proc/2553/task/2657/comm /proc/2553/task/2658/comm /proc/2553/task/2659/comm /proc/2553/task/2660/comm /proc/2553/task/2661/comm /proc/2553/task/2662/comm /proc/2553/task/2663/comm /proc/2553/task/2664/comm /proc/2553/task/2665/comm /proc/2553/task/2666/comm /proc/2553/task/2667/comm /proc/2553/task/2668/comm /proc/2553/task/2669/comm /proc/2553/task/2670/comm /proc/2553/task/2671/comm /proc/2553/task/2672/comm /proc/2553/task/2673/comm /proc/2553/task/2674/comm /proc/2553/task/2675/comm /proc/2553/task/2676/comm /proc/2553/task/2677/comm /proc/2553/task/2678/comm /proc/2553/task/2679/comm /proc/2553/task/2680/comm /proc/2553/task/2681/comm /proc/2553/task/2682/comm /proc/2553/task/2683/comm /proc/2553/task/2684/comm /proc/2553/task/2685/comm /proc/2553/task/2686/comm /proc/2553/task/2687/comm /proc/2553/task/2688/comm /proc/2553/task/2689/comm /proc/2553/task/2690/comm /proc/2553/task/2691/comm /proc/2553/task/2692/comm /proc/2553/task/2693/comm /proc/2553/task/2694/comm /proc/2553/task/2695/comm /proc/2553/task/2696/comm /proc/2553/task/2697/comm /proc/2553/task/2698/comm /proc/2553/task/2699/comm /proc/2553/task/2700/comm /proc/2553/task/2701/comm /proc/2553/task/2702/comm /proc/2553/task/2703/comm /proc/2553/task/2704/comm /proc/2553/task/2705/comm /proc/2553/task/2706/comm /proc/2553/task/2707/comm /proc/2553/task/2708/comm /proc/2553/task/2709/comm /proc/2553/task/2710/comm /proc/2553/task/2711/comm /proc/2553/task/2712/comm /proc/2553/task/2713/comm /proc/2553/task/2717/comm /proc/2553/task/2719/comm /proc/2553/task/2723/comm /proc/2553/task/2724/comm /proc/2553/task/2725/comm /proc/2553/task/2727/comm /proc/2553/task/2728/comm /proc/2553/task/2729/comm /proc/2553/task/2730/comm /proc/2553/task/2731/comm /proc/2553/task/2732/comm /proc/2553/task/2733/comm /proc/2553/task/2734/comm /proc/2553/task/2735/comm /proc/2553/task/2736/comm /proc/2553/task/2737/comm /proc/2553/task/2738/comm /proc/2553/task/2739/comm /proc/2553/task/2740/comm /proc/2553/task/2741/comm /proc/2553/task/2742/comm /proc/2553/task/2743/comm /proc/2553/task/2744/comm /proc/2553/task/2745/comm /proc/2553/task/2746/comm /proc/2553/task/2747/comm /proc/2553/task/2748/comm /proc/2553/task/2749/comm /proc/2553/task/2750/comm /proc/2553/task/2751/comm /proc/2553/task/2752/comm /proc/2553/task/2753/comm /proc/2553/task/2754/comm /proc/2553/task/2755/comm /proc/2553/task/2756/comm /proc/2553/task/2757/comm /proc/2553/task/2758/comm /proc/2553/task/2759/comm /proc/2553/task/2760/comm /proc/2553/task/2761/comm /proc/2553/task/2762/comm /proc/2553/task/2763/comm /proc/2553/task/2764/comm /proc/2553/task/2765/comm /proc/2553/task/2766/comm /proc/2553/task/2767/comm /proc/2553/task/2768/comm /proc/2553/task/2769/comm /proc/2553/task/2770/comm /proc/2553/task/2771/comm /proc/2553/task/2772/comm /proc/2553/task/2773/comm /proc/2553/task/2774/comm /proc/2553/task/2775/comm /proc/2553/task/2776/comm /proc/2553/task/2777/comm /proc/2553/task/2778/comm /proc/2553/task/2779/comm /proc/2553/task/2780/comm /proc/2553/task/2781/comm /proc/2553/task/2782/comm /proc/2553/task/2783/comm /proc/2553/task/2784/comm /proc/2553/task/2785/comm /proc/2553/task/2786/comm /proc/2553/task/2787/comm /proc/2553/task/2788/comm /proc/2553/task/2789/comm /proc/2553/task/2790/comm /proc/2553/task/2791/comm /proc/2553/task/2792/comm /proc/2553/task/2793/comm /proc/2553/task/2794/comm /proc/2553/task/2795/comm /proc/2553/task/2796/comm /proc/2553/task/2797/comm /proc/2553/task/2798/comm /proc/2553/task/2799/comm /proc/2553/task/2800/comm /proc/2553/task/2801/comm /proc/2553/task/2802/comm /proc/2553/task/2803/comm /proc/2553/task/2804/comm /proc/2553/task/2805/comm /proc/2553/task/2806/comm /proc/2553/task/2807/comm /proc/2553/task/2808/comm /proc/2553/task/2809/comm /proc/2553/task/2810/comm /proc/2553/task/2811/comm /proc/2553/task/2812/comm /proc/2553/task/2813/comm /proc/2553/task/2814/comm /proc/2553/task/2815/comm /proc/2553/task/2816/comm /proc/2553/task/2817/comm /proc/2553/task/2819/comm /proc/2553/task/2822/comm
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=275
++ '[' 275 -gt 243 ']'
++ max=275
++ sort
++ sort -rn
++ uniq -c
++ cat /proc/2553/task/2553/comm /proc/2553/task/2557/comm /proc/2553/task/2558/comm /proc/2553/task/2559/comm /proc/2553/task/2560/comm /proc/2553/task/2561/comm /proc/2553/task/2562/comm /proc/2553/task/2563/comm /proc/2553/task/2564/comm /proc/2553/task/2565/comm /proc/2553/task/2566/comm /proc/2553/task/2567/comm /proc/2553/task/2568/comm /proc/2553/task/2569/comm /proc/2553/task/2575/comm /proc/2553/task/2576/comm /proc/2553/task/2577/comm /proc/2553/task/2578/comm /proc/2553/task/2579/comm /proc/2553/task/2580/comm /proc/2553/task/2581/comm /proc/2553/task/2582/comm /proc/2553/task/2583/comm /proc/2553/task/2584/comm /proc/2553/task/2585/comm /proc/2553/task/2586/comm /proc/2553/task/2587/comm /proc/2553/task/2588/comm /proc/2553/task/2589/comm /proc/2553/task/2590/comm /proc/2553/task/2591/comm /proc/2553/task/2592/comm /proc/2553/task/2593/comm /proc/2553/task/2594/comm /proc/2553/task/2595/comm /proc/2553/task/2596/comm /proc/2553/task/2597/comm /proc/2553/task/2598/comm /proc/2553/task/2599/comm /proc/2553/task/2600/comm /proc/2553/task/2601/comm /proc/2553/task/2602/comm /proc/2553/task/2603/comm /proc/2553/task/2604/comm /proc/2553/task/2605/comm /proc/2553/task/2606/comm /proc/2553/task/2607/comm /proc/2553/task/2608/comm /proc/2553/task/2609/comm /proc/2553/task/2610/comm /proc/2553/task/2611/comm /proc/2553/task/2612/comm /proc/2553/task/2613/comm /proc/2553/task/2614/comm /proc/2553/task/2615/comm /proc/2553/task/2616/comm /proc/2553/task/2617/comm /proc/2553/task/2618/comm /proc/2553/task/2619/comm /proc/2553/task/2620/comm /proc/2553/task/2621/comm /proc/2553/task/2622/comm /proc/2553/task/2623/comm /proc/2553/task/2624/comm /proc/2553/task/2628/comm /proc/2553/task/2633/comm /proc/2553/task/2634/comm /proc/2553/task/2635/comm /proc/2553/task/2637/comm /proc/2553/task/2638/comm /proc/2553/task/2639/comm /proc/2553/task/2640/comm /proc/2553/task/2641/comm /proc/2553/task/2642/comm /proc/2553/task/2643/comm /proc/2553/task/2644/comm /proc/2553/task/2645/comm /proc/2553/task/2646/comm /proc/2553/task/2647/comm /proc/2553/task/2648/comm /proc/2553/task/2649/comm /proc/2553/task/2650/comm /proc/2553/task/2651/comm /proc/2553/task/2652/comm /proc/2553/task/2653/comm /proc/2553/task/2654/comm /proc/2553/task/2655/comm /proc/2553/task/2656/comm /proc/2553/task/2657/comm /proc/2553/task/2658/comm /proc/2553/task/2659/comm /proc/2553/task/2660/comm /proc/2553/task/2661/comm /proc/2553/task/2662/comm /proc/2553/task/2663/comm /proc/2553/task/2664/comm /proc/2553/task/2665/comm /proc/2553/task/2666/comm /proc/2553/task/2667/comm /proc/2553/task/2668/comm /proc/2553/task/2669/comm /proc/2553/task/2670/comm /proc/2553/task/2671/comm /proc/2553/task/2672/comm /proc/2553/task/2673/comm /proc/2553/task/2674/comm /proc/2553/task/2675/comm /proc/2553/task/2676/comm /proc/2553/task/2677/comm /proc/2553/task/2678/comm /proc/2553/task/2679/comm /proc/2553/task/2680/comm /proc/2553/task/2681/comm /proc/2553/task/2682/comm /proc/2553/task/2683/comm /proc/2553/task/2684/comm /proc/2553/task/2685/comm /proc/2553/task/2686/comm /proc/2553/task/2687/comm /proc/2553/task/2688/comm /proc/2553/task/2689/comm /proc/2553/task/2690/comm /proc/2553/task/2691/comm /proc/2553/task/2692/comm /proc/2553/task/2693/comm /proc/2553/task/2694/comm /proc/2553/task/2695/comm /proc/2553/task/2696/comm /proc/2553/task/2697/comm /proc/2553/task/2698/comm /proc/2553/task/2699/comm /proc/2553/task/2700/comm /proc/2553/task/2701/comm /proc/2553/task/2702/comm /proc/2553/task/2703/comm /proc/2553/task/2704/comm /proc/2553/task/2705/comm /proc/2553/task/2706/comm /proc/2553/task/2707/comm /proc/2553/task/2708/comm /proc/2553/task/2709/comm /proc/2553/task/2710/comm /proc/2553/task/2711/comm /proc/2553/task/2712/comm /proc/2553/task/2713/comm /proc/2553/task/2717/comm /proc/2553/task/2719/comm /proc/2553/task/2723/comm /proc/2553/task/2724/comm /proc/2553/task/2725/comm /proc/2553/task/2727/comm /proc/2553/task/2728/comm /proc/2553/task/2729/comm /proc/2553/task/2730/comm /proc/2553/task/2731/comm /proc/2553/task/2732/comm /proc/2553/task/2733/comm /proc/2553/task/2734/comm /proc/2553/task/2735/comm /proc/2553/task/2736/comm /proc/2553/task/2737/comm /proc/2553/task/2738/comm /proc/2553/task/2739/comm /proc/2553/task/2740/comm /proc/2553/task/2741/comm /proc/2553/task/2742/comm /proc/2553/task/2743/comm /proc/2553/task/2744/comm /proc/2553/task/2745/comm /proc/2553/task/2746/comm /proc/2553/task/2747/comm /proc/2553/task/2748/comm /proc/2553/task/2749/comm /proc/2553/task/2750/comm /proc/2553/task/2751/comm /proc/2553/task/2752/comm /proc/2553/task/2753/comm /proc/2553/task/2754/comm /proc/2553/task/2755/comm /proc/2553/task/2756/comm /proc/2553/task/2757/comm /proc/2553/task/2758/comm /proc/2553/task/2759/comm /proc/2553/task/2760/comm /proc/2553/task/2761/comm /proc/2553/task/2762/comm /proc/2553/task/2763/comm /proc/2553/task/2764/comm /proc/2553/task/2765/comm /proc/2553/task/2766/comm /proc/2553/task/2767/comm /proc/2553/task/2768/comm /proc/2553/task/2769/comm /proc/2553/task/2770/comm /proc/2553/task/2771/comm /proc/2553/task/2772/comm /proc/2553/task/2773/comm /proc/2553/task/2774/comm /proc/2553/task/2775/comm /proc/2553/task/2776/comm /proc/2553/task/2777/comm /proc/2553/task/2778/comm /proc/2553/task/2779/comm /proc/2553/task/2780/comm /proc/2553/task/2781/comm /proc/2553/task/2782/comm /proc/2553/task/2783/comm /proc/2553/task/2784/comm /proc/2553/task/2785/comm /proc/2553/task/2786/comm /proc/2553/task/2787/comm /proc/2553/task/2788/comm /proc/2553/task/2789/comm /proc/2553/task/2790/comm /proc/2553/task/2791/comm /proc/2553/task/2792/comm /proc/2553/task/2793/comm /proc/2553/task/2794/comm /proc/2553/task/2795/comm /proc/2553/task/2796/comm /proc/2553/task/2797/comm /proc/2553/task/2798/comm /proc/2553/task/2799/comm /proc/2553/task/2800/comm /proc/2553/task/2801/comm /proc/2553/task/2802/comm /proc/2553/task/2803/comm /proc/2553/task/2804/comm /proc/2553/task/2805/comm /proc/2553/task/2806/comm /proc/2553/task/2807/comm /proc/2553/task/2808/comm /proc/2553/task/2809/comm /proc/2553/task/2810/comm /proc/2553/task/2811/comm /proc/2553/task/2812/comm /proc/2553/task/2813/comm /proc/2553/task/2814/comm /proc/2553/task/2815/comm /proc/2553/task/2816/comm /proc/2553/task/2817/comm /proc/2553/task/2819/comm /proc/2553/task/2822/comm /proc/2553/task/2827/comm /proc/2553/task/2828/comm /proc/2553/task/2830/comm /proc/2553/task/2831/comm /proc/2553/task/2832/comm /proc/2553/task/2833/comm /proc/2553/task/2834/comm /proc/2553/task/2835/comm /proc/2553/task/2836/comm /proc/2553/task/2837/comm /proc/2553/task/2838/comm /proc/2553/task/2839/comm /proc/2553/task/2840/comm /proc/2553/task/2841/comm /proc/2553/task/2842/comm /proc/2553/task/2843/comm /proc/2553/task/2844/comm /proc/2553/task/2845/comm /proc/2553/task/2846/comm /proc/2553/task/2847/comm /proc/2553/task/2848/comm /proc/2553/task/2849/comm /proc/2553/task/2850/comm /proc/2553/task/2851/comm /proc/2553/task/2852/comm /proc/2553/task/2853/comm /proc/2553/task/2854/comm /proc/2553/task/2855/comm /proc/2553/task/2856/comm /proc/2553/task/2857/comm /proc/2553/task/2858/comm /proc/2553/task/2859/comm
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=313
++ '[' 313 -gt 275 ']'
++ max=313
++ sort
++ sort -rn
++ uniq -c
++ cat /proc/2553/task/2553/comm /proc/2553/task/2557/comm /proc/2553/task/2558/comm /proc/2553/task/2559/comm /proc/2553/task/2560/comm /proc/2553/task/2561/comm /proc/2553/task/2562/comm /proc/2553/task/2563/comm /proc/2553/task/2564/comm /proc/2553/task/2565/comm /proc/2553/task/2566/comm /proc/2553/task/2567/comm /proc/2553/task/2568/comm /proc/2553/task/2569/comm /proc/2553/task/2575/comm /proc/2553/task/2576/comm /proc/2553/task/2577/comm /proc/2553/task/2578/comm /proc/2553/task/2579/comm /proc/2553/task/2580/comm /proc/2553/task/2581/comm /proc/2553/task/2582/comm /proc/2553/task/2583/comm /proc/2553/task/2584/comm /proc/2553/task/2585/comm /proc/2553/task/2586/comm /proc/2553/task/2587/comm /proc/2553/task/2588/comm /proc/2553/task/2589/comm /proc/2553/task/2590/comm /proc/2553/task/2591/comm /proc/2553/task/2592/comm /proc/2553/task/2593/comm /proc/2553/task/2594/comm /proc/2553/task/2595/comm /proc/2553/task/2596/comm /proc/2553/task/2597/comm /proc/2553/task/2598/comm /proc/2553/task/2599/comm /proc/2553/task/2600/comm /proc/2553/task/2601/comm /proc/2553/task/2602/comm /proc/2553/task/2603/comm /proc/2553/task/2604/comm /proc/2553/task/2605/comm /proc/2553/task/2606/comm /proc/2553/task/2607/comm /proc/2553/task/2608/comm /proc/2553/task/2609/comm /proc/2553/task/2610/comm /proc/2553/task/2611/comm /proc/2553/task/2612/comm /proc/2553/task/2613/comm /proc/2553/task/2614/comm /proc/2553/task/2615/comm /proc/2553/task/2616/comm /proc/2553/task/2617/comm /proc/2553/task/2618/comm /proc/2553/task/2619/comm /proc/2553/task/2620/comm /proc/2553/task/2621/comm /proc/2553/task/2622/comm /proc/2553/task/2623/comm /proc/2553/task/2624/comm /proc/2553/task/2628/comm /proc/2553/task/2633/comm /proc/2553/task/2634/comm /proc/2553/task/2635/comm /proc/2553/task/2637/comm /proc/2553/task/2638/comm /proc/2553/task/2639/comm /proc/2553/task/2640/comm /proc/2553/task/2641/comm /proc/2553/task/2642/comm /proc/2553/task/2643/comm /proc/2553/task/2644/comm /proc/2553/task/2645/comm /proc/2553/task/2646/comm /proc/2553/task/2647/comm /proc/2553/task/2648/comm /proc/2553/task/2649/comm /proc/2553/task/2650/comm /proc/2553/task/2651/comm /proc/2553/task/2652/comm /proc/2553/task/2653/comm /proc/2553/task/2654/comm /proc/2553/task/2655/comm /proc/2553/task/2656/comm /proc/2553/task/2657/comm /proc/2553/task/2658/comm /proc/2553/task/2659/comm /proc/2553/task/2660/comm /proc/2553/task/2661/comm /proc/2553/task/2662/comm /proc/2553/task/2663/comm /proc/2553/task/2664/comm /proc/2553/task/2665/comm /proc/2553/task/2666/comm /proc/2553/task/2667/comm /proc/2553/task/2668/comm /proc/2553/task/2669/comm /proc/2553/task/2670/comm /proc/2553/task/2671/comm /proc/2553/task/2672/comm /proc/2553/task/2673/comm /proc/2553/task/2674/comm /proc/2553/task/2675/comm /proc/2553/task/2676/comm /proc/2553/task/2677/comm /proc/2553/task/2678/comm /proc/2553/task/2679/comm /proc/2553/task/2680/comm /proc/2553/task/2681/comm /proc/2553/task/2682/comm /proc/2553/task/2683/comm /proc/2553/task/2684/comm /proc/2553/task/2685/comm /proc/2553/task/2686/comm /proc/2553/task/2687/comm /proc/2553/task/2688/comm /proc/2553/task/2689/comm /proc/2553/task/2690/comm /proc/2553/task/2691/comm /proc/2553/task/2692/comm /proc/2553/task/2693/comm /proc/2553/task/2694/comm /proc/2553/task/2695/comm /proc/2553/task/2696/comm /proc/2553/task/2697/comm /proc/2553/task/2698/comm /proc/2553/task/2699/comm /proc/2553/task/2700/comm /proc/2553/task/2701/comm /proc/2553/task/2702/comm /proc/2553/task/2703/comm /proc/2553/task/2704/comm /proc/2553/task/2705/comm /proc/2553/task/2706/comm /proc/2553/task/2707/comm /proc/2553/task/2708/comm /proc/2553/task/2709/comm /proc/2553/task/2710/comm /proc/2553/task/2711/comm /proc/2553/task/2712/comm /proc/2553/task/2713/comm /proc/2553/task/2717/comm /proc/2553/task/2719/comm /proc/2553/task/2723/comm /proc/2553/task/2724/comm /proc/2553/task/2725/comm /proc/2553/task/2727/comm /proc/2553/task/2728/comm /proc/2553/task/2729/comm /proc/2553/task/2730/comm /proc/2553/task/2731/comm /proc/2553/task/2732/comm /proc/2553/task/2733/comm /proc/2553/task/2734/comm /proc/2553/task/2735/comm /proc/2553/task/2736/comm /proc/2553/task/2737/comm /proc/2553/task/2738/comm /proc/2553/task/2739/comm /proc/2553/task/2740/comm /proc/2553/task/2741/comm /proc/2553/task/2742/comm /proc/2553/task/2743/comm /proc/2553/task/2744/comm /proc/2553/task/2745/comm /proc/2553/task/2746/comm /proc/2553/task/2747/comm /proc/2553/task/2748/comm /proc/2553/task/2749/comm /proc/2553/task/2750/comm /proc/2553/task/2751/comm /proc/2553/task/2752/comm /proc/2553/task/2753/comm /proc/2553/task/2754/comm /proc/2553/task/2755/comm /proc/2553/task/2756/comm /proc/2553/task/2757/comm /proc/2553/task/2758/comm /proc/2553/task/2759/comm /proc/2553/task/2760/comm /proc/2553/task/2761/comm /proc/2553/task/2762/comm /proc/2553/task/2763/comm /proc/2553/task/2764/comm /proc/2553/task/2765/comm /proc/2553/task/2766/comm /proc/2553/task/2767/comm /proc/2553/task/2768/comm /proc/2553/task/2769/comm /proc/2553/task/2770/comm /proc/2553/task/2771/comm /proc/2553/task/2772/comm /proc/2553/task/2773/comm /proc/2553/task/2774/comm /proc/2553/task/2775/comm /proc/2553/task/2776/comm /proc/2553/task/2777/comm /proc/2553/task/2778/comm /proc/2553/task/2779/comm /proc/2553/task/2780/comm /proc/2553/task/2781/comm /proc/2553/task/2782/comm /proc/2553/task/2783/comm /proc/2553/task/2784/comm /proc/2553/task/2785/comm /proc/2553/task/2786/comm /proc/2553/task/2787/comm /proc/2553/task/2788/comm /proc/2553/task/2789/comm /proc/2553/task/2790/comm /proc/2553/task/2791/comm /proc/2553/task/2792/comm /proc/2553/task/2793/comm /proc/2553/task/2794/comm /proc/2553/task/2795/comm /proc/2553/task/2796/comm /proc/2553/task/2797/comm /proc/2553/task/2798/comm /proc/2553/task/2799/comm /proc/2553/task/2800/comm /proc/2553/task/2801/comm /proc/2553/task/2802/comm /proc/2553/task/2803/comm /proc/2553/task/2804/comm /proc/2553/task/2805/comm /proc/2553/task/2806/comm /proc/2553/task/2807/comm /proc/2553/task/2808/comm /proc/2553/task/2809/comm /proc/2553/task/2810/comm /proc/2553/task/2811/comm /proc/2553/task/2812/comm /proc/2553/task/2813/comm /proc/2553/task/2814/comm /proc/2553/task/2815/comm /proc/2553/task/2816/comm /proc/2553/task/2817/comm /proc/2553/task/2819/comm /proc/2553/task/2822/comm /proc/2553/task/2827/comm /proc/2553/task/2828/comm /proc/2553/task/2830/comm /proc/2553/task/2831/comm /proc/2553/task/2832/comm /proc/2553/task/2833/comm /proc/2553/task/2834/comm /proc/2553/task/2835/comm /proc/2553/task/2836/comm /proc/2553/task/2837/comm /proc/2553/task/2838/comm /proc/2553/task/2839/comm /proc/2553/task/2840/comm /proc/2553/task/2841/comm /proc/2553/task/2842/comm /proc/2553/task/2843/comm /proc/2553/task/2844/comm /proc/2553/task/2845/comm /proc/2553/task/2846/comm /proc/2553/task/2847/comm /proc/2553/task/2848/comm /proc/2553/task/2849/comm /proc/2553/task/2850/comm /proc/2553/task/2851/comm /proc/2553/task/2852/comm /proc/2553/task/2853/comm /proc/2553/task/2854/comm /proc/2553/task/2855/comm /proc/2553/task/2856/comm /proc/2553/task/2857/comm /proc/2553/task/2858/comm /proc/2553/task/2859/comm /proc/2553/task/2868/comm /proc/2553/task/2869/comm /proc/2553/task/2870/comm /proc/2553/task/2871/comm /proc/2553/task/2872/comm /proc/2553/task/2873/comm /proc/2553/task/2874/comm /proc/2553/task/2875/comm /proc/2553/task/2876/comm /proc/2553/task/2877/comm /proc/2553/task/2878/comm /proc/2553/task/2879/comm /proc/2553/task/2880/comm /proc/2553/task/2881/comm /proc/2553/task/2882/comm /proc/2553/task/2883/comm /proc/2553/task/2884/comm /proc/2553/task/2885/comm /proc/2553/task/2886/comm /proc/2553/task/2887/comm /proc/2553/task/2888/comm /proc/2553/task/2889/comm /proc/2553/task/2890/comm /proc/2553/task/2891/comm /proc/2553/task/2892/comm /proc/2553/task/2893/comm /proc/2553/task/2894/comm /proc/2553/task/2895/comm /proc/2553/task/2896/comm /proc/2553/task/2897/comm /proc/2553/task/2898/comm /proc/2553/task/2899/comm /proc/2553/task/2900/comm /proc/2553/task/2901/comm /proc/2553/task/2902/comm /proc/2553/task/2903/comm /proc/2553/task/2904/comm /proc/2553/task/2908/comm
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=323
++ '[' 323 -gt 313 ']'
++ max=323
++ sort
++ uniq -c
++ sort -rn
++ cat /proc/2553/task/2553/comm /proc/2553/task/2557/comm /proc/2553/task/2558/comm /proc/2553/task/2559/comm /proc/2553/task/2560/comm /proc/2553/task/2561/comm /proc/2553/task/2562/comm /proc/2553/task/2563/comm /proc/2553/task/2564/comm /proc/2553/task/2565/comm /proc/2553/task/2566/comm /proc/2553/task/2567/comm /proc/2553/task/2568/comm /proc/2553/task/2569/comm /proc/2553/task/2575/comm /proc/2553/task/2576/comm /proc/2553/task/2577/comm /proc/2553/task/2578/comm /proc/2553/task/2579/comm /proc/2553/task/2580/comm /proc/2553/task/2581/comm /proc/2553/task/2582/comm /proc/2553/task/2583/comm /proc/2553/task/2584/comm /proc/2553/task/2585/comm /proc/2553/task/2586/comm /proc/2553/task/2587/comm /proc/2553/task/2588/comm /proc/2553/task/2589/comm /proc/2553/task/2590/comm /proc/2553/task/2591/comm /proc/2553/task/2592/comm /proc/2553/task/2593/comm /proc/2553/task/2594/comm /proc/2553/task/2595/comm /proc/2553/task/2596/comm /proc/2553/task/2597/comm /proc/2553/task/2598/comm /proc/2553/task/2599/comm /proc/2553/task/2600/comm /proc/2553/task/2601/comm /proc/2553/task/2602/comm /proc/2553/task/2603/comm /proc/2553/task/2604/comm /proc/2553/task/2605/comm /proc/2553/task/2606/comm /proc/2553/task/2607/comm /proc/2553/task/2608/comm /proc/2553/task/2609/comm /proc/2553/task/2610/comm /proc/2553/task/2611/comm /proc/2553/task/2612/comm /proc/2553/task/2613/comm /proc/2553/task/2614/comm /proc/2553/task/2615/comm /proc/2553/task/2616/comm /proc/2553/task/2617/comm /proc/2553/task/2618/comm /proc/2553/task/2619/comm /proc/2553/task/2620/comm /proc/2553/task/2621/comm /proc/2553/task/2622/comm /proc/2553/task/2623/comm /proc/2553/task/2624/comm /proc/2553/task/2628/comm /proc/2553/task/2633/comm /proc/2553/task/2634/comm /proc/2553/task/2635/comm /proc/2553/task/2637/comm /proc/2553/task/2638/comm /proc/2553/task/2639/comm /proc/2553/task/2640/comm /proc/2553/task/2641/comm /proc/2553/task/2642/comm /proc/2553/task/2643/comm /proc/2553/task/2644/comm /proc/2553/task/2645/comm /proc/2553/task/2646/comm /proc/2553/task/2647/comm /proc/2553/task/2648/comm /proc/2553/task/2649/comm /proc/2553/task/2650/comm /proc/2553/task/2651/comm /proc/2553/task/2652/comm /proc/2553/task/2653/comm /proc/2553/task/2654/comm /proc/2553/task/2655/comm /proc/2553/task/2656/comm /proc/2553/task/2657/comm /proc/2553/task/2658/comm /proc/2553/task/2659/comm /proc/2553/task/2660/comm /proc/2553/task/2661/comm /proc/2553/task/2662/comm /proc/2553/task/2663/comm /proc/2553/task/2664/comm /proc/2553/task/2665/comm /proc/2553/task/2666/comm /proc/2553/task/2667/comm /proc/2553/task/2668/comm /proc/2553/task/2669/comm /proc/2553/task/2670/comm /proc/2553/task/2671/comm /proc/2553/task/2672/comm /proc/2553/task/2673/comm /proc/2553/task/2674/comm /proc/2553/task/2675/comm /proc/2553/task/2676/comm /proc/2553/task/2677/comm /proc/2553/task/2678/comm /proc/2553/task/2679/comm /proc/2553/task/2680/comm /proc/2553/task/2681/comm /proc/2553/task/2682/comm /proc/2553/task/2683/comm /proc/2553/task/2684/comm /proc/2553/task/2685/comm /proc/2553/task/2686/comm /proc/2553/task/2687/comm /proc/2553/task/2688/comm /proc/2553/task/2689/comm /proc/2553/task/2690/comm /proc/2553/task/2691/comm /proc/2553/task/2692/comm /proc/2553/task/2693/comm /proc/2553/task/2694/comm /proc/2553/task/2695/comm /proc/2553/task/2696/comm /proc/2553/task/2697/comm /proc/2553/task/2698/comm /proc/2553/task/2699/comm /proc/2553/task/2700/comm /proc/2553/task/2701/comm /proc/2553/task/2702/comm /proc/2553/task/2703/comm /proc/2553/task/2704/comm /proc/2553/task/2705/comm /proc/2553/task/2706/comm /proc/2553/task/2707/comm /proc/2553/task/2708/comm /proc/2553/task/2709/comm /proc/2553/task/2710/comm /proc/2553/task/2711/comm /proc/2553/task/2712/comm /proc/2553/task/2713/comm /proc/2553/task/2717/comm /proc/2553/task/2719/comm /proc/2553/task/2723/comm /proc/2553/task/2724/comm /proc/2553/task/2725/comm /proc/2553/task/2727/comm /proc/2553/task/2728/comm /proc/2553/task/2729/comm /proc/2553/task/2730/comm /proc/2553/task/2731/comm /proc/2553/task/2732/comm /proc/2553/task/2733/comm /proc/2553/task/2734/comm /proc/2553/task/2735/comm /proc/2553/task/2736/comm /proc/2553/task/2737/comm /proc/2553/task/2738/comm /proc/2553/task/2739/comm /proc/2553/task/2740/comm /proc/2553/task/2741/comm /proc/2553/task/2742/comm /proc/2553/task/2743/comm /proc/2553/task/2744/comm /proc/2553/task/2745/comm /proc/2553/task/2746/comm /proc/2553/task/2747/comm /proc/2553/task/2748/comm /proc/2553/task/2749/comm /proc/2553/task/2750/comm /proc/2553/task/2751/comm /proc/2553/task/2752/comm /proc/2553/task/2753/comm /proc/2553/task/2754/comm /proc/2553/task/2755/comm /proc/2553/task/2756/comm /proc/2553/task/2757/comm /proc/2553/task/2758/comm /proc/2553/task/2759/comm /proc/2553/task/2760/comm /proc/2553/task/2761/comm /proc/2553/task/2762/comm /proc/2553/task/2763/comm /proc/2553/task/2764/comm /proc/2553/task/2765/comm /proc/2553/task/2766/comm /proc/2553/task/2767/comm /proc/2553/task/2768/comm /proc/2553/task/2769/comm /proc/2553/task/2770/comm /proc/2553/task/2771/comm /proc/2553/task/2772/comm /proc/2553/task/2773/comm /proc/2553/task/2774/comm /proc/2553/task/2775/comm /proc/2553/task/2776/comm /proc/2553/task/2777/comm /proc/2553/task/2778/comm /proc/2553/task/2779/comm /proc/2553/task/2780/comm /proc/2553/task/2781/comm /proc/2553/task/2782/comm /proc/2553/task/2783/comm /proc/2553/task/2784/comm /proc/2553/task/2785/comm /proc/2553/task/2786/comm /proc/2553/task/2787/comm /proc/2553/task/2788/comm /proc/2553/task/2789/comm /proc/2553/task/2790/comm /proc/2553/task/2791/comm /proc/2553/task/2792/comm /proc/2553/task/2793/comm /proc/2553/task/2794/comm /proc/2553/task/2795/comm /proc/2553/task/2796/comm /proc/2553/task/2797/comm /proc/2553/task/2798/comm /proc/2553/task/2799/comm /proc/2553/task/2800/comm /proc/2553/task/2801/comm /proc/2553/task/2802/comm /proc/2553/task/2803/comm /proc/2553/task/2804/comm /proc/2553/task/2805/comm /proc/2553/task/2806/comm /proc/2553/task/2807/comm /proc/2553/task/2808/comm /proc/2553/task/2809/comm /proc/2553/task/2810/comm /proc/2553/task/2811/comm /proc/2553/task/2812/comm /proc/2553/task/2813/comm /proc/2553/task/2814/comm /proc/2553/task/2815/comm /proc/2553/task/2816/comm /proc/2553/task/2817/comm /proc/2553/task/2819/comm /proc/2553/task/2822/comm /proc/2553/task/2827/comm /proc/2553/task/2828/comm /proc/2553/task/2830/comm /proc/2553/task/2831/comm /proc/2553/task/2832/comm /proc/2553/task/2833/comm /proc/2553/task/2834/comm /proc/2553/task/2835/comm /proc/2553/task/2836/comm /proc/2553/task/2837/comm /proc/2553/task/2838/comm /proc/2553/task/2839/comm /proc/2553/task/2840/comm /proc/2553/task/2841/comm /proc/2553/task/2842/comm /proc/2553/task/2843/comm /proc/2553/task/2844/comm /proc/2553/task/2845/comm /proc/2553/task/2846/comm /proc/2553/task/2847/comm /proc/2553/task/2848/comm /proc/2553/task/2849/comm /proc/2553/task/2850/comm /proc/2553/task/2851/comm /proc/2553/task/2852/comm /proc/2553/task/2853/comm /proc/2553/task/2854/comm /proc/2553/task/2855/comm /proc/2553/task/2856/comm /proc/2553/task/2857/comm /proc/2553/task/2858/comm /proc/2553/task/2859/comm /proc/2553/task/2868/comm /proc/2553/task/2869/comm /proc/2553/task/2870/comm /proc/2553/task/2871/comm /proc/2553/task/2872/comm /proc/2553/task/2873/comm /proc/2553/task/2874/comm /proc/2553/task/2875/comm /proc/2553/task/2876/comm /proc/2553/task/2877/comm /proc/2553/task/2878/comm /proc/2553/task/2879/comm /proc/2553/task/2880/comm /proc/2553/task/2881/comm /proc/2553/task/2882/comm /proc/2553/task/2883/comm /proc/2553/task/2884/comm /proc/2553/task/2885/comm /proc/2553/task/2886/comm /proc/2553/task/2887/comm /proc/2553/task/2888/comm /proc/2553/task/2889/comm /proc/2553/task/2890/comm /proc/2553/task/2891/comm /proc/2553/task/2892/comm /proc/2553/task/2893/comm /proc/2553/task/2894/comm /proc/2553/task/2895/comm /proc/2553/task/2896/comm /proc/2553/task/2897/comm /proc/2553/task/2898/comm /proc/2553/task/2899/comm /proc/2553/task/2900/comm /proc/2553/task/2901/comm /proc/2553/task/2902/comm /proc/2553/task/2903/comm /proc/2553/task/2904/comm /proc/2553/task/2908/comm /proc/2553/task/2913/comm /proc/2553/task/2914/comm /proc/2553/task/2916/comm /proc/2553/task/2917/comm /proc/2553/task/2918/comm /proc/2553/task/2919/comm /proc/2553/task/2920/comm /proc/2553/task/2921/comm /proc/2553/task/2922/comm /proc/2553/task/2923/comm
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=323
++ '[' 323 -gt 323 ']'
++ sleep 0.2
++ kill -0 2553
+++ wc -l
+++ ls /proc/2553/task
++ local t=324
++ '[' 324 -gt 323 ']'
++ max=324
++ uniq -c
++ sort
++ sort -rn
++ cat /proc/2553/task/2553/comm /proc/2553/task/2557/comm /proc/2553/task/2558/comm /proc/2553/task/2559/comm /proc/2553/task/2560/comm /proc/2553/task/2561/comm /proc/2553/task/2562/comm /proc/2553/task/2563/comm /proc/2553/task/2564/comm /proc/2553/task/2565/comm /proc/2553/task/2566/comm /proc/2553/task/2567/comm /proc/2553/task/2568/comm /proc/2553/task/2569/comm /proc/2553/task/2575/comm /proc/2553/task/2576/comm /proc/2553/task/2577/comm /proc/2553/task/2578/comm /proc/2553/task/2579/comm /proc/2553/task/2580/comm /proc/2553/task/2581/comm /proc/2553/task/2582/comm /proc/2553/task/2583/comm /proc/2553/task/2584/comm /proc/2553/task/2585/comm /proc/2553/task/2586/comm /proc/2553/task/2587/comm /proc/2553/task/2588/comm /proc/2553/task/2589/comm /proc/2553/task/2590/comm /proc/2553/task/2591/comm /proc/2553/task/2592/comm /proc/2553/task/2593/comm /proc/2553/task/2594/comm /proc/2553/task/2595/comm /proc/2553/task/2596/comm /proc/2553/task/2597/comm /proc/2553/task/2598/comm /proc/2553/task/2599/comm /proc/2553/task/2600/comm /proc/2553/task/2601/comm /proc/2553/task/2602/comm /proc/2553/task/2603/comm /proc/2553/task/2604/comm /proc/2553/task/2605/comm /proc/2553/task/2606/comm /proc/2553/task/2607/comm /proc/2553/task/2608/comm /proc/2553/task/2609/comm /proc/2553/task/2610/comm /proc/2553/task/2611/comm /proc/2553/task/2612/comm /proc/2553/task/2613/comm /proc/2553/task/2614/comm /proc/2553/task/2615/comm /proc/2553/task/2616/comm /proc/2553/task/2617/comm /proc/2553/task/2618/comm /proc/2553/task/2619/comm /proc/2553/task/2620/comm /proc/2553/task/2621/comm /proc/2553/task/2622/comm /proc/2553/task/2623/comm /proc/2553/task/2624/comm /proc/2553/task/2628/comm /proc/2553/task/2633/comm /proc/2553/task/2634/comm /proc/2553/task/2635/comm /proc/2553/task/2637/comm /proc/2553/task/2638/comm /proc/2553/task/2639/comm /proc/2553/task/2640/comm /proc/2553/task/2641/comm /proc/2553/task/2642/comm /proc/2553/task/2643/comm /proc/2553/task/2644/comm /proc/2553/task/2645/comm /proc/2553/task/2646/comm /proc/2553/task/2647/comm /proc/2553/task/2648/comm /proc/2553/task/2649/comm /proc/2553/task/2650/comm /proc/2553/task/2651/comm /proc/2553/task/2652/comm /proc/2553/task/2653/comm /proc/2553/task/2654/comm /proc/2553/task/2655/comm /proc/2553/task/2656/comm /proc/2553/task/2657/comm /proc/2553/task/2658/comm /proc/2553/task/2659/comm /proc/2553/task/2660/comm /proc/2553/task/2661/comm /proc/2553/task/2662/comm /proc/2553/task/2663/comm /proc/2553/task/2664/comm /proc/2553/task/2665/comm /proc/2553/task/2666/comm /proc/2553/task/2667/comm /proc/2553/task/2668/comm /proc/2553/task/2669/comm /proc/2553/task/2670/comm /proc/2553/task/2671/comm /proc/2553/task/2672/comm /proc/2553/task/2673/comm /proc/2553/task/2674/comm /proc/2553/task/2675/comm /proc/2553/task/2676/comm /proc/2553/task/2677/comm /proc/2553/task/2678/comm /proc/2553/task/2679/comm /proc/2553/task/2680/comm /proc/2553/task/2681/comm /proc/2553/task/2682/comm /proc/2553/task/2683/comm /proc/2553/task/2684/comm /proc/2553/task/2685/comm /proc/2553/task/2686/comm /proc/2553/task/2687/comm /proc/2553/task/2688/comm /proc/2553/task/2689/comm /proc/2553/task/2690/comm /proc/2553/task/2691/comm /proc/2553/task/2692/comm /proc/2553/task/2693/comm /proc/2553/task/2694/comm /proc/2553/task/2695/comm /proc/2553/task/2696/comm /proc/2553/task/2697/comm /proc/2553/task/2698/comm /proc/2553/task/2699/comm /proc/2553/task/2700/comm /proc/2553/task/2701/comm /proc/2553/task/2702/comm /proc/2553/task/2703/comm /proc/2553/task/2704/comm /proc/2553/task/2705/comm /proc/2553/task/2706/comm /proc/2553/task/2707/comm /proc/2553/task/2708/comm /proc/2553/task/2709/comm /proc/2553/task/2710/comm /proc/2553/task/2711/comm /proc/2553/task/2712/comm /proc/2553/task/2713/comm /proc/2553/task/2717/comm /proc/2553/task/2719/comm /proc/2553/task/2723/comm /proc/2553/task/2724/comm /proc/2553/task/2725/comm /proc/2553/task/2727/comm /proc/2553/task/2728/comm /proc/2553/task/2729/comm /proc/2553/task/2730/comm /proc/2553/task/2731/comm /proc/2553/task/2732/comm /proc/2553/task/2733/comm /proc/2553/task/2734/comm /proc/2553/task/2735/comm /proc/2553/task/2736/comm /proc/2553/task/2737/comm /proc/2553/task/2738/comm /proc/2553/task/2739/comm /proc/2553/task/2740/comm /proc/2553/task/2741/comm /proc/2553/task/2742/comm /proc/2553/task/2743/comm /proc/2553/task/2744/comm /proc/2553/task/2745/comm /proc/2553/task/2746/comm /proc/2553/task/2747/comm /proc/2553/task/2748/comm /proc/2553/task/2749/comm /proc/2553/task/2750/comm /proc/2553/task/2751/comm /proc/2553/task/2752/comm /proc/2553/task/2753/comm /proc/2553/task/2754/comm /proc/2553/task/2755/comm /proc/2553/task/2756/comm /proc/2553/task/2757/comm /proc/2553/task/2758/comm /proc/2553/task/2759/comm /proc/2553/task/2760/comm /proc/2553/task/2761/comm /proc/2553/task/2762/comm /proc/2553/task/2763/comm /proc/2553/task/2764/comm /proc/2553/task/2765/comm /proc/2553/task/2766/comm /proc/2553/task/2767/comm /proc/2553/task/2768/comm /proc/2553/task/2769/comm /proc/2553/task/2770/comm /proc/2553/task/2771/comm /proc/2553/task/2772/comm /proc/2553/task/2773/comm /proc/2553/task/2774/comm /proc/2553/task/2775/comm /proc/2553/task/2776/comm /proc/2553/task/2777/comm /proc/2553/task/2778/comm /proc/2553/task/2779/comm /proc/2553/task/2780/comm /proc/2553/task/2781/comm /proc/2553/task/2782/comm /proc/2553/task/2783/comm /proc/2553/task/2784/comm /proc/2553/task/2785/comm /proc/2553/task/2786/comm /proc/2553/task/2787/comm /proc/2553/task/2788/comm /proc/2553/task/2789/comm /proc/2553/task/2790/comm /proc/2553/task/2791/comm /proc/2553/task/2792/comm /proc/2553/task/2793/comm /proc/2553/task/2794/comm /proc/2553/task/2795/comm /proc/2553/task/2796/comm /proc/2553/task/2797/comm /proc/2553/task/2798/comm /proc/2553/task/2799/comm /proc/2553/task/2800/comm /proc/2553/task/2801/comm /proc/2553/task/2802/comm /proc/2553/task/2803/comm /proc/2553/task/2804/comm /proc/2553/task/2805/comm /proc/2553/task/2806/comm /proc/2553/task/2807/comm /proc/2553/task/2808/comm /proc/2553/task/2809/comm /proc/2553/task/2810/comm /proc/2553/task/2811/comm /proc/2553/task/2812/comm /proc/2553/task/2813/comm /proc/2553/task/2814/comm /proc/2553/task/2815/comm /proc/2553/task/2816/comm /proc/2553/task/2817/comm /proc/2553/task/2819/comm /proc/2553/task/2822/comm /proc/2553/task/2827/comm /proc/2553/task/2828/comm /proc/2553/task/2830/comm /proc/2553/task/2831/comm /proc/2553/task/2832/comm /proc/2553/task/2833/comm /proc/2553/task/2834/comm /proc/2553/task/2835/comm /proc/2553/task/2836/comm /proc/2553/task/2837/comm /proc/2553/task/2838/comm /proc/2553/task/2839/comm /proc/2553/task/2840/comm /proc/2553/task/2841/comm /proc/2553/task/2842/comm /proc/2553/task/2843/comm /proc/2553/task/2844/comm /proc/2553/task/2845/comm /proc/2553/task/2846/comm /proc/2553/task/2847/comm /proc/2553/task/2848/comm /proc/2553/task/2849/comm /proc/2553/task/2850/comm /proc/2553/task/2851/comm /proc/2553/task/2852/comm /proc/2553/task/2853/comm /proc/2553/task/2854/comm /proc/2553/task/2855/comm /proc/2553/task/2856/comm /proc/2553/task/2857/comm /proc/2553/task/2858/comm /proc/2553/task/2859/comm /proc/2553/task/2868/comm /proc/2553/task/2869/comm /proc/2553/task/2870/comm /proc/2553/task/2871/comm /proc/2553/task/2872/comm /proc/2553/task/2873/comm /proc/2553/task/2874/comm /proc/2553/task/2875/comm /proc/2553/task/2876/comm /proc/2553/task/2877/comm /proc/2553/task/2878/comm /proc/2553/task/2879/comm /proc/2553/task/2880/comm /proc/2553/task/2881/comm /proc/2553/task/2882/comm /proc/2553/task/2883/comm /proc/2553/task/2884/comm /proc/2553/task/2885/comm /proc/2553/task/2886/comm /proc/2553/task/2887/comm /proc/2553/task/2888/comm /proc/2553/task/2889/comm /proc/2553/task/2890/comm /proc/2553/task/2891/comm /proc/2553/task/2892/comm /proc/2553/task/2893/comm /proc/2553/task/2894/comm /proc/2553/task/2895/comm /proc/2553/task/2896/comm /proc/2553/task/2897/comm /proc/2553/task/2898/comm /proc/2553/task/2899/comm /proc/2553/task/2900/comm /proc/2553/task/2901/comm /proc/2553/task/2902/comm /proc/2553/task/2903/comm /proc/2553/task/2904/comm /proc/2553/task/2908/comm /proc/2553/task/2913/comm /proc/2553/task/2914/comm /proc/2553/task/2916/comm /proc/2553/task/2917/comm /proc/2553/task/2918/comm /proc/2553/task/2919/comm /proc/2553/task/2920/comm /proc/2553/task/2921/comm /proc/2553/task/2922/comm /proc/2553/task/2923/comm /proc/2553/task/2936/comm
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ wc -l
+++ ls /proc/2553/task
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ wc -l
+++ ls /proc/2553/task
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ wc -l
+++ ls /proc/2553/task
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ wc -l
+++ ls /proc/2553/task
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ wc -l
+++ ls /proc/2553/task
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ wc -l
+++ ls /proc/2553/task
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ wc -l
+++ ls /proc/2553/task
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ wc -l
+++ ls /proc/2553/task
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ wc -l
+++ ls /proc/2553/task
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ wc -l
+++ ls /proc/2553/task
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ wc -l
+++ ls /proc/2553/task
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ wc -l
+++ ls /proc/2553/task
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=324
++ '[' 324 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=282
++ '[' 282 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=271
++ '[' 271 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=271
++ '[' 271 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=271
++ '[' 271 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=271
++ '[' 271 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=271
++ '[' 271 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=271
++ '[' 271 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=271
++ '[' 271 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=271
++ '[' 271 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=271
++ '[' 271 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=271
++ '[' 271 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=271
++ '[' 271 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=271
++ '[' 271 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=271
++ '[' 271 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=271
++ '[' 271 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=271
++ '[' 271 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=271
++ '[' 271 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=271
++ '[' 271 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=271
++ '[' 271 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
+++ ls /proc/2553/task
+++ wc -l
++ local t=271
++ '[' 271 -gt 324 ']'
++ sleep 0.2
++ kill -0 2553
++ wait 2553
++ echo max_os_threads=324
++ cat /var/log/bench3/par256_rust_block_threads.threads.txt
+    262 bench_rust
+     62 gcs-core-tokio
+max_os_threads=324
++ gsutil -q cp /var/log/bench3/par256_rust_block_threads.threads.txt gs://cpriti-thickthin-poc-asse1/results/vm3/
++ threadnames par256_rust_async_threads env RUST_ASYNC=1
++ local name=par256_rust_async_threads
++ shift
++ local pid=3353
++ local max=0
++ kill -0 3353
++ env RUST_ASYNC=1 ./bin/bench_rust -sizes 16MiB -iters 512 -parallel 256 -list-iters 0
+++ ls /proc/3353/task
+++ wc -l
++ local t=1
++ '[' 1 -gt 0 ']'
++ max=1
++ cat /proc/3353/task/3353/comm
++ sort
++ uniq -c
++ sort -rn
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=62
++ '[' 62 -gt 1 ']'
++ max=62
++ sort -rn
++ sort
++ cat /proc/3353/task/3353/comm /proc/3353/task/3360/comm /proc/3353/task/3362/comm /proc/3353/task/3363/comm /proc/3353/task/3364/comm /proc/3353/task/3365/comm /proc/3353/task/3366/comm /proc/3353/task/3367/comm /proc/3353/task/3368/comm /proc/3353/task/3369/comm /proc/3353/task/3370/comm /proc/3353/task/3371/comm /proc/3353/task/3372/comm /proc/3353/task/3373/comm /proc/3353/task/3375/comm /proc/3353/task/3376/comm /proc/3353/task/3377/comm /proc/3353/task/3378/comm /proc/3353/task/3379/comm /proc/3353/task/3380/comm /proc/3353/task/3381/comm /proc/3353/task/3382/comm /proc/3353/task/3383/comm /proc/3353/task/3384/comm /proc/3353/task/3385/comm /proc/3353/task/3386/comm /proc/3353/task/3387/comm /proc/3353/task/3388/comm /proc/3353/task/3389/comm /proc/3353/task/3390/comm /proc/3353/task/3391/comm /proc/3353/task/3392/comm /proc/3353/task/3393/comm /proc/3353/task/3394/comm /proc/3353/task/3395/comm /proc/3353/task/3396/comm /proc/3353/task/3397/comm /proc/3353/task/3398/comm /proc/3353/task/3399/comm /proc/3353/task/3400/comm /proc/3353/task/3401/comm /proc/3353/task/3402/comm /proc/3353/task/3403/comm /proc/3353/task/3404/comm /proc/3353/task/3405/comm /proc/3353/task/3406/comm /proc/3353/task/3407/comm /proc/3353/task/3408/comm /proc/3353/task/3409/comm /proc/3353/task/3410/comm /proc/3353/task/3411/comm /proc/3353/task/3412/comm /proc/3353/task/3413/comm /proc/3353/task/3414/comm /proc/3353/task/3415/comm /proc/3353/task/3416/comm /proc/3353/task/3417/comm /proc/3353/task/3418/comm /proc/3353/task/3419/comm /proc/3353/task/3420/comm /proc/3353/task/3421/comm /proc/3353/task/3422/comm /proc/3353/task/3426/comm
++ uniq -c
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=129
++ '[' 129 -gt 62 ']'
++ max=129
++ cat /proc/3353/task/3353/comm /proc/3353/task/3360/comm /proc/3353/task/3362/comm /proc/3353/task/3363/comm /proc/3353/task/3364/comm /proc/3353/task/3365/comm /proc/3353/task/3366/comm /proc/3353/task/3367/comm /proc/3353/task/3368/comm /proc/3353/task/3369/comm /proc/3353/task/3370/comm /proc/3353/task/3371/comm /proc/3353/task/3372/comm /proc/3353/task/3373/comm /proc/3353/task/3375/comm /proc/3353/task/3376/comm /proc/3353/task/3377/comm /proc/3353/task/3378/comm /proc/3353/task/3379/comm /proc/3353/task/3380/comm /proc/3353/task/3381/comm /proc/3353/task/3382/comm /proc/3353/task/3383/comm /proc/3353/task/3384/comm /proc/3353/task/3385/comm /proc/3353/task/3386/comm /proc/3353/task/3387/comm /proc/3353/task/3388/comm /proc/3353/task/3389/comm /proc/3353/task/3390/comm /proc/3353/task/3391/comm /proc/3353/task/3392/comm /proc/3353/task/3393/comm /proc/3353/task/3394/comm /proc/3353/task/3395/comm /proc/3353/task/3396/comm /proc/3353/task/3397/comm /proc/3353/task/3398/comm /proc/3353/task/3399/comm /proc/3353/task/3400/comm /proc/3353/task/3401/comm /proc/3353/task/3402/comm /proc/3353/task/3403/comm /proc/3353/task/3404/comm /proc/3353/task/3405/comm /proc/3353/task/3406/comm /proc/3353/task/3407/comm /proc/3353/task/3408/comm /proc/3353/task/3409/comm /proc/3353/task/3410/comm /proc/3353/task/3411/comm /proc/3353/task/3412/comm /proc/3353/task/3413/comm /proc/3353/task/3414/comm /proc/3353/task/3415/comm /proc/3353/task/3416/comm /proc/3353/task/3417/comm /proc/3353/task/3418/comm /proc/3353/task/3419/comm /proc/3353/task/3420/comm /proc/3353/task/3421/comm /proc/3353/task/3422/comm /proc/3353/task/3426/comm /proc/3353/task/3431/comm /proc/3353/task/3433/comm /proc/3353/task/3434/comm /proc/3353/task/3435/comm /proc/3353/task/3436/comm /proc/3353/task/3437/comm /proc/3353/task/3438/comm /proc/3353/task/3439/comm /proc/3353/task/3440/comm /proc/3353/task/3441/comm /proc/3353/task/3442/comm /proc/3353/task/3443/comm /proc/3353/task/3444/comm /proc/3353/task/3445/comm /proc/3353/task/3446/comm /proc/3353/task/3447/comm /proc/3353/task/3448/comm /proc/3353/task/3449/comm /proc/3353/task/3450/comm /proc/3353/task/3451/comm /proc/3353/task/3452/comm /proc/3353/task/3453/comm /proc/3353/task/3454/comm /proc/3353/task/3455/comm /proc/3353/task/3456/comm /proc/3353/task/3457/comm /proc/3353/task/3458/comm /proc/3353/task/3459/comm /proc/3353/task/3460/comm /proc/3353/task/3461/comm /proc/3353/task/3462/comm /proc/3353/task/3463/comm /proc/3353/task/3464/comm /proc/3353/task/3465/comm /proc/3353/task/3466/comm /proc/3353/task/3467/comm /proc/3353/task/3468/comm /proc/3353/task/3469/comm /proc/3353/task/3470/comm /proc/3353/task/3471/comm /proc/3353/task/3472/comm /proc/3353/task/3473/comm /proc/3353/task/3474/comm /proc/3353/task/3475/comm /proc/3353/task/3476/comm /proc/3353/task/3477/comm /proc/3353/task/3478/comm /proc/3353/task/3479/comm /proc/3353/task/3480/comm /proc/3353/task/3481/comm /proc/3353/task/3482/comm /proc/3353/task/3483/comm /proc/3353/task/3484/comm /proc/3353/task/3485/comm /proc/3353/task/3486/comm /proc/3353/task/3487/comm /proc/3353/task/3488/comm /proc/3353/task/3489/comm /proc/3353/task/3490/comm /proc/3353/task/3491/comm /proc/3353/task/3492/comm /proc/3353/task/3493/comm /proc/3353/task/3494/comm /proc/3353/task/3495/comm /proc/3353/task/3496/comm /proc/3353/task/3497/comm
++ sort -rn
++ sort
++ uniq -c
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=179
++ '[' 179 -gt 129 ']'
++ max=179
++ sort
++ sort -rn
++ uniq -c
++ cat /proc/3353/task/3353/comm /proc/3353/task/3360/comm /proc/3353/task/3362/comm /proc/3353/task/3363/comm /proc/3353/task/3364/comm /proc/3353/task/3365/comm /proc/3353/task/3366/comm /proc/3353/task/3367/comm /proc/3353/task/3368/comm /proc/3353/task/3369/comm /proc/3353/task/3370/comm /proc/3353/task/3371/comm /proc/3353/task/3372/comm /proc/3353/task/3373/comm /proc/3353/task/3375/comm /proc/3353/task/3376/comm /proc/3353/task/3377/comm /proc/3353/task/3378/comm /proc/3353/task/3379/comm /proc/3353/task/3380/comm /proc/3353/task/3381/comm /proc/3353/task/3382/comm /proc/3353/task/3383/comm /proc/3353/task/3384/comm /proc/3353/task/3385/comm /proc/3353/task/3386/comm /proc/3353/task/3387/comm /proc/3353/task/3388/comm /proc/3353/task/3389/comm /proc/3353/task/3390/comm /proc/3353/task/3391/comm /proc/3353/task/3392/comm /proc/3353/task/3393/comm /proc/3353/task/3394/comm /proc/3353/task/3395/comm /proc/3353/task/3396/comm /proc/3353/task/3397/comm /proc/3353/task/3398/comm /proc/3353/task/3399/comm /proc/3353/task/3400/comm /proc/3353/task/3401/comm /proc/3353/task/3402/comm /proc/3353/task/3403/comm /proc/3353/task/3404/comm /proc/3353/task/3405/comm /proc/3353/task/3406/comm /proc/3353/task/3407/comm /proc/3353/task/3408/comm /proc/3353/task/3409/comm /proc/3353/task/3410/comm /proc/3353/task/3411/comm /proc/3353/task/3412/comm /proc/3353/task/3413/comm /proc/3353/task/3414/comm /proc/3353/task/3415/comm /proc/3353/task/3416/comm /proc/3353/task/3417/comm /proc/3353/task/3418/comm /proc/3353/task/3419/comm /proc/3353/task/3420/comm /proc/3353/task/3421/comm /proc/3353/task/3422/comm /proc/3353/task/3426/comm /proc/3353/task/3431/comm /proc/3353/task/3433/comm /proc/3353/task/3434/comm /proc/3353/task/3435/comm /proc/3353/task/3436/comm /proc/3353/task/3437/comm /proc/3353/task/3438/comm /proc/3353/task/3439/comm /proc/3353/task/3440/comm /proc/3353/task/3441/comm /proc/3353/task/3442/comm /proc/3353/task/3443/comm /proc/3353/task/3444/comm /proc/3353/task/3445/comm /proc/3353/task/3446/comm /proc/3353/task/3447/comm /proc/3353/task/3448/comm /proc/3353/task/3449/comm /proc/3353/task/3450/comm /proc/3353/task/3451/comm /proc/3353/task/3452/comm /proc/3353/task/3453/comm /proc/3353/task/3454/comm /proc/3353/task/3455/comm /proc/3353/task/3456/comm /proc/3353/task/3457/comm /proc/3353/task/3458/comm /proc/3353/task/3459/comm /proc/3353/task/3460/comm /proc/3353/task/3461/comm /proc/3353/task/3462/comm /proc/3353/task/3463/comm /proc/3353/task/3464/comm /proc/3353/task/3465/comm /proc/3353/task/3466/comm /proc/3353/task/3467/comm /proc/3353/task/3468/comm /proc/3353/task/3469/comm /proc/3353/task/3470/comm /proc/3353/task/3471/comm /proc/3353/task/3472/comm /proc/3353/task/3473/comm /proc/3353/task/3474/comm /proc/3353/task/3475/comm /proc/3353/task/3476/comm /proc/3353/task/3477/comm /proc/3353/task/3478/comm /proc/3353/task/3479/comm /proc/3353/task/3480/comm /proc/3353/task/3481/comm /proc/3353/task/3482/comm /proc/3353/task/3483/comm /proc/3353/task/3484/comm /proc/3353/task/3485/comm /proc/3353/task/3486/comm /proc/3353/task/3487/comm /proc/3353/task/3488/comm /proc/3353/task/3489/comm /proc/3353/task/3490/comm /proc/3353/task/3491/comm /proc/3353/task/3492/comm /proc/3353/task/3493/comm /proc/3353/task/3494/comm /proc/3353/task/3495/comm /proc/3353/task/3496/comm /proc/3353/task/3497/comm /proc/3353/task/3506/comm /proc/3353/task/3507/comm /proc/3353/task/3508/comm /proc/3353/task/3509/comm /proc/3353/task/3510/comm /proc/3353/task/3511/comm /proc/3353/task/3512/comm /proc/3353/task/3513/comm /proc/3353/task/3514/comm /proc/3353/task/3515/comm /proc/3353/task/3516/comm /proc/3353/task/3517/comm /proc/3353/task/3518/comm /proc/3353/task/3519/comm /proc/3353/task/3520/comm /proc/3353/task/3521/comm /proc/3353/task/3522/comm /proc/3353/task/3523/comm /proc/3353/task/3524/comm /proc/3353/task/3525/comm /proc/3353/task/3526/comm /proc/3353/task/3527/comm /proc/3353/task/3528/comm /proc/3353/task/3529/comm /proc/3353/task/3530/comm /proc/3353/task/3531/comm /proc/3353/task/3532/comm /proc/3353/task/3533/comm /proc/3353/task/3534/comm /proc/3353/task/3535/comm /proc/3353/task/3536/comm /proc/3353/task/3537/comm /proc/3353/task/3538/comm /proc/3353/task/3539/comm /proc/3353/task/3540/comm /proc/3353/task/3541/comm /proc/3353/task/3542/comm /proc/3353/task/3543/comm /proc/3353/task/3544/comm /proc/3353/task/3545/comm /proc/3353/task/3546/comm /proc/3353/task/3547/comm /proc/3353/task/3548/comm /proc/3353/task/3549/comm /proc/3353/task/3550/comm /proc/3353/task/3551/comm /proc/3353/task/3552/comm /proc/3353/task/3553/comm /proc/3353/task/3554/comm /proc/3353/task/3555/comm
++ sleep 0.2
++ kill -0 3353
+++ wc -l
+++ ls /proc/3353/task
++ local t=183
++ '[' 183 -gt 179 ']'
++ max=183
++ uniq -c
++ sort
++ cat /proc/3353/task/3353/comm /proc/3353/task/3360/comm /proc/3353/task/3362/comm /proc/3353/task/3363/comm /proc/3353/task/3364/comm /proc/3353/task/3365/comm /proc/3353/task/3366/comm /proc/3353/task/3367/comm /proc/3353/task/3368/comm /proc/3353/task/3369/comm /proc/3353/task/3370/comm /proc/3353/task/3371/comm /proc/3353/task/3372/comm /proc/3353/task/3373/comm /proc/3353/task/3375/comm /proc/3353/task/3376/comm /proc/3353/task/3377/comm /proc/3353/task/3378/comm /proc/3353/task/3379/comm /proc/3353/task/3380/comm /proc/3353/task/3381/comm /proc/3353/task/3382/comm /proc/3353/task/3383/comm /proc/3353/task/3384/comm /proc/3353/task/3385/comm /proc/3353/task/3386/comm /proc/3353/task/3387/comm /proc/3353/task/3388/comm /proc/3353/task/3389/comm /proc/3353/task/3390/comm /proc/3353/task/3391/comm /proc/3353/task/3392/comm /proc/3353/task/3393/comm /proc/3353/task/3394/comm /proc/3353/task/3395/comm /proc/3353/task/3396/comm /proc/3353/task/3397/comm /proc/3353/task/3398/comm /proc/3353/task/3399/comm /proc/3353/task/3400/comm /proc/3353/task/3401/comm /proc/3353/task/3402/comm /proc/3353/task/3403/comm /proc/3353/task/3404/comm /proc/3353/task/3405/comm /proc/3353/task/3406/comm /proc/3353/task/3407/comm /proc/3353/task/3408/comm /proc/3353/task/3409/comm /proc/3353/task/3410/comm /proc/3353/task/3411/comm /proc/3353/task/3412/comm /proc/3353/task/3413/comm /proc/3353/task/3414/comm /proc/3353/task/3415/comm /proc/3353/task/3416/comm /proc/3353/task/3417/comm /proc/3353/task/3418/comm /proc/3353/task/3419/comm /proc/3353/task/3420/comm /proc/3353/task/3421/comm /proc/3353/task/3422/comm /proc/3353/task/3426/comm /proc/3353/task/3431/comm /proc/3353/task/3433/comm /proc/3353/task/3434/comm /proc/3353/task/3435/comm /proc/3353/task/3436/comm /proc/3353/task/3437/comm /proc/3353/task/3438/comm /proc/3353/task/3439/comm /proc/3353/task/3440/comm /proc/3353/task/3441/comm /proc/3353/task/3442/comm /proc/3353/task/3443/comm /proc/3353/task/3444/comm /proc/3353/task/3445/comm /proc/3353/task/3446/comm /proc/3353/task/3447/comm /proc/3353/task/3448/comm /proc/3353/task/3449/comm /proc/3353/task/3450/comm /proc/3353/task/3451/comm /proc/3353/task/3452/comm /proc/3353/task/3453/comm /proc/3353/task/3454/comm /proc/3353/task/3455/comm /proc/3353/task/3456/comm /proc/3353/task/3457/comm /proc/3353/task/3458/comm /proc/3353/task/3459/comm /proc/3353/task/3460/comm /proc/3353/task/3461/comm /proc/3353/task/3462/comm /proc/3353/task/3463/comm /proc/3353/task/3464/comm /proc/3353/task/3465/comm /proc/3353/task/3466/comm /proc/3353/task/3467/comm /proc/3353/task/3468/comm /proc/3353/task/3469/comm /proc/3353/task/3470/comm /proc/3353/task/3471/comm /proc/3353/task/3472/comm /proc/3353/task/3473/comm /proc/3353/task/3474/comm /proc/3353/task/3475/comm /proc/3353/task/3476/comm /proc/3353/task/3477/comm /proc/3353/task/3478/comm /proc/3353/task/3479/comm /proc/3353/task/3480/comm /proc/3353/task/3481/comm /proc/3353/task/3482/comm /proc/3353/task/3483/comm /proc/3353/task/3484/comm /proc/3353/task/3485/comm /proc/3353/task/3486/comm /proc/3353/task/3487/comm /proc/3353/task/3488/comm /proc/3353/task/3489/comm /proc/3353/task/3490/comm /proc/3353/task/3491/comm /proc/3353/task/3492/comm /proc/3353/task/3493/comm /proc/3353/task/3494/comm /proc/3353/task/3495/comm /proc/3353/task/3496/comm /proc/3353/task/3497/comm /proc/3353/task/3506/comm /proc/3353/task/3507/comm /proc/3353/task/3508/comm /proc/3353/task/3509/comm /proc/3353/task/3510/comm /proc/3353/task/3511/comm /proc/3353/task/3512/comm /proc/3353/task/3513/comm /proc/3353/task/3514/comm /proc/3353/task/3515/comm /proc/3353/task/3516/comm /proc/3353/task/3517/comm /proc/3353/task/3518/comm /proc/3353/task/3519/comm /proc/3353/task/3520/comm /proc/3353/task/3521/comm /proc/3353/task/3522/comm /proc/3353/task/3523/comm /proc/3353/task/3524/comm /proc/3353/task/3525/comm /proc/3353/task/3526/comm /proc/3353/task/3527/comm /proc/3353/task/3528/comm /proc/3353/task/3529/comm /proc/3353/task/3530/comm /proc/3353/task/3531/comm /proc/3353/task/3532/comm /proc/3353/task/3533/comm /proc/3353/task/3534/comm /proc/3353/task/3535/comm /proc/3353/task/3536/comm /proc/3353/task/3537/comm /proc/3353/task/3538/comm /proc/3353/task/3539/comm /proc/3353/task/3540/comm /proc/3353/task/3541/comm /proc/3353/task/3542/comm /proc/3353/task/3543/comm /proc/3353/task/3544/comm /proc/3353/task/3545/comm /proc/3353/task/3546/comm /proc/3353/task/3547/comm /proc/3353/task/3548/comm /proc/3353/task/3549/comm /proc/3353/task/3550/comm /proc/3353/task/3551/comm /proc/3353/task/3552/comm /proc/3353/task/3553/comm /proc/3353/task/3554/comm /proc/3353/task/3555/comm /proc/3353/task/3564/comm /proc/3353/task/3565/comm /proc/3353/task/3566/comm /proc/3353/task/3567/comm
++ sort -rn
++ sleep 0.2
++ kill -0 3353
+++ wc -l
+++ ls /proc/3353/task
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ wc -l
+++ ls /proc/3353/task
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ wc -l
+++ ls /proc/3353/task
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ wc -l
+++ ls /proc/3353/task
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ wc -l
+++ ls /proc/3353/task
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ wc -l
+++ ls /proc/3353/task
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ wc -l
+++ ls /proc/3353/task
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ wc -l
+++ ls /proc/3353/task
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ wc -l
+++ ls /proc/3353/task
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ wc -l
+++ ls /proc/3353/task
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ wc -l
+++ ls /proc/3353/task
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ wc -l
+++ ls /proc/3353/task
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ wc -l
+++ ls /proc/3353/task
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ wc -l
+++ ls /proc/3353/task
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ wc -l
+++ ls /proc/3353/task
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ wc -l
+++ ls /proc/3353/task
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=183
++ '[' 183 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=168
++ '[' 168 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=168
++ '[' 168 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
+++ ls /proc/3353/task
+++ wc -l
++ local t=168
++ '[' 168 -gt 183 ']'
++ sleep 0.2
++ kill -0 3353
++ wait 3353
++ echo max_os_threads=183
++ cat /var/log/bench3/par256_rust_async_threads.threads.txt
+    160 bench_rust
+     23 gcs-core-tokio
+max_os_threads=183
++ gsutil -q cp /var/log/bench3/par256_rust_async_threads.threads.txt gs://cpriti-thickthin-poc-asse1/results/vm3/
++ pid=3932
++ max=0
++ kill -0 3932
++ ./bin/bench_native -sizes 16MiB -iters 512 -parallel 256 -list-iters 0
+++ ls /proc/3932/task
+++ wc -l
++ t=1
++ '[' 1 -gt 0 ']'
++ max=1
++ sort
++ uniq -c
++ cat /proc/3932/task/3932/comm /proc/3932/task/3938/comm /proc/3932/task/3940/comm /proc/3932/task/3941/comm /proc/3932/task/3942/comm
++ sort -rn
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=10
++ '[' 10 -gt 1 ']'
++ max=10
++ sort -rn
++ uniq -c
++ sort
++ cat /proc/3932/task/3932/comm /proc/3932/task/3938/comm /proc/3932/task/3940/comm /proc/3932/task/3941/comm /proc/3932/task/3942/comm /proc/3932/task/3944/comm /proc/3932/task/3946/comm /proc/3932/task/3947/comm /proc/3932/task/3948/comm /proc/3932/task/3949/comm
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=10
++ '[' 10 -gt 10 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=10
++ '[' 10 -gt 10 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=10
++ '[' 10 -gt 10 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=10
++ '[' 10 -gt 10 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=10
++ '[' 10 -gt 10 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 10 ']'
++ max=11
++ sort
++ uniq -c
++ cat /proc/3932/task/3932/comm /proc/3932/task/3938/comm /proc/3932/task/3940/comm /proc/3932/task/3941/comm /proc/3932/task/3942/comm /proc/3932/task/3944/comm /proc/3932/task/3946/comm /proc/3932/task/3947/comm /proc/3932/task/3948/comm /proc/3932/task/3949/comm /proc/3932/task/3978/comm
++ sort -rn
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ wc -l
+++ ls /proc/3932/task
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ wc -l
+++ ls /proc/3932/task
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ wc -l
+++ ls /proc/3932/task
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ wc -l
+++ ls /proc/3932/task
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ wc -l
+++ ls /proc/3932/task
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ wc -l
+++ ls /proc/3932/task
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ wc -l
+++ ls /proc/3932/task
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ wc -l
+++ ls /proc/3932/task
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ wc -l
+++ ls /proc/3932/task
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ wc -l
+++ ls /proc/3932/task
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ wc -l
+++ ls /proc/3932/task
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ wc -l
+++ ls /proc/3932/task
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ wc -l
+++ ls /proc/3932/task
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ wc -l
+++ ls /proc/3932/task
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
+++ ls /proc/3932/task
+++ wc -l
++ t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 3932
++ echo max_os_threads=11
++ cat /var/log/bench3/par256_native_threads.txt
+     11 bench_native
+max_os_threads=11
++ stage upload
+++ date -u
++ echo '=== STAGE: upload Tue Oct 13 07:11:29 UTC 2026 ==='
+=== STAGE: upload Tue Oct 13 07:11:29 UTC 2026 ===
++ echo upload
++ gsutil -q cp /var/log/bench3/STAGE gs://cpriti-thickthin-poc-asse1/results/vm3/STAGE
++ gsutil -q cp -r /var/log/bench3 gs://cpriti-thickthin-poc-asse1/results/vm3/

@@ -1,0 +1,1125 @@
+++ date -u
+++ hostname
++ echo '=== START Tue Oct 13 06:11:39 UTC 2026 host=cpriti-thickthin-bench ==='
+=== START Tue Oct 13 06:11:39 UTC 2026 host=cpriti-thickthin-bench ===
++ stage apt
+++ date -u
++ echo '=== STAGE: apt Tue Oct 13 06:11:39 UTC 2026 ==='
+=== STAGE: apt Tue Oct 13 06:11:39 UTC 2026 ===
++ echo apt
++ gsutil -q cp /var/log/bench/STAGE gs://cpriti-thickthin-poc-asse1/results/vm/STAGE
++ export DEBIAN_FRONTEND=noninteractive
++ DEBIAN_FRONTEND=noninteractive
++ apt-get update -qq
++ apt-get install -y -qq build-essential cmake curl file procps
++ stage toolchains
+++ date -u
++ echo '=== STAGE: toolchains Tue Oct 13 06:11:55 UTC 2026 ==='
+=== STAGE: toolchains Tue Oct 13 06:11:55 UTC 2026 ===
++ echo toolchains
++ gsutil -q cp /var/log/bench/STAGE gs://cpriti-thickthin-poc-asse1/results/vm/STAGE
++ curl -sSL https://go.dev/dl/go1.26.6.linux-amd64.tar.gz -o /tmp/go.tgz
++ rm -rf /usr/local/go
++ tar -C /usr/local -xzf /tmp/go.tgz
++ export HOME=/root
++ HOME=/root
++ curl -sSf https://sh.rustup.rs -o /tmp/rustup-init.sh
++ sh /tmp/rustup-init.sh -y --profile minimal --default-toolchain stable --no-modify-path
+info: downloading installer
+info: profile set to minimal
+info: default host tuple is x86_64-unknown-linux-gnu
+info: syncing channel updates for stable-x86_64-unknown-linux-gnu
+info: latest update on 2026-10-01 for version 1.99.0 (b940084d7 2026-09-28)
+info: downloading 3 components
+info: default toolchain set to stable-x86_64-unknown-linux-gnu
+
+  stable-x86_64-unknown-linux-gnu installed - rustc 1.99.0 (b940084d7 2026-09-28)
+
+
+Rust is installed now. Great!
+
+To get started you need Cargo's bin directory ($HOME/.cargo/bin) in your PATH
+environment variable. This has not been done automatically.
+
+To configure your current shell, you need to source
+the corresponding env file under $HOME/.cargo.
+
+Consider running the right command for your shell (note the leading DOT):
+. "$HOME/.cargo/env" # For sh/ash/dash/pdksh/bash
+cargo:rerun-if-env-changed=CC_x86_64-unknown-linux-gnu
+CC_x86_64-unknown-linux-gnu = None
+cargo:rerun-if-env-changed=CC_x86_64_unknown_linux_gnu
+CC_x86_64_unknown_linux_gnu = None
+cargo:rerun-if-env-changed=HOST_CC
+HOST_CC = None
+cargo:rerun-if-env-changed=CC
+CC = None
+cargo:rerun-if-env-changed=CC_ENABLE_DEBUG_OUTPUT
+cargo:rerun-if-env-changed=CRATE_CC_NO_DEFAULTS
+CRATE_CC_NO_DEFAULTS = None
+cargo:rerun-if-env-changed=CFLAGS
+CFLAGS = None
+cargo:rerun-if-env-changed=HOST_CFLAGS
+HOST_CFLAGS = None
+cargo:rerun-if-env-changed=CFLAGS_x86_64_unknown_linux_gnu
+CFLAGS_x86_64_unknown_linux_gnu = None
+cargo:rerun-if-env-changed=CFLAGS_x86_64-unknown-linux-gnu
+CFLAGS_x86_64-unknown-linux-gnu = None
++ export PATH=/root/.cargo/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
++ PATH=/root/.cargo/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
++ go version
+go version go1.26.6 linux/amd64
++ cargo --version
+cargo 1.99.0 (5f94df478 2026-08-27)
++ ldd --version
++ head -1
+ldd (Debian GLIBC 2.36-9+deb12u14) 2.36
++ nproc
+8
++ free -g
++ head -2
+               total        used        free      shared  buff/cache   available
+Mem:              31           0          28           0           2          30
++ stage fetch-src
+++ date -u
++ echo '=== STAGE: fetch-src Tue Oct 13 06:12:07 UTC 2026 ==='
+=== STAGE: fetch-src Tue Oct 13 06:12:07 UTC 2026 ===
++ echo fetch-src
++ gsutil -q cp /var/log/bench/STAGE gs://cpriti-thickthin-poc-asse1/results/vm/STAGE
++ mkdir -p /opt/poc
++ cd /opt/poc
++ gsutil -q cp gs://cpriti-thickthin-poc-asse1/poc/poc.tgz /tmp/poc.tgz
++ tar -xzf /tmp/poc.tgz
++ ls -la /opt/poc /opt/poc/gothin/bin
+/opt/poc:
+total 16
+drwxr-xr-x 4 root   root  4096 Oct 13 06:12 .
+drwxr-xr-x 3 root   root  4096 Oct 13 06:12 ..
+drwxr-xr-x 3 cpriti 89939 4096 Oct 13 04:04 gcs_core
+drwxr-xr-x 6 cpriti 89939 4096 Oct 13 06:10 gothin
+
+/opt/poc/gothin/bin:
+total 83624
+drwxr-xr-x 2 cpriti 89939     4096 Oct 13 06:10 .
+drwxr-xr-x 6 cpriti 89939     4096 Oct 13 06:10 ..
+-rwxr-xr-x 1 cpriti 89939 49934463 Oct 13 04:16 bench_native
+-rwxr-xr-x 1 cpriti 89939 19448544 Oct 13 06:10 bench_rust
+-rwxr-xr-x 1 cpriti 89939 16229888 Oct 13 04:10 bench_rust_static
++ stage cloudtop-binary-compat
+++ date -u
++ echo '=== STAGE: cloudtop-binary-compat Tue Oct 13 06:12:10 UTC 2026 ==='
+=== STAGE: cloudtop-binary-compat Tue Oct 13 06:12:10 UTC 2026 ===
++ echo cloudtop-binary-compat
++ gsutil -q cp /var/log/bench/STAGE gs://cpriti-thickthin-poc-asse1/results/vm/STAGE
++ chmod +x /opt/poc/gothin/bin/bench_native /opt/poc/gothin/bin/bench_rust /opt/poc/gothin/bin/bench_rust_static
++ echo '--- native static binary:'
+--- native static binary:
++ /opt/poc/gothin/bin/bench_native -sizes 1MiB -iters 1 -list-iters 1
++ tail -5
+backend=go-json bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-json  write      1MiB        141ms     141ms     141ms        7.1        7.1
+go-json  read       1MiB         38ms      38ms      45ms       26.2       26.6
+go-json  list       -            59ms      59ms      59ms  (objects=1000)
++ echo '--- cgo dynamic binary:'
+--- cgo dynamic binary:
++ /opt/poc/gothin/bin/bench_rust ffi
++ tail -5
+/opt/poc/gothin/bin/bench_rust: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.39' not found (required by /opt/poc/gothin/bin/bench_rust)
+/opt/poc/gothin/bin/bench_rust: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.38' not found (required by /opt/poc/gothin/bin/bench_rust)
++ echo '--- cgo -static binary (glibc static, getaddrinfo warning at link time):'
+--- cgo -static binary (glibc static, getaddrinfo warning at link time):
++ /opt/poc/gothin/bin/bench_rust_static -sizes 1MiB -iters 1 -list-iters 1
++ tail -5
+backend=go-rust bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-rust  write      1MiB        152ms     152ms     152ms        6.6        6.6
+go-rust  read       1MiB         49ms      49ms      50ms       20.3       21.9
+go-rust  list       -            81ms      81ms      81ms  (objects=1000)
++ stage build-rust
+++ date -u
++ echo '=== STAGE: build-rust Tue Oct 13 06:12:12 UTC 2026 ==='
+=== STAGE: build-rust Tue Oct 13 06:12:12 UTC 2026 ===
++ echo build-rust
++ gsutil -q cp /var/log/bench/STAGE gs://cpriti-thickthin-poc-asse1/results/vm/STAGE
++ cd /opt/poc/gcs_core
++ rm -rf target
++ /usr/bin/time -f 'rust build: wall=%e s user=%U sys=%S maxrss_kb=%M' cargo build --release
++ tail -5
+/tmp/metadata-scripts2687042357/startup-script: line 42: /usr/bin/time: No such file or directory
++ ls -la target/release/libgcs_core.a target/release/libgcs_core.so
+ls: cannot access 'target/release/libgcs_core.a': No such file or directory
+ls: cannot access 'target/release/libgcs_core.so': No such file or directory
++ stage build-go
+++ date -u
++ echo '=== STAGE: build-go Tue Oct 13 06:12:13 UTC 2026 ==='
+=== STAGE: build-go Tue Oct 13 06:12:13 UTC 2026 ===
++ echo build-go
++ gsutil -q cp /var/log/bench/STAGE gs://cpriti-thickthin-poc-asse1/results/vm/STAGE
++ cd /opt/poc/gothin
++ rm -rf bin
++ mkdir bin
++ export GOFLAGS=-mod=mod GOPATH=/root/go GOCACHE=/root/.cache/go-build
++ GOFLAGS=-mod=mod
++ GOPATH=/root/go
++ GOCACHE=/root/.cache/go-build
++ /usr/bin/time -f 'go native build: wall=%e s' env CGO_ENABLED=0 go build -o bin/bench_native ./cmd/bench_native
+/tmp/metadata-scripts2687042357/startup-script: line 48: /usr/bin/time: No such file or directory
++ /usr/bin/time -f 'go cgo build: wall=%e s' go build -o bin/bench_rust ./cmd/bench_rust
+/tmp/metadata-scripts2687042357/startup-script: line 49: /usr/bin/time: No such file or directory
++ CGO_ENABLED=0
++ go build '-ldflags=-s -w' -o bin/bench_native_stripped ./cmd/bench_native
+go: downloading cloud.google.com/go/storage v1.69.0
+go: downloading google.golang.org/api v0.302.0
+go: downloading cloud.google.com/go v0.123.0
+go: downloading cloud.google.com/go/compute/metadata v0.10.0
+go: downloading cloud.google.com/go/auth v0.24.1-0.20261001053825-dbc26066f70a
+go: downloading cloud.google.com/go/iam v1.12.0
+go: downloading github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.57.0
+go: downloading github.com/google/uuid v1.6.0
+go: downloading github.com/googleapis/gax-go/v2 v2.26.2
+go: downloading go.opentelemetry.io/contrib/detectors/gcp v1.45.0
+go: downloading go.opentelemetry.io/otel v1.45.0
+go: downloading go.opentelemetry.io/otel/metric v1.45.0
+go: downloading go.opentelemetry.io/otel/sdk/metric v1.45.0
+go: downloading go.opentelemetry.io/otel/sdk v1.45.0
+go: downloading go.opentelemetry.io/otel/trace v1.45.0
+go: downloading golang.org/x/oauth2 v0.37.0
+go: downloading golang.org/x/sync v0.24.0
+go: downloading google.golang.org/genproto v0.0.0-20260715232425-e75dac1f907d
+go: downloading google.golang.org/grpc v1.84.0
+go: downloading google.golang.org/protobuf v1.36.12
+go: downloading google.golang.org/genproto/googleapis/api v0.0.0-20260715232425-e75dac1f907d
+go: downloading google.golang.org/genproto/googleapis/rpc v0.0.0-20261005182115-fad411399dd8
+go: downloading cloud.google.com/go/monitoring v1.30.0
+go: downloading github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.57.0
+go: downloading github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.35.0
+go: downloading github.com/go-logr/logr v1.4.4
+go: downloading golang.org/x/sys v0.49.0
+go: downloading cloud.google.com/go/auth/oauth2adapt v0.3.0
+go: downloading go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.69.0
+go: downloading golang.org/x/net v0.61.0
+go: downloading go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.68.0
+go: downloading golang.org/x/time v0.16.0
+go: downloading github.com/go-logr/stdr v1.2.2
+go: downloading go.opentelemetry.io/auto/sdk v1.2.1
+go: downloading github.com/cespare/xxhash/v2 v2.3.0
+go: downloading github.com/google/s2a-go v0.1.11
+go: downloading github.com/googleapis/enterprise-certificate-proxy v0.3.23
+go: downloading github.com/envoyproxy/go-control-plane/envoy v1.37.0
+go: downloading github.com/spiffe/go-spiffe/v2 v2.8.1
+go: downloading github.com/cncf/xds/go v0.0.0-20260202195803-dba9d589def2
+go: downloading golang.org/x/text v0.43.0
+go: downloading github.com/felixge/httpsnoop v1.1.0
+go: downloading github.com/go-jose/go-jose/v4 v4.1.4
+go: downloading cel.dev/expr v0.25.2
+go: downloading github.com/envoyproxy/protoc-gen-validate v1.3.3
+go: downloading golang.org/x/crypto v0.58.0
++ go build '-ldflags=-s -w' -o bin/bench_rust_stripped ./cmd/bench_rust
+# poc/gothin/cmd/bench_rust
+/usr/local/go/pkg/tool/linux_amd64/link: running gcc failed: exit status 1
+/usr/bin/gcc -m64 -s -Wl,--build-id=0xbeb002f7ff4562bb9b428b2b2f0ee036f88fee7b -o $WORK/b001/exe/a.out -Wl,--export-dynamic-symbol=_cgo_panic -Wl,--export-dynamic-symbol=_cgo_topofstack -Wl,--export-dynamic-symbol=crosscall2 -Wl,--export-dynamic-symbol=goCallbackTrampoline -Wl,--export-dynamic-symbol=goDoneCb -Wl,--compress-debug-sections=zlib /tmp/go-link-2147648753/go.o /tmp/go-link-2147648753/000000.o /tmp/go-link-2147648753/000001.o /tmp/go-link-2147648753/000002.o /tmp/go-link-2147648753/000003.o /tmp/go-link-2147648753/000004.o /tmp/go-link-2147648753/000005.o /tmp/go-link-2147648753/000006.o /tmp/go-link-2147648753/000007.o /tmp/go-link-2147648753/000008.o /tmp/go-link-2147648753/000009.o /tmp/go-link-2147648753/000010.o /tmp/go-link-2147648753/000011.o /tmp/go-link-2147648753/000012.o /tmp/go-link-2147648753/000013.o /tmp/go-link-2147648753/000014.o /tmp/go-link-2147648753/000015.o /tmp/go-link-2147648753/000016.o /tmp/go-link-2147648753/000017.o -O2 -g /opt/poc/gothin/gcsrust/../../gcs_core/target/release/libgcs_core.a -lm -ldl -lpthread -O2 -g -lpthread -no-pie
+/usr/bin/ld: cannot find /opt/poc/gothin/gcsrust/../../gcs_core/target/release/libgcs_core.a: No such file or directory
+collect2: error: ld returned 1 exit status
+
++ ls -la bin/
+total 33260
+drwxr-xr-x 2 root   root      4096 Oct 13 06:12 .
+drwxr-xr-x 6 cpriti 89939     4096 Oct 13 06:12 ..
+-rwxr-xr-x 1 root   root  34046114 Oct 13 06:12 bench_native_stripped
++ file bin/bench_rust
+bin/bench_rust: cannot open `bin/bench_rust' (No such file or directory)
++ ldd bin/bench_rust
+ldd: bin/bench_rust: No such file or directory
++ chmod +x threads.sh
++ stage ffi-micro
+++ date -u
++ echo '=== STAGE: ffi-micro Tue Oct 13 06:12:45 UTC 2026 ==='
+=== STAGE: ffi-micro Tue Oct 13 06:12:45 UTC 2026 ===
++ echo ffi-micro
++ gsutil -q cp /var/log/bench/STAGE gs://cpriti-thickthin-poc-asse1/results/vm/STAGE
++ ./bin/bench_rust ffi
+/tmp/metadata-scripts2687042357/startup-script: line 56: ./bin/bench_rust: No such file or directory
++ SIZES=1MiB,16MiB,128MiB,512MiB
++ ITERS=10
++ for round in 1 2
++ stage seq-round1
+++ date -u
++ echo '=== STAGE: seq-round1 Tue Oct 13 06:12:46 UTC 2026 ==='
+=== STAGE: seq-round1 Tue Oct 13 06:12:46 UTC 2026 ===
++ echo seq-round1
++ gsutil -q cp /var/log/bench/STAGE gs://cpriti-thickthin-poc-asse1/results/vm/STAGE
++ run seq_native_h2_r1 ./bin/bench_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ local name=seq_native_h2_r1
++ shift
+++ date -u
++ echo '##### seq_native_h2_r1 Tue Oct 13 06:12:52 UTC 2026'
+##### seq_native_h2_r1 Tue Oct 13 06:12:52 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./bin/bench_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ tee /var/log/bench/seq_native_h2_r1.txt
+/tmp/metadata-scripts2687042357/startup-script: line 61: /usr/bin/time: No such file or directory
++ gsutil -q cp /var/log/bench/seq_native_h2_r1.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run seq_native_h1_r1 env NATIVE_HTTP1=1 ./bin/bench_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ local name=seq_native_h1_r1
++ shift
+++ date -u
++ echo '##### seq_native_h1_r1 Tue Oct 13 06:12:53 UTC 2026'
+##### seq_native_h1_r1 Tue Oct 13 06:12:53 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' env NATIVE_HTTP1=1 ./bin/bench_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ tee /var/log/bench/seq_native_h1_r1.txt
+/tmp/metadata-scripts2687042357/startup-script: line 61: /usr/bin/time: No such file or directory
++ gsutil -q cp /var/log/bench/seq_native_h1_r1.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run seq_rust_block_r1 ./bin/bench_rust -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ local name=seq_rust_block_r1
++ shift
+++ date -u
++ echo '##### seq_rust_block_r1 Tue Oct 13 06:12:54 UTC 2026'
+##### seq_rust_block_r1 Tue Oct 13 06:12:54 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./bin/bench_rust -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ tee /var/log/bench/seq_rust_block_r1.txt
+/tmp/metadata-scripts2687042357/startup-script: line 61: /usr/bin/time: No such file or directory
++ gsutil -q cp /var/log/bench/seq_rust_block_r1.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run seq_rust_async_r1 env RUST_ASYNC=1 ./bin/bench_rust -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ local name=seq_rust_async_r1
++ shift
+++ date -u
++ echo '##### seq_rust_async_r1 Tue Oct 13 06:12:55 UTC 2026'
+##### seq_rust_async_r1 Tue Oct 13 06:12:55 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' env RUST_ASYNC=1 ./bin/bench_rust -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ tee /var/log/bench/seq_rust_async_r1.txt
+/tmp/metadata-scripts2687042357/startup-script: line 61: /usr/bin/time: No such file or directory
++ gsutil -q cp /var/log/bench/seq_rust_async_r1.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ for round in 1 2
++ stage seq-round2
+++ date -u
++ echo '=== STAGE: seq-round2 Tue Oct 13 06:12:56 UTC 2026 ==='
+=== STAGE: seq-round2 Tue Oct 13 06:12:56 UTC 2026 ===
++ echo seq-round2
++ gsutil -q cp /var/log/bench/STAGE gs://cpriti-thickthin-poc-asse1/results/vm/STAGE
++ run seq_native_h2_r2 ./bin/bench_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ local name=seq_native_h2_r2
++ shift
+++ date -u
++ echo '##### seq_native_h2_r2 Tue Oct 13 06:12:57 UTC 2026'
+##### seq_native_h2_r2 Tue Oct 13 06:12:57 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./bin/bench_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ tee /var/log/bench/seq_native_h2_r2.txt
+/tmp/metadata-scripts2687042357/startup-script: line 61: /usr/bin/time: No such file or directory
++ gsutil -q cp /var/log/bench/seq_native_h2_r2.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run seq_native_h1_r2 env NATIVE_HTTP1=1 ./bin/bench_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ local name=seq_native_h1_r2
++ shift
+++ date -u
++ echo '##### seq_native_h1_r2 Tue Oct 13 06:12:58 UTC 2026'
+##### seq_native_h1_r2 Tue Oct 13 06:12:58 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' env NATIVE_HTTP1=1 ./bin/bench_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ tee /var/log/bench/seq_native_h1_r2.txt
+/tmp/metadata-scripts2687042357/startup-script: line 61: /usr/bin/time: No such file or directory
++ gsutil -q cp /var/log/bench/seq_native_h1_r2.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run seq_rust_block_r2 ./bin/bench_rust -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ local name=seq_rust_block_r2
++ shift
+++ date -u
++ echo '##### seq_rust_block_r2 Tue Oct 13 06:12:59 UTC 2026'
+##### seq_rust_block_r2 Tue Oct 13 06:12:59 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./bin/bench_rust -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ tee /var/log/bench/seq_rust_block_r2.txt
+/tmp/metadata-scripts2687042357/startup-script: line 61: /usr/bin/time: No such file or directory
++ gsutil -q cp /var/log/bench/seq_rust_block_r2.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run seq_rust_async_r2 env RUST_ASYNC=1 ./bin/bench_rust -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ local name=seq_rust_async_r2
++ shift
+++ date -u
++ echo '##### seq_rust_async_r2 Tue Oct 13 06:13:00 UTC 2026'
+##### seq_rust_async_r2 Tue Oct 13 06:13:00 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' env RUST_ASYNC=1 ./bin/bench_rust -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ tee /var/log/bench/seq_rust_async_r2.txt
+/tmp/metadata-scripts2687042357/startup-script: line 61: /usr/bin/time: No such file or directory
++ gsutil -q cp /var/log/bench/seq_rust_async_r2.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ stage parallel
+++ date -u
++ echo '=== STAGE: parallel Tue Oct 13 06:13:01 UTC 2026 ==='
+=== STAGE: parallel Tue Oct 13 06:13:01 UTC 2026 ===
++ echo parallel
++ gsutil -q cp /var/log/bench/STAGE gs://cpriti-thickthin-poc-asse1/results/vm/STAGE
++ for par in 16 64 256
++ run par16_native_h2 ./threads.sh native 16
++ local name=par16_native_h2
++ shift
+++ date -u
++ echo '##### par16_native_h2 Tue Oct 13 06:13:02 UTC 2026'
+##### par16_native_h2 Tue Oct 13 06:13:02 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./threads.sh native 16
++ tee /var/log/bench/par16_native_h2.txt
+/tmp/metadata-scripts2687042357/startup-script: line 61: /usr/bin/time: No such file or directory
++ gsutil -q cp /var/log/bench/par16_native_h2.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run par16_native_h1 env NATIVE_HTTP1=1 ./threads.sh native 16
++ local name=par16_native_h1
++ shift
+++ date -u
++ echo '##### par16_native_h1 Tue Oct 13 06:13:03 UTC 2026'
+##### par16_native_h1 Tue Oct 13 06:13:03 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' env NATIVE_HTTP1=1 ./threads.sh native 16
++ tee /var/log/bench/par16_native_h1.txt
+/tmp/metadata-scripts2687042357/startup-script: line 61: /usr/bin/time: No such file or directory
++ gsutil -q cp /var/log/bench/par16_native_h1.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run par16_rust_block ./threads.sh rust 16
++ local name=par16_rust_block
++ shift
+++ date -u
++ echo '##### par16_rust_block Tue Oct 13 06:13:04 UTC 2026'
+##### par16_rust_block Tue Oct 13 06:13:04 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./threads.sh rust 16
++ tee /var/log/bench/par16_rust_block.txt
+/tmp/metadata-scripts2687042357/startup-script: line 61: /usr/bin/time: No such file or directory
++ gsutil -q cp /var/log/bench/par16_rust_block.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run par16_rust_async env RUST_ASYNC=1 ./threads.sh rust 16
++ local name=par16_rust_async
++ shift
+++ date -u
++ echo '##### par16_rust_async Tue Oct 13 06:13:05 UTC 2026'
+##### par16_rust_async Tue Oct 13 06:13:05 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' env RUST_ASYNC=1 ./threads.sh rust 16
++ tee /var/log/bench/par16_rust_async.txt
+/tmp/metadata-scripts2687042357/startup-script: line 61: /usr/bin/time: No such file or directory
++ gsutil -q cp /var/log/bench/par16_rust_async.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ for par in 16 64 256
++ run par64_native_h2 ./threads.sh native 64
++ local name=par64_native_h2
++ shift
+++ date -u
++ echo '##### par64_native_h2 Tue Oct 13 06:13:06 UTC 2026'
+##### par64_native_h2 Tue Oct 13 06:13:06 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./threads.sh native 64
++ tee /var/log/bench/par64_native_h2.txt
+/tmp/metadata-scripts2687042357/startup-script: line 61: /usr/bin/time: No such file or directory
++ gsutil -q cp /var/log/bench/par64_native_h2.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run par64_native_h1 env NATIVE_HTTP1=1 ./threads.sh native 64
++ local name=par64_native_h1
++ shift
+++ date -u
++ echo '##### par64_native_h1 Tue Oct 13 06:13:07 UTC 2026'
+##### par64_native_h1 Tue Oct 13 06:13:07 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' env NATIVE_HTTP1=1 ./threads.sh native 64
++ tee /var/log/bench/par64_native_h1.txt
+/tmp/metadata-scripts2687042357/startup-script: line 61: /usr/bin/time: No such file or directory
++ gsutil -q cp /var/log/bench/par64_native_h1.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run par64_rust_block ./threads.sh rust 64
++ local name=par64_rust_block
++ shift
+++ date -u
++ echo '##### par64_rust_block Tue Oct 13 06:13:08 UTC 2026'
+##### par64_rust_block Tue Oct 13 06:13:08 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./threads.sh rust 64
++ tee /var/log/bench/par64_rust_block.txt
+/tmp/metadata-scripts2687042357/startup-script: line 61: /usr/bin/time: No such file or directory
++ gsutil -q cp /var/log/bench/par64_rust_block.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run par64_rust_async env RUST_ASYNC=1 ./threads.sh rust 64
++ local name=par64_rust_async
++ shift
+++ date -u
++ echo '##### par64_rust_async Tue Oct 13 06:13:09 UTC 2026'
+##### par64_rust_async Tue Oct 13 06:13:09 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' env RUST_ASYNC=1 ./threads.sh rust 64
++ tee /var/log/bench/par64_rust_async.txt
+/tmp/metadata-scripts2687042357/startup-script: line 61: /usr/bin/time: No such file or directory
++ gsutil -q cp /var/log/bench/par64_rust_async.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ for par in 16 64 256
++ run par256_native_h2 ./threads.sh native 256
++ local name=par256_native_h2
++ shift
+++ date -u
++ echo '##### par256_native_h2 Tue Oct 13 06:13:10 UTC 2026'
+##### par256_native_h2 Tue Oct 13 06:13:10 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./threads.sh native 256
++ tee /var/log/bench/par256_native_h2.txt
+/tmp/metadata-scripts2687042357/startup-script: line 61: /usr/bin/time: No such file or directory
++ gsutil -q cp /var/log/bench/par256_native_h2.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run par256_native_h1 env NATIVE_HTTP1=1 ./threads.sh native 256
++ local name=par256_native_h1
++ shift
+++ date -u
++ echo '##### par256_native_h1 Tue Oct 13 06:13:11 UTC 2026'
+##### par256_native_h1 Tue Oct 13 06:13:11 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' env NATIVE_HTTP1=1 ./threads.sh native 256
++ tee /var/log/bench/par256_native_h1.txt
+/tmp/metadata-scripts2687042357/startup-script: line 61: /usr/bin/time: No such file or directory
++ gsutil -q cp /var/log/bench/par256_native_h1.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run par256_rust_block ./threads.sh rust 256
++ local name=par256_rust_block
++ shift
+++ date -u
++ echo '##### par256_rust_block Tue Oct 13 06:13:12 UTC 2026'
+##### par256_rust_block Tue Oct 13 06:13:12 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./threads.sh rust 256
++ tee /var/log/bench/par256_rust_block.txt
+/tmp/metadata-scripts2687042357/startup-script: line 61: /usr/bin/time: No such file or directory
++ gsutil -q cp /var/log/bench/par256_rust_block.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run par256_rust_async env RUST_ASYNC=1 ./threads.sh rust 256
++ local name=par256_rust_async
++ shift
+++ date -u
++ echo '##### par256_rust_async Tue Oct 13 06:13:13 UTC 2026'
+##### par256_rust_async Tue Oct 13 06:13:13 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' env RUST_ASYNC=1 ./threads.sh rust 256
++ tee /var/log/bench/par256_rust_async.txt
+/tmp/metadata-scripts2687042357/startup-script: line 61: /usr/bin/time: No such file or directory
++ gsutil -q cp /var/log/bench/par256_rust_async.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ stage cancel
+++ date -u
++ echo '=== STAGE: cancel Tue Oct 13 06:13:14 UTC 2026 ==='
+=== STAGE: cancel Tue Oct 13 06:13:14 UTC 2026 ===
++ echo cancel
++ gsutil -q cp /var/log/bench/STAGE gs://cpriti-thickthin-poc-asse1/results/vm/STAGE
++ run cancel_async ./bin/bench_rust cancel cpriti-thickthin-poc-asse1
++ local name=cancel_async
++ shift
+++ date -u
++ echo '##### cancel_async Tue Oct 13 06:13:15 UTC 2026'
+##### cancel_async Tue Oct 13 06:13:15 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./bin/bench_rust cancel cpriti-thickthin-poc-asse1
++ tee /var/log/bench/cancel_async.txt
+/tmp/metadata-scripts2687042357/startup-script: line 61: /usr/bin/time: No such file or directory
++ gsutil -q cp /var/log/bench/cancel_async.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ stage upload
+++ date -u
++ echo '=== STAGE: upload Tue Oct 13 06:13:16 UTC 2026 ==='
+=== STAGE: upload Tue Oct 13 06:13:16 UTC 2026 ===
++ echo upload
++ gsutil -q cp /var/log/bench/STAGE gs://cpriti-thickthin-poc-asse1/results/vm/STAGE
++ dmesg
++ tail -20
++ gsutil -q cp -r /var/log/bench gs://cpriti-thickthin-poc-asse1/results/vm/
+++ date -u
++ echo '=== DONE Tue Oct 13 06:13:20 UTC 2026 ==='
+=== DONE Tue Oct 13 06:13:20 UTC 2026 ===
++ echo DONE
++ gsutil -q cp /var/log/bench/STAGE gs://cpriti-thickthin-poc-asse1/results/vm/STAGE
+++ date -u
+++ hostname
++ echo '=== START Tue Oct 13 06:18:19 UTC 2026 host=cpriti-thickthin-bench ==='
+=== START Tue Oct 13 06:18:19 UTC 2026 host=cpriti-thickthin-bench ===
++ stage apt
+++ date -u
++ echo '=== STAGE: apt Tue Oct 13 06:18:19 UTC 2026 ==='
+=== STAGE: apt Tue Oct 13 06:18:19 UTC 2026 ===
++ echo apt
++ gsutil -q cp /var/log/bench/STAGE gs://cpriti-thickthin-poc-asse1/results/vm/STAGE
++ export DEBIAN_FRONTEND=noninteractive
++ DEBIAN_FRONTEND=noninteractive
++ apt-get update -qq
++ apt-get install -y -qq build-essential cmake curl file procps time
++ stage toolchains
+++ date -u
++ echo '=== STAGE: toolchains Tue Oct 13 06:18:23 UTC 2026 ==='
+=== STAGE: toolchains Tue Oct 13 06:18:23 UTC 2026 ===
++ echo toolchains
++ gsutil -q cp /var/log/bench/STAGE gs://cpriti-thickthin-poc-asse1/results/vm/STAGE
++ curl -sSL https://go.dev/dl/go1.26.6.linux-amd64.tar.gz -o /tmp/go.tgz
++ rm -rf /usr/local/go
++ tar -C /usr/local -xzf /tmp/go.tgz
++ export HOME=/root
++ HOME=/root
++ curl -sSf https://sh.rustup.rs -o /tmp/rustup-init.sh
++ sh /tmp/rustup-init.sh -y --profile minimal --default-toolchain stable --no-modify-path
+info: downloading installer
+warn: it looks like you have an existing rustup settings file at:
+warn: /root/.rustup/settings.toml
+info: profile set to minimal
+info: default host tuple is x86_64-unknown-linux-gnu
+warn: Updating existing toolchain, profile choice will be ignored
+info: syncing channel updates for stable-x86_64-unknown-linux-gnu
+info: default toolchain set to stable-x86_64-unknown-linux-gnu
+
+  stable-x86_64-unknown-linux-gnu unchanged - rustc 1.99.0 (b940084d7 2026-09-28)
+
+
+Rust is installed now. Great!
+
+To get started you need Cargo's bin directory ($HOME/.cargo/bin) in your PATH
+environment variable. This has not been done automatically.
+
+To configure your current shell, you need to source
+the corresponding env file under $HOME/.cargo.
+
+Consider running the right command for your shell (note the leading DOT):
+. "$HOME/.cargo/env" # For sh/ash/dash/pdksh/bash
+cargo:rerun-if-env-changed=CC_x86_64-unknown-linux-gnu
+CC_x86_64-unknown-linux-gnu = None
+cargo:rerun-if-env-changed=CC_x86_64_unknown_linux_gnu
+CC_x86_64_unknown_linux_gnu = None
+cargo:rerun-if-env-changed=HOST_CC
+HOST_CC = None
+cargo:rerun-if-env-changed=CC
+CC = None
+cargo:rerun-if-env-changed=CC_ENABLE_DEBUG_OUTPUT
+cargo:rerun-if-env-changed=CRATE_CC_NO_DEFAULTS
+CRATE_CC_NO_DEFAULTS = None
+cargo:rerun-if-env-changed=CFLAGS
+CFLAGS = None
+cargo:rerun-if-env-changed=HOST_CFLAGS
+HOST_CFLAGS = None
+cargo:rerun-if-env-changed=CFLAGS_x86_64_unknown_linux_gnu
+CFLAGS_x86_64_unknown_linux_gnu = None
+cargo:rerun-if-env-changed=CFLAGS_x86_64-unknown-linux-gnu
+CFLAGS_x86_64-unknown-linux-gnu = None
++ export PATH=/root/.cargo/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
++ PATH=/root/.cargo/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
++ go version
+go version go1.26.6 linux/amd64
++ cargo --version
+cargo 1.99.0 (5f94df478 2026-08-27)
++ ldd --version
++ head -1
+ldd (Debian GLIBC 2.36-9+deb12u14) 2.36
++ nproc
+8
++ free -g
++ head -2
+               total        used        free      shared  buff/cache   available
+Mem:              31           0          30           0           1          30
++ stage fetch-src
+++ date -u
++ echo '=== STAGE: fetch-src Tue Oct 13 06:18:27 UTC 2026 ==='
+=== STAGE: fetch-src Tue Oct 13 06:18:27 UTC 2026 ===
++ echo fetch-src
++ gsutil -q cp /var/log/bench/STAGE gs://cpriti-thickthin-poc-asse1/results/vm/STAGE
++ mkdir -p /opt/poc
++ cd /opt/poc
++ gsutil -q cp gs://cpriti-thickthin-poc-asse1/poc/poc.tgz /tmp/poc.tgz
++ tar -xzf /tmp/poc.tgz
++ ls -la /opt/poc /opt/poc/gothin/bin
+/opt/poc:
+total 16
+drwxr-xr-x 4 root   root  4096 Oct 13 06:12 .
+drwxr-xr-x 3 root   root  4096 Oct 13 06:12 ..
+drwxr-xr-x 3 cpriti 89939 4096 Oct 13 04:04 gcs_core
+drwxr-xr-x 6 cpriti 89939 4096 Oct 13 06:10 gothin
+
+/opt/poc/gothin/bin:
+total 116876
+drwxr-xr-x 2 cpriti 89939     4096 Oct 13 06:10 .
+drwxr-xr-x 6 cpriti 89939     4096 Oct 13 06:10 ..
+-rwxr-xr-x 1 cpriti 89939 49934463 Oct 13 04:16 bench_native
+-rwxr-xr-x 1 root   root  34046114 Oct 13 06:12 bench_native_stripped
+-rwxr-xr-x 1 cpriti 89939 19448544 Oct 13 06:10 bench_rust
+-rwxr-xr-x 1 cpriti 89939 16229888 Oct 13 04:10 bench_rust_static
++ stage cloudtop-binary-compat
+++ date -u
++ echo '=== STAGE: cloudtop-binary-compat Tue Oct 13 06:18:30 UTC 2026 ==='
+=== STAGE: cloudtop-binary-compat Tue Oct 13 06:18:30 UTC 2026 ===
++ echo cloudtop-binary-compat
++ gsutil -q cp /var/log/bench/STAGE gs://cpriti-thickthin-poc-asse1/results/vm/STAGE
++ chmod +x /opt/poc/gothin/bin/bench_native /opt/poc/gothin/bin/bench_native_stripped /opt/poc/gothin/bin/bench_rust /opt/poc/gothin/bin/bench_rust_static
++ echo '--- native static binary:'
+--- native static binary:
++ /opt/poc/gothin/bin/bench_native -sizes 1MiB -iters 1 -list-iters 1
++ tail -5
+backend=go-json bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-json  write      1MiB        110ms     110ms     110ms        9.1        9.1
+go-json  read       1MiB         30ms      30ms      56ms       33.0       25.9
+go-json  list       -            89ms      89ms      89ms  (objects=1000)
++ echo '--- cgo dynamic binary:'
+--- cgo dynamic binary:
++ /opt/poc/gothin/bin/bench_rust ffi
++ tail -5
+/opt/poc/gothin/bin/bench_rust: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.39' not found (required by /opt/poc/gothin/bin/bench_rust)
+/opt/poc/gothin/bin/bench_rust: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.38' not found (required by /opt/poc/gothin/bin/bench_rust)
++ echo '--- cgo -static binary (glibc static, getaddrinfo warning at link time):'
+--- cgo -static binary (glibc static, getaddrinfo warning at link time):
++ /opt/poc/gothin/bin/bench_rust_static -sizes 1MiB -iters 1 -list-iters 1
++ tail -5
+backend=go-rust bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-rust  write      1MiB        129ms     129ms     129ms        7.8        7.8
+go-rust  read       1MiB         33ms      33ms      51ms       30.3       26.8
+go-rust  list       -            94ms      94ms      94ms  (objects=1000)
++ stage build-rust
+++ date -u
++ echo '=== STAGE: build-rust Tue Oct 13 06:18:32 UTC 2026 ==='
+=== STAGE: build-rust Tue Oct 13 06:18:32 UTC 2026 ===
++ echo build-rust
++ gsutil -q cp /var/log/bench/STAGE gs://cpriti-thickthin-poc-asse1/results/vm/STAGE
++ cd /opt/poc/gcs_core
++ rm -rf target
++ /usr/bin/time -f 'rust build: wall=%e s user=%U sys=%S maxrss_kb=%M' cargo build --release
++ tail -5
+   Compiling google-cloud-lro v1.11.0
+   Compiling google-cloud-storage v1.20.0
+   Compiling gcs_core v0.1.0 (/opt/poc/gcs_core)
+    Finished `release` profile [optimized] target(s) in 3m 14s
+rust build: wall=194.50 s user=362.21 sys=17.88 maxrss_kb=1339044
++ ls -la target/release/libgcs_core.a target/release/libgcs_core.so
+-rw-r--r-- 2 root root 39422214 Oct 13 06:21 target/release/libgcs_core.a
+-rwxr-xr-x 2 root root 15654128 Oct 13 06:21 target/release/libgcs_core.so
++ stage build-go
+++ date -u
++ echo '=== STAGE: build-go Tue Oct 13 06:21:47 UTC 2026 ==='
+=== STAGE: build-go Tue Oct 13 06:21:47 UTC 2026 ===
++ echo build-go
++ gsutil -q cp /var/log/bench/STAGE gs://cpriti-thickthin-poc-asse1/results/vm/STAGE
++ cd /opt/poc/gothin
++ rm -rf bin
++ mkdir bin
++ export GOFLAGS=-mod=mod GOPATH=/root/go GOCACHE=/root/.cache/go-build
++ GOFLAGS=-mod=mod
++ GOPATH=/root/go
++ GOCACHE=/root/.cache/go-build
++ /usr/bin/time -f 'go native build: wall=%e s' env CGO_ENABLED=0 go build -o bin/bench_native ./cmd/bench_native
+go native build: wall=3.89 s
++ /usr/bin/time -f 'go cgo build: wall=%e s' go build -o bin/bench_rust ./cmd/bench_rust
+go cgo build: wall=0.70 s
++ CGO_ENABLED=0
++ go build '-ldflags=-s -w' -o bin/bench_native_stripped ./cmd/bench_native
++ go build '-ldflags=-s -w' -o bin/bench_rust_stripped ./cmd/bench_rust
++ ls -la bin/
+total 115984
+drwxr-xr-x 2 root   root      4096 Oct 13 06:21 .
+drwxr-xr-x 6 cpriti 89939     4096 Oct 13 06:21 ..
+-rwxr-xr-x 1 root   root  49887103 Oct 13 06:21 bench_native
+-rwxr-xr-x 1 root   root  34046114 Oct 13 06:21 bench_native_stripped
+-rwxr-xr-x 1 root   root  19416184 Oct 13 06:21 bench_rust
+-rwxr-xr-x 1 root   root  15398712 Oct 13 06:21 bench_rust_stripped
++ file bin/bench_rust
+bin/bench_rust: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=446b9b55fc4eef9cfc8a8d10700c0e3f68403776, for GNU/Linux 3.2.0, with debug_info, not stripped
++ ldd bin/bench_rust
+	linux-vdso.so.1 (0x00007ffe59fb0000)
+	libm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x00007f6d092d1000)
+	libgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007f6d092b1000)
+	libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007f6d090cf000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007f6d093b9000)
++ chmod +x threads.sh
++ stage ffi-micro
+++ date -u
++ echo '=== STAGE: ffi-micro Tue Oct 13 06:21:54 UTC 2026 ==='
+=== STAGE: ffi-micro Tue Oct 13 06:21:54 UTC 2026 ===
++ echo ffi-micro
++ gsutil -q cp /var/log/bench/STAGE gs://cpriti-thickthin-poc-asse1/results/vm/STAGE
++ ./bin/bench_rust ffi
+cgo Go->Rust call: 35ns/call
+Rust->Go callback (inside one cgo call): 48ns/call
++ SIZES=1MiB,16MiB,128MiB,512MiB
++ ITERS=10
++ for round in 1 2
++ stage seq-round1
+++ date -u
++ echo '=== STAGE: seq-round1 Tue Oct 13 06:21:56 UTC 2026 ==='
+=== STAGE: seq-round1 Tue Oct 13 06:21:56 UTC 2026 ===
++ echo seq-round1
++ gsutil -q cp /var/log/bench/STAGE gs://cpriti-thickthin-poc-asse1/results/vm/STAGE
++ run seq_native_h2_r1 ./bin/bench_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ local name=seq_native_h2_r1
++ shift
+++ date -u
++ echo '##### seq_native_h2_r1 Tue Oct 13 06:21:57 UTC 2026'
+##### seq_native_h2_r1 Tue Oct 13 06:21:57 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./bin/bench_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ tee /var/log/bench/seq_native_h2_r1.txt
+backend=go-json bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-json  write      1MiB         91ms     117ms     124ms       11.0       10.5
+go-json  read       1MiB         37ms      48ms      55ms       26.9       25.9
+go-json  write      16MiB       265ms     314ms     314ms       60.3       58.9
+go-json  read       16MiB       100ms     129ms     141ms      160.5      154.1
+go-json  write      128MiB      1.38s    1.461s    1.507s       92.8       95.1
+go-json  read       128MiB      580ms     696ms     879ms      220.8      211.1
+go-json  write      512MiB     4.887s    5.086s   11.665s      104.8       92.3
+go-json  read       512MiB     2.115s    2.392s    3.674s      242.1      231.2
+go-json  list       -            62ms      68ms     384ms  (objects=1000)
+rss_max_kb=1554032 user=38.36 sys=27.21 wall=164.21
++ gsutil -q cp /var/log/bench/seq_native_h2_r1.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run seq_native_h1_r1 env NATIVE_HTTP1=1 ./bin/bench_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ local name=seq_native_h1_r1
++ shift
+++ date -u
++ echo '##### seq_native_h1_r1 Tue Oct 13 06:24:42 UTC 2026'
+##### seq_native_h1_r1 Tue Oct 13 06:24:42 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' env NATIVE_HTTP1=1 ./bin/bench_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ tee /var/log/bench/seq_native_h1_r1.txt
+backend=go-json-h1 bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-json-h1 write      1MiB         90ms     105ms     108ms       11.2       10.8
+go-json-h1 read       1MiB         36ms      50ms      69ms       27.8       25.7
+go-json-h1 write      16MiB       265ms     310ms     321ms       60.3       59.7
+go-json-h1 read       16MiB       114ms     136ms     167ms      140.1      137.3
+go-json-h1 write      128MiB     1.323s    1.395s      1.4s       96.8       97.0
+go-json-h1 read       128MiB      618ms     707ms    1.093s      207.0      198.1
+go-json-h1 write      512MiB     4.905s    5.665s   12.917s      104.4       90.2
+go-json-h1 read       512MiB      2.29s    2.593s    3.142s      223.6      219.2
+go-json-h1 list       -            62ms      88ms      89ms  (objects=1000)
+rss_max_kb=1534668 user=23.45 sys=17.41 wall=170.19
++ gsutil -q cp /var/log/bench/seq_native_h1_r1.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run seq_rust_block_r1 ./bin/bench_rust -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ local name=seq_rust_block_r1
++ shift
+++ date -u
++ echo '##### seq_rust_block_r1 Tue Oct 13 06:27:33 UTC 2026'
+##### seq_rust_block_r1 Tue Oct 13 06:27:33 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./bin/bench_rust -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ tee /var/log/bench/seq_rust_block_r1.txt
+client init: 32.061847ms
+backend=go-rust bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-rust  write      1MiB         89ms     120ms     124ms       11.2       10.5
+go-rust  read       1MiB         36ms      48ms      81ms       27.8       25.8
+go-rust  write      16MiB       257ms     301ms     308ms       62.2       60.8
+go-rust  read       16MiB        91ms     115ms     129ms      175.4      171.3
+go-rust  write      128MiB     1.458s    1.583s    1.657s       87.8       85.4
+go-rust  read       128MiB      453ms     596ms     916ms      282.5      259.9
+go-rust  write      512MiB     5.638s    5.754s    5.815s       90.8       91.1
+go-rust  read       512MiB     1.663s    2.045s    2.287s      307.9      303.4
+go-rust  list       -            63ms      78ms      80ms  (objects=1000)
+rss_max_kb=1914880 user=28.66 sys=24.73 wall=146.58
++ gsutil -q cp /var/log/bench/seq_rust_block_r1.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run seq_rust_async_r1 env RUST_ASYNC=1 ./bin/bench_rust -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ local name=seq_rust_async_r1
++ shift
+++ date -u
++ echo '##### seq_rust_async_r1 Tue Oct 13 06:30:01 UTC 2026'
+##### seq_rust_async_r1 Tue Oct 13 06:30:01 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' env RUST_ASYNC=1 ./bin/bench_rust -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ tee /var/log/bench/seq_rust_async_r1.txt
+client init: 31.874311ms
+backend=go-rust-async bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-rust-async write      1MiB         76ms      86ms     132ms       13.1       12.0
+go-rust-async read       1MiB         37ms      48ms      85ms       27.1       25.5
+go-rust-async write      16MiB       273ms     301ms     325ms       58.6       57.6
+go-rust-async read       16MiB        95ms     116ms     150ms      168.9      164.2
+go-rust-async write      128MiB      1.62s    2.062s    2.587s       79.0       72.7
+go-rust-async read       128MiB      409ms     629ms      8.2s      312.8      178.7
+go-rust-async write      512MiB     5.886s    7.199s    7.812s       87.0       79.9
+go-rust-async read       512MiB     1.495s    1.958s   20.598s      342.5      234.2
+go-rust-async list       -            65ms      77ms      81ms  (objects=1000)
+rss_max_kb=1934140 user=19.60 sys=13.53 wall=178.98
++ gsutil -q cp /var/log/bench/seq_rust_async_r1.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ for round in 1 2
++ stage seq-round2
+++ date -u
++ echo '=== STAGE: seq-round2 Tue Oct 13 06:33:01 UTC 2026 ==='
+=== STAGE: seq-round2 Tue Oct 13 06:33:01 UTC 2026 ===
++ echo seq-round2
++ gsutil -q cp /var/log/bench/STAGE gs://cpriti-thickthin-poc-asse1/results/vm/STAGE
++ run seq_native_h2_r2 ./bin/bench_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ local name=seq_native_h2_r2
++ shift
+++ date -u
++ echo '##### seq_native_h2_r2 Tue Oct 13 06:33:02 UTC 2026'
+##### seq_native_h2_r2 Tue Oct 13 06:33:02 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./bin/bench_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ tee /var/log/bench/seq_native_h2_r2.txt
+backend=go-json bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-json  write      1MiB         87ms     107ms     114ms       11.6       10.7
+go-json  read       1MiB         38ms      50ms      66ms       26.0       24.8
+go-json  write      16MiB       286ms     355ms     355ms       55.9       55.3
+go-json  read       16MiB       131ms     156ms     164ms      122.2      118.9
+go-json  write      128MiB      1.41s    1.511s    1.618s       90.8       89.9
+go-json  read       128MiB      799ms     913ms    1.294s      160.3      159.1
+go-json  write      512MiB     5.247s    5.699s    5.709s       97.6       96.6
+go-json  read       512MiB     3.244s    4.176s     7.78s      157.8      146.9
+go-json  list       -            62ms      80ms      85ms  (objects=1000)
+rss_max_kb=1557228 user=42.87 sys=33.04 wall=207.49
++ gsutil -q cp /var/log/bench/seq_native_h2_r2.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run seq_native_h1_r2 env NATIVE_HTTP1=1 ./bin/bench_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ local name=seq_native_h1_r2
++ shift
+++ date -u
++ echo '##### seq_native_h1_r2 Tue Oct 13 06:36:30 UTC 2026'
+##### seq_native_h1_r2 Tue Oct 13 06:36:30 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' env NATIVE_HTTP1=1 ./bin/bench_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ tee /var/log/bench/seq_native_h1_r2.txt
+backend=go-json-h1 bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-json-h1 write      1MiB         88ms      96ms     124ms       11.3       11.0
+go-json-h1 read       1MiB         35ms      47ms      52ms       28.5       27.7
+go-json-h1 write      16MiB       306ms     356ms     466ms       52.2       51.3
+go-json-h1 read       16MiB       107ms     131ms     151ms      148.8      150.6
+go-json-h1 write      128MiB     1.362s    1.428s    1.507s       94.0       94.5
+go-json-h1 read       128MiB      537ms     646ms     839ms      238.2      235.0
+go-json-h1 write      512MiB     5.183s    5.476s    5.578s       98.8       98.7
+go-json-h1 read       512MiB     1.933s    2.311s    2.853s      264.9      257.1
+go-json-h1 list       -            61ms      74ms      97ms  (objects=1000)
+rss_max_kb=1533512 user=21.73 sys=16.13 wall=152.30
++ gsutil -q cp /var/log/bench/seq_native_h1_r2.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run seq_rust_block_r2 ./bin/bench_rust -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ local name=seq_rust_block_r2
++ shift
+++ date -u
++ echo '##### seq_rust_block_r2 Tue Oct 13 06:39:03 UTC 2026'
+##### seq_rust_block_r2 Tue Oct 13 06:39:03 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./bin/bench_rust -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ tee /var/log/bench/seq_rust_block_r2.txt
+client init: 36.204629ms
+backend=go-rust bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-rust  write      1MiB         87ms     119ms     122ms       11.4       10.5
+go-rust  read       1MiB         38ms      49ms      60ms       26.1       24.8
+go-rust  write      16MiB       298ms     326ms     353ms       53.8       52.5
+go-rust  read       16MiB       114ms     142ms     168ms      140.3      135.5
+go-rust  write      128MiB     1.602s    1.743s    1.761s       79.9       78.0
+go-rust  read       128MiB      606ms     694ms     794ms      211.3      205.2
+go-rust  write      512MiB     6.182s    6.345s    6.688s       82.8       82.8
+go-rust  read       512MiB     2.376s    2.756s    3.216s      215.4      209.9
+go-rust  list       -            73ms      86ms     107ms  (objects=1000)
+rss_max_kb=1912616 user=33.93 sys=30.59 wall=181.48
++ gsutil -q cp /var/log/bench/seq_rust_block_r2.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run seq_rust_async_r2 env RUST_ASYNC=1 ./bin/bench_rust -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ local name=seq_rust_async_r2
++ shift
+++ date -u
++ echo '##### seq_rust_async_r2 Tue Oct 13 06:42:06 UTC 2026'
+##### seq_rust_async_r2 Tue Oct 13 06:42:06 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' env RUST_ASYNC=1 ./bin/bench_rust -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ tee /var/log/bench/seq_rust_async_r2.txt
+client init: 32.350219ms
+backend=go-rust-async bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-rust-async write      1MiB         98ms     118ms     127ms       10.2       10.0
+go-rust-async read       1MiB         40ms      52ms      68ms       25.0       24.1
+go-rust-async write      16MiB       277ms     317ms     343ms       57.8       56.1
+go-rust-async read       16MiB       115ms     145ms     212ms      138.8      130.6
+go-rust-async write      128MiB     1.616s    1.773s    1.801s       79.2       76.9
+go-rust-async read       128MiB      843ms    1.098s     1.42s      151.8      144.1
+go-rust-async write      512MiB       6.6s    7.058s    7.112s       77.6       77.6
+go-rust-async read       512MiB     3.069s    3.922s    4.462s      166.8      158.7
+go-rust-async list       -            71ms      89ms     116ms  (objects=1000)
+rss_max_kb=1931272 user=23.36 sys=14.77 wall=217.36
++ gsutil -q cp /var/log/bench/seq_rust_async_r2.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ stage parallel
+++ date -u
++ echo '=== STAGE: parallel Tue Oct 13 06:45:44 UTC 2026 ==='
+=== STAGE: parallel Tue Oct 13 06:45:44 UTC 2026 ===
++ echo parallel
++ gsutil -q cp /var/log/bench/STAGE gs://cpriti-thickthin-poc-asse1/results/vm/STAGE
++ for par in 16 64 256
++ run par16_native_h2 ./threads.sh native 16
++ local name=par16_native_h2
++ shift
+++ date -u
++ echo '##### par16_native_h2 Tue Oct 13 06:45:45 UTC 2026'
+##### par16_native_h2 Tue Oct 13 06:45:45 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./threads.sh native 16
++ tee /var/log/bench/par16_native_h2.txt
+backend=go-json bucket=cpriti-thickthin-poc-asse1 parallel=16
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-json  write      16MiB       737ms     964ms    1.083s       21.7       23.8
+go-json  read       16MiB       658ms     737ms     938ms       24.3       26.1
+go-json  list       -              0s        0s        0s  (objects=0)
+backend=native parallel=16 max_os_threads=10
+rss_max_kb=1049428 user=27.55 sys=16.00 wall=40.77
++ gsutil -q cp /var/log/bench/par16_native_h2.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run par16_native_h1 env NATIVE_HTTP1=1 ./threads.sh native 16
++ local name=par16_native_h1
++ shift
+++ date -u
++ echo '##### par16_native_h1 Tue Oct 13 06:46:27 UTC 2026'
+##### par16_native_h1 Tue Oct 13 06:46:27 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' env NATIVE_HTTP1=1 ./threads.sh native 16
++ tee /var/log/bench/par16_native_h1.txt
+backend=go-json-h1 bucket=cpriti-thickthin-poc-asse1 parallel=16
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-json-h1 write      16MiB       260ms     350ms    4.528s       61.6       54.8
+go-json-h1 read       16MiB        96ms     129ms     575ms      167.0      158.4
+go-json-h1 list       -              0s        0s        0s  (objects=0)
+backend=native parallel=16 max_os_threads=12
+rss_max_kb=988224 user=15.33 sys=12.88 wall=12.19
++ gsutil -q cp /var/log/bench/par16_native_h1.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run par16_rust_block ./threads.sh rust 16
++ local name=par16_rust_block
++ shift
+++ date -u
++ echo '##### par16_rust_block Tue Oct 13 06:46:40 UTC 2026'
+##### par16_rust_block Tue Oct 13 06:46:40 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./threads.sh rust 16
++ tee /var/log/bench/par16_rust_block.txt
+client init: 32.124807ms
+backend=go-rust bucket=cpriti-thickthin-poc-asse1 parallel=16
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-rust  write      16MiB       281ms     359ms     444ms       56.9       54.9
+go-rust  read       16MiB       100ms     141ms     301ms      160.4      152.6
+go-rust  list       -              0s        0s        0s  (objects=0)
+backend=rust parallel=16 max_os_threads=37
+rss_max_kb=650940 user=18.17 sys=16.58 wall=10.19
++ gsutil -q cp /var/log/bench/par16_rust_block.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run par16_rust_async env RUST_ASYNC=1 ./threads.sh rust 16
++ local name=par16_rust_async
++ shift
+++ date -u
++ echo '##### par16_rust_async Tue Oct 13 06:46:51 UTC 2026'
+##### par16_rust_async Tue Oct 13 06:46:51 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' env RUST_ASYNC=1 ./threads.sh rust 16
++ tee /var/log/bench/par16_rust_async.txt
+client init: 38.587369ms
+backend=go-rust-async bucket=cpriti-thickthin-poc-asse1 parallel=16
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-rust-async write      16MiB       279ms     344ms     485ms       57.3       55.7
+go-rust-async read       16MiB        97ms     130ms     238ms      165.4      159.6
+go-rust-async list       -              0s        0s        0s  (objects=0)
+backend=rust parallel=16 max_os_threads=32
+rss_max_kb=862228 user=15.87 sys=13.58 wall=9.97
++ gsutil -q cp /var/log/bench/par16_rust_async.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ for par in 16 64 256
++ run par64_native_h2 ./threads.sh native 64
++ local name=par64_native_h2
++ shift
+++ date -u
++ echo '##### par64_native_h2 Tue Oct 13 06:47:02 UTC 2026'
+##### par64_native_h2 Tue Oct 13 06:47:02 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./threads.sh native 64
++ tee /var/log/bench/par64_native_h2.txt
+backend=go-json bucket=cpriti-thickthin-poc-asse1 parallel=64
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-json  write      16MiB      2.858s    3.644s    3.762s        5.6        5.8
+go-json  read       16MiB      2.748s    3.046s    3.132s        5.8        6.8
+go-json  list       -              0s        0s        0s  (objects=0)
+backend=native parallel=64 max_os_threads=10
+rss_max_kb=3989992 user=28.67 sys=16.89 wall=42.39
++ gsutil -q cp /var/log/bench/par64_native_h2.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run par64_native_h1 env NATIVE_HTTP1=1 ./threads.sh native 64
++ local name=par64_native_h1
++ shift
+++ date -u
++ echo '##### par64_native_h1 Tue Oct 13 06:47:46 UTC 2026'
+##### par64_native_h1 Tue Oct 13 06:47:46 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' env NATIVE_HTTP1=1 ./threads.sh native 64
++ tee /var/log/bench/par64_native_h1.txt
+backend=go-json-h1 bucket=cpriti-thickthin-poc-asse1 parallel=64
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-json-h1 write      16MiB       439ms    1.035s    1.199s       36.4       29.4
+go-json-h1 read       16MiB       154ms     246ms     790ms      103.6       95.0
+go-json-h1 list       -              0s        0s        0s  (objects=0)
+backend=native parallel=64 max_os_threads=16
+rss_max_kb=3198888 user=12.91 sys=14.30 wall=4.86
++ gsutil -q cp /var/log/bench/par64_native_h1.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run par64_rust_block ./threads.sh rust 64
++ local name=par64_rust_block
++ shift
+++ date -u
++ echo '##### par64_rust_block Tue Oct 13 06:47:52 UTC 2026'
+##### par64_rust_block Tue Oct 13 06:47:52 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./threads.sh rust 64
++ tee /var/log/bench/par64_rust_block.txt
+client init: 32.993075ms
+backend=go-rust bucket=cpriti-thickthin-poc-asse1 parallel=64
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-rust  write      16MiB       466ms     904ms     982ms       34.3       29.0
+go-rust  read       16MiB       157ms     284ms     612ms      101.9       89.3
+go-rust  list       -              0s        0s        0s  (objects=0)
+backend=rust parallel=64 max_os_threads=84
+rss_max_kb=2274628 user=11.99 sys=16.73 wall=4.97
++ gsutil -q cp /var/log/bench/par64_rust_block.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run par64_rust_async env RUST_ASYNC=1 ./threads.sh rust 64
++ local name=par64_rust_async
++ shift
+++ date -u
++ echo '##### par64_rust_async Tue Oct 13 06:47:58 UTC 2026'
+##### par64_rust_async Tue Oct 13 06:47:58 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' env RUST_ASYNC=1 ./threads.sh rust 64
++ tee /var/log/bench/par64_rust_async.txt
+client init: 32.272501ms
+backend=go-rust-async bucket=cpriti-thickthin-poc-asse1 parallel=64
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-rust-async write      16MiB       502ms    1.018s    1.183s       31.9       26.7
+go-rust-async read       16MiB       151ms     256ms     642ms      105.6       96.6
+go-rust-async list       -              0s        0s        0s  (objects=0)
+backend=rust parallel=64 max_os_threads=78
+rss_max_kb=2539544 user=12.38 sys=16.14 wall=4.96
++ gsutil -q cp /var/log/bench/par64_rust_async.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ for par in 16 64 256
++ run par256_native_h2 ./threads.sh native 256
++ local name=par256_native_h2
++ shift
+++ date -u
++ echo '##### par256_native_h2 Tue Oct 13 06:48:03 UTC 2026'
+##### par256_native_h2 Tue Oct 13 06:48:03 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./threads.sh native 256
++ tee /var/log/bench/par256_native_h2.txt
+backend=go-json bucket=cpriti-thickthin-poc-asse1 parallel=256
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-json  write      16MiB       5.72s     6.88s    7.017s        2.8        3.0
+go-json  read       16MiB      5.623s    6.318s    6.465s        2.8        3.3
+go-json  list       -              0s        0s        0s  (objects=0)
+backend=native parallel=256 max_os_threads=11
+rss_max_kb=8651164 user=31.48 sys=20.09 wall=25.40
++ gsutil -q cp /var/log/bench/par256_native_h2.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run par256_native_h1 env NATIVE_HTTP1=1 ./threads.sh native 256
++ local name=par256_native_h1
++ shift
+++ date -u
++ echo '##### par256_native_h1 Tue Oct 13 06:48:30 UTC 2026'
+##### par256_native_h1 Tue Oct 13 06:48:30 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' env NATIVE_HTTP1=1 ./threads.sh native 256
++ tee /var/log/bench/par256_native_h1.txt
+backend=go-json-h1 bucket=cpriti-thickthin-poc-asse1 parallel=256
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-json-h1 write      16MiB      2.172s     2.72s    3.948s        7.4        7.4
+go-json-h1 read       16MiB       601ms    1.153s    2.341s       26.6       25.6
+go-json-h1 list       -              0s        0s        0s  (objects=0)
+backend=native parallel=256 max_os_threads=18
+rss_max_kb=8548060 user=13.78 sys=16.63 wall=5.54
++ gsutil -q cp /var/log/bench/par256_native_h1.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run par256_rust_block ./threads.sh rust 256
++ local name=par256_rust_block
++ shift
+++ date -u
++ echo '##### par256_rust_block Tue Oct 13 06:48:36 UTC 2026'
+##### par256_rust_block Tue Oct 13 06:48:36 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./threads.sh rust 256
++ tee /var/log/bench/par256_rust_block.txt
+client init: 32.411862ms
+backend=go-rust bucket=cpriti-thickthin-poc-asse1 parallel=256
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-rust  write      16MiB      1.962s    2.496s    3.932s        8.2        8.0
+go-rust  read       16MiB       659ms     1.25s    2.136s       24.3       22.7
+go-rust  list       -              0s        0s        0s  (objects=0)
+backend=rust parallel=256 max_os_threads=308
+rss_max_kb=4577460 user=12.73 sys=20.57 wall=5.58
++ gsutil -q cp /var/log/bench/par256_rust_block.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ run par256_rust_async env RUST_ASYNC=1 ./threads.sh rust 256
++ local name=par256_rust_async
++ shift
+++ date -u
++ echo '##### par256_rust_async Tue Oct 13 06:48:43 UTC 2026'
+##### par256_rust_async Tue Oct 13 06:48:43 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' env RUST_ASYNC=1 ./threads.sh rust 256
++ tee /var/log/bench/par256_rust_async.txt
+client init: 32.861591ms
+backend=go-rust-async bucket=cpriti-thickthin-poc-asse1 parallel=256
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-rust-async write      16MiB      2.349s    2.716s    4.307s        6.8        6.9
+go-rust-async read       16MiB       682ms    1.501s    1.824s       23.5       21.9
+go-rust-async list       -              0s        0s        0s  (objects=0)
+backend=rust parallel=256 max_os_threads=221
+rss_max_kb=4542960 user=12.71 sys=20.12 wall=5.80
++ gsutil -q cp /var/log/bench/par256_rust_async.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ stage cancel
+++ date -u
++ echo '=== STAGE: cancel Tue Oct 13 06:48:50 UTC 2026 ==='
+=== STAGE: cancel Tue Oct 13 06:48:50 UTC 2026 ===
++ echo cancel
++ gsutil -q cp /var/log/bench/STAGE gs://cpriti-thickthin-poc-asse1/results/vm/STAGE
++ run cancel_async ./bin/bench_rust cancel cpriti-thickthin-poc-asse1
++ local name=cancel_async
++ shift
+++ date -u
++ echo '##### cancel_async Tue Oct 13 06:48:51 UTC 2026'
+##### cancel_async Tue Oct 13 06:48:51 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./bin/bench_rust cancel cpriti-thickthin-poc-asse1
++ tee /var/log/bench/cancel_async.txt
+client init: 31.773378ms
+ctx timeout=20ms -> returned after 20ms, n=0, err=context deadline exceeded
+ctx timeout=100ms -> returned after 100ms, n=0, err=context deadline exceeded
+ctx timeout=10s -> returned after 755ms, n=134217728, err=<nil>
+rss_max_kb=156956 user=0.25 sys=0.12 wall=2.19
++ gsutil -q cp /var/log/bench/cancel_async.txt gs://cpriti-thickthin-poc-asse1/results/vm/
++ stage upload
+++ date -u
++ echo '=== STAGE: upload Tue Oct 13 06:48:54 UTC 2026 ==='
+=== STAGE: upload Tue Oct 13 06:48:54 UTC 2026 ===
++ echo upload
++ gsutil -q cp /var/log/bench/STAGE gs://cpriti-thickthin-poc-asse1/results/vm/STAGE
++ dmesg
++ tail -20
++ gsutil -q cp -r /var/log/bench gs://cpriti-thickthin-poc-asse1/results/vm/

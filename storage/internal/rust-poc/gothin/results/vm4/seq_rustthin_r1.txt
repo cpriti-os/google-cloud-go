@@ -1,0 +1,21 @@
+client init: 31.75937ms
+backend=go-rustthin bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend    style  op      size          p50       p90       max      mean  p50 MiB/s   ffi/op
+go-rustthin whole  write   1MiB        133ms     145ms     207ms     139ms        7.5      4.0
+go-rustthin whole  read    1MiB         38ms      53ms      73ms      42ms       26.0      4.0
+go-rustthin whole  write   16MiB       256ms     288ms     294ms     253ms       62.4      4.0
+go-rustthin whole  read    16MiB       110ms     137ms     182ms     111ms      144.9      4.0
+go-rustthin whole  write   128MiB     1.398s    1.517s    1.563s    1.393s       91.6      4.0
+go-rustthin whole  read    128MiB      560ms     757ms    1.106s     601ms      228.4      4.0
+go-rustthin whole  write   512MiB     5.214s    6.037s    6.251s    5.431s       98.2      4.0
+go-rustthin whole  read    512MiB     2.089s    2.573s    2.984s    2.127s      245.0      4.0
+go-rustthin 32k    write   1MiB        144ms     153ms     162ms     143ms        6.9     35.0
+go-rustthin 32k    read    1MiB         38ms      55ms      66ms      41ms       26.1     36.0
+go-rustthin 32k    write   16MiB       287ms     308ms     317ms     282ms       55.8    515.0
+go-rustthin 32k    read    16MiB       108ms     157ms     181ms     116ms      148.2    516.0
+go-rustthin 32k    write   128MiB     1.522s    1.706s    1.823s    1.564s       84.1   4099.0
+go-rustthin 32k    read    128MiB      553ms     738ms    1.198s     609ms      231.6   4100.0
+go-rustthin 32k    write   512MiB     5.691s    5.953s     6.42s    5.779s       90.0  16387.0
+go-rustthin 32k    read    512MiB     2.086s    2.726s    3.168s    2.148s      245.5  16388.0
+go-rustthin -      list    -            74ms      80ms      83ms      74ms          -      1.0  (objects=1000)
+rss_max_kb=1973468 user=61.47 sys=40.39 wall=328.00

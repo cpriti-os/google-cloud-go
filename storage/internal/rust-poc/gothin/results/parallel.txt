@@ -1,0 +1,16 @@
+go-json  read       16MiB       637ms     705ms     740ms       25.1       27.2
+go-json  list       -              0s        0s        0s  (objects=0)
+backend=native parallel=16 max_os_threads=25
+rss_max_kb=1000796 user=9.66 sys=14.77 wall=11.65
+go-rust  read       16MiB       224ms     292ms     484ms       71.4       71.5
+go-rust  list       -              0s        0s        0s  (objects=0)
+backend=rust parallel=16 max_os_threads=62
+rss_max_kb=593136 user=6.04 sys=7.09 wall=4.59
+go-json  read       16MiB      3.809s    4.095s    4.118s        4.2        4.2
+go-json  list       -              0s        0s        0s  (objects=0)
+backend=native parallel=64 max_os_threads=25
+rss_max_kb=2221176 user=13.55 sys=19.99 wall=15.31
+go-rust  read       16MiB       921ms    1.448s    2.304s       17.4       16.9
+go-rust  list       -              0s        0s        0s  (objects=0)
+backend=rust parallel=64 max_os_threads=157
+rss_max_kb=1155772 user=8.33 sys=9.83 wall=5.46

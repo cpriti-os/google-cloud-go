@@ -1,0 +1,23 @@
+=== sequential h1 ===
+backend=go-json-h1 bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-json-h1 write      1MiB         93ms     146ms     411ms       10.8        7.5
+go-json-h1 read       1MiB         38ms      50ms      55ms       26.6       25.4
+go-json-h1 write      16MiB       262ms     335ms     368ms       61.0       57.0
+go-json-h1 read       16MiB        93ms     128ms     165ms      172.1      157.6
+go-json-h1 write      128MiB     1.294s    1.562s    1.642s       99.0       95.5
+go-json-h1 read       128MiB      442ms     603ms     627ms      289.5      273.5
+go-json-h1 list       -            73ms     100ms     101ms  (objects=1000)
+rss_max_kb=506736 user=4.63 sys=7.53 wall=36.96
+=== parallel 16 ===
+go-json-h1 write      16MiB       344ms     769ms     816ms       46.5       37.2
+go-json-h1 read       16MiB       247ms     320ms     434ms       64.8       67.8
+go-json-h1 list       -              0s        0s        0s  (objects=0)
+backend=native parallel=16 max_os_threads=23
+rss_max_kb=815496 user=3.97 sys=5.32 wall=5.21
+=== parallel 64 ===
+go-json-h1 write      16MiB      1.737s    2.232s    2.492s        9.2        9.1
+go-json-h1 read       16MiB       958ms    1.429s    2.327s       16.7       16.3
+go-json-h1 list       -              0s        0s        0s  (objects=0)
+backend=native parallel=64 max_os_threads=27
+rss_max_kb=2210324 user=5.28 sys=6.99 wall=5.42

@@ -1,0 +1,3126 @@
++ export HOME=/root PATH=/root/.cargo/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin GOFLAGS=-mod=mod GOPATH=/root/go GOCACHE=/root/.cache/go-build
++ HOME=/root
++ PATH=/root/.cargo/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
++ GOFLAGS=-mod=mod
++ GOPATH=/root/go
++ GOCACHE=/root/.cache/go-build
++ stage fetch-build
+++ date -u
++ echo '=== STAGE: fetch-build Tue Oct 13 08:25:48 UTC 2026 ==='
+=== STAGE: fetch-build Tue Oct 13 08:25:48 UTC 2026 ===
++ echo fetch-build
++ gsutil -q cp /var/log/bench5/STAGE gs://cpriti-thickthin-poc-asse1/results/vm5/STAGE
++ mkdir -p /opt/poc3
++ cd /opt/poc3
++ gsutil -q cp gs://cpriti-thickthin-poc-asse1/poc/poc3.tgz /tmp/poc3.tgz
++ tar -xzf /tmp/poc3.tgz
++ cd /opt/poc3/gcs_core
++ /usr/bin/time -f 'rust build: wall=%e s' cargo build --release
++ tail -2
+    Finished `release` profile [optimized] target(s) in 3m 16s
+rust build: wall=196.75 s
++ cd /opt/poc3/gothin
++ mkdir -p bin
++ go build -o bin/bench2_rust ./cmd/bench2_rust
++ CGO_ENABLED=0
++ go build -o bin/bench2_native ./cmd/bench2_native
++ ls -la bin
+total 109704
+drwxr-xr-x 2 root   root      4096 Oct 13 08:29 .
+drwxr-xr-x 8 cpriti 89939     4096 Oct 13 08:29 ..
+-rwxr-xr-x 1 root   root  49894128 Oct 13 08:29 bench2_native
+-rwxr-xr-x 1 root   root  62427768 Oct 13 08:29 bench2_rust
++ ./bin/bench2_rust check
++ tee /var/log/bench5/check.txt
+client init: 32.524133ms
+missing object -> errors.Is(ErrObjectNotExist)=true (storage: object doesn't exist)
+create -> err=<nil> attrs=&{Bucket:cpriti-thickthin-poc-asse1 Name:check/exists ContentType: ContentLanguage: CacheControl: EventBasedHold:false TemporaryHold:false RetentionExpirationTime:0001-01-01 00:00:00 +0000 UTC ACL:[] PredefinedACL: Owner: Size:1 ContentEncoding: ContentDisposition: MD5:[] CRC32C:0 MediaLink: Metadata:map[] Generation:1791880156566462 Metageneration:0 StorageClass: Created:0001-01-01 00:00:00 +0000 UTC Finalized:0001-01-01 00:00:00 +0000 UTC Deleted:0001-01-01 00:00:00 +0000 UTC Updated:0001-01-01 00:00:00 +0000 UTC CustomerKeySHA256: KMSKeyName: Prefix: Etag: CustomTime:0001-01-01 00:00:00 +0000 UTC ComponentCount:0 Retention:<nil> SoftDeleteTime:0001-01-01 00:00:00 +0000 UTC HardDeleteTime:0001-01-01 00:00:00 +0000 UTC Contexts:<nil>}
+DoesNotExist on existing -> googleapi.Error=false code=0 (gcs_core: code=1 http=0: the service reports an error with code UNKNOWN described as: At least one of the pre-conditions you specified did not hold.)
+range read -> attrs={Size:1 StartOffset:0 ContentType:application/octet-stream ContentEncoding:identity CacheControl: LastModified:0001-01-01 00:00:00 +0000 UTC Generation:1791880156566462 Metageneration:1 CRC32C:0 Decompressed:false} remain=0 data="x"
+ctx timeout 30ms mid-stream -> after 30ms copied=0 err=context deadline exceeded (errors.Is(ctx.Err))=true
++ SIZES=1MiB,16MiB,128MiB,512MiB
++ ITERS=10
++ for round in 1 2
++ stage seq-round1
+++ date -u
++ echo '=== STAGE: seq-round1 Tue Oct 13 08:29:17 UTC 2026 ==='
+=== STAGE: seq-round1 Tue Oct 13 08:29:17 UTC 2026 ===
++ echo seq-round1
++ gsutil -q cp /var/log/bench5/STAGE gs://cpriti-thickthin-poc-asse1/results/vm5/STAGE
++ run seq_native_h2_r1 ./bin/bench2_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ local name=seq_native_h2_r1
++ shift
+++ date -u
++ echo '##### seq_native_h2_r1 Tue Oct 13 08:29:18 UTC 2026'
+##### seq_native_h2_r1 Tue Oct 13 08:29:18 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./bin/bench2_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ tee /var/log/bench5/seq_native_h2_r1.txt
+backend=go-json bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend    style  op      size          p50       p90       max      mean  p50 MiB/s   ffi/op cpu s/GiB  peak MiB
+go-json    whole  write   1MiB        100ms     139ms     188ms     113ms       10.0      0.0      4.69        82
+go-json    whole  read    1MiB         41ms      61ms      65ms      45ms       24.6      0.0      4.69        82
+go-json    whole  write   16MiB       271ms     347ms     369ms     288ms       59.1      0.0      2.78       132
+go-json    whole  read    16MiB       109ms     156ms     224ms     119ms      146.6      0.0      2.78       132
+go-json    whole  write   128MiB     1.463s    1.562s     1.67s    1.438s       87.5      0.0      2.74       491
+go-json    whole  read    128MiB      690ms     782ms    1.054s     698ms      185.4      0.0      2.74       491
+go-json    whole  write   512MiB     5.683s    5.824s    6.075s    5.585s       90.1      0.0      2.70      1521
+go-json    whole  read    512MiB      2.63s    3.329s    4.009s    2.768s      194.7      0.0      2.70      1521
+go-json    32k    write   1MiB         90ms     123ms     154ms     102ms       11.1      0.0      3.51      1474
+go-json    32k    read    1MiB         42ms      57ms      69ms      43ms       23.9      0.0      3.51      1474
+go-json    32k    write   16MiB       270ms     322ms     347ms     287ms       59.3      0.0      2.72      1585
+go-json    32k    read    16MiB       118ms     155ms     224ms     124ms      135.2      0.0      2.72      1585
+go-json    32k    write   128MiB      1.44s    1.669s    3.109s    1.641s       88.9      0.0      2.68      1874
+go-json    32k    read    128MiB      658ms     828ms     997ms     676ms      194.4      0.0      2.68      1874
+go-json    32k    write   512MiB     5.595s    5.957s    6.347s    5.662s       91.5      0.0      2.67      2387
+go-json    32k    read    512MiB     2.257s    2.822s    3.292s    2.358s      226.9      0.0      2.67      2387
+go-json    -      list    -            59ms      74ms      77ms      62ms          -      0.0  10.76ms/call   1536  (objects=1000)
+rss_max_kb=1573744 user=81.09 sys=60.79 wall=360.34
++ gsutil -q cp /var/log/bench5/seq_native_h2_r1.txt gs://cpriti-thickthin-poc-asse1/results/vm5/
++ run seq_native_h1_r1 env NATIVE_HTTP1=1 ./bin/bench2_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ local name=seq_native_h1_r1
++ shift
+++ date -u
++ echo '##### seq_native_h1_r1 Tue Oct 13 08:35:19 UTC 2026'
+##### seq_native_h1_r1 Tue Oct 13 08:35:19 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' env NATIVE_HTTP1=1 ./bin/bench2_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ tee /var/log/bench5/seq_native_h1_r1.txt
+backend=go-json-h1 bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend    style  op      size          p50       p90       max      mean  p50 MiB/s   ffi/op cpu s/GiB  peak MiB
+go-json-h1 whole  write   1MiB         96ms     105ms     115ms      98ms       10.4      0.0      3.17        82
+go-json-h1 whole  read    1MiB         37ms      54ms      63ms      40ms       27.2      0.0      3.17        82
+go-json-h1 whole  write   16MiB       261ms     351ms     394ms     286ms       61.3      0.0      1.28       133
+go-json-h1 whole  read    16MiB        87ms     108ms     118ms      86ms      184.2      0.0      1.28       133
+go-json-h1 whole  write   128MiB     1.234s    1.427s    3.936s    1.522s      103.7      0.0      1.22       472
+go-json-h1 whole  read    128MiB      395ms     561ms     624ms     431ms      323.7      0.0      1.22       472
+go-json-h1 whole  write   512MiB     4.813s        5s    5.123s    4.799s      106.4      0.0      1.20      1498
+go-json-h1 whole  read    512MiB      1.35s    1.765s    2.584s    1.464s      379.2      0.0      1.20      1498
+go-json-h1 32k    write   1MiB         87ms      96ms     106ms      89ms       11.4      0.0      2.06      1498
+go-json-h1 32k    read    1MiB         35ms      49ms      78ms      38ms       28.9      0.0      2.06      1498
+go-json-h1 32k    write   16MiB       260ms     380ms     583ms     304ms       61.5      0.0      1.25      1642
+go-json-h1 32k    read    16MiB        74ms     101ms     141ms      80ms      215.0      0.0      1.25      1642
+go-json-h1 32k    write   128MiB     1.361s    1.415s    1.597s    1.347s       94.1      0.0      1.26      1909
+go-json-h1 32k    read    128MiB      424ms     580ms     784ms     458ms      301.8      0.0      1.26      1909
+go-json-h1 32k    write   512MiB     4.524s    4.833s    5.243s    4.656s      113.2      0.0      1.18      1042
+go-json-h1 32k    read    512MiB     1.329s    1.958s    2.704s    1.444s      385.2      0.0      1.18      1042
+go-json-h1 -      list    -            64ms      88ms     101ms      70ms          -      0.0   8.89ms/call    950  (objects=1000)
+rss_max_kb=973660 user=38.14 sys=27.28 wall=256.47
++ gsutil -q cp /var/log/bench5/seq_native_h1_r1.txt gs://cpriti-thickthin-poc-asse1/results/vm5/
++ run seq_rustthin_r1 ./bin/bench2_rust -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ local name=seq_rustthin_r1
++ shift
+++ date -u
++ echo '##### seq_rustthin_r1 Tue Oct 13 08:39:37 UTC 2026'
+##### seq_rustthin_r1 Tue Oct 13 08:39:37 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./bin/bench2_rust -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ tee /var/log/bench5/seq_rustthin_r1.txt
+client init: 31.612944ms
+backend=go-rustthin bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend    style  op      size          p50       p90       max      mean  p50 MiB/s   ffi/op cpu s/GiB  peak MiB
+go-rustthin whole  write   1MiB         94ms     131ms     166ms     102ms       10.6      4.0      3.18        60
+go-rustthin whole  read    1MiB         40ms      58ms      71ms      44ms       24.7      4.0      3.18        60
+go-rustthin whole  write   16MiB       286ms     310ms     352ms     288ms       56.0      4.0      1.42       138
+go-rustthin whole  read    16MiB       108ms     147ms     209ms     114ms      148.6      4.0      1.42       138
+go-rustthin whole  write   128MiB     1.477s    1.716s    1.764s    1.501s       86.7      4.0      1.38       525
+go-rustthin whole  read    128MiB      589ms     714ms    1.206s     615ms      217.3      4.0      1.38       525
+go-rustthin whole  write   512MiB      5.68s    6.358s    9.709s      6.1s       90.1      4.0      1.36      1935
+go-rustthin whole  read    512MiB      1.96s    2.529s    2.801s    2.002s      261.3      4.0      1.36      1935
+go-rustthin 32k    write   1MiB         88ms     101ms     112ms      90ms       11.3      4.0      3.24      1238
+go-rustthin 32k    read    1MiB         40ms      56ms      76ms      43ms       25.1     36.0      3.24      1238
+go-rustthin 32k    write   16MiB       290ms     355ms     381ms     301ms       55.1      5.0      2.69      2097
+go-rustthin 32k    read    16MiB       102ms     178ms     469ms     124ms      156.4    516.0      2.69      2097
+go-rustthin 32k    write   128MiB     1.433s    1.593s    1.704s    1.474s       89.4   3589.0      2.56      2226
+go-rustthin 32k    read    128MiB      546ms     777ms    8.737s     846ms      234.5   4100.0      2.56      2226
+go-rustthin 32k    write   512MiB     5.819s    6.254s   10.208s    6.261s       88.0  15877.0      2.55      1767
+go-rustthin 32k    read    512MiB     1.906s    2.673s    3.248s    2.106s      268.7  16388.0      2.55      1767
+go-rustthin -      list    -            83ms      97ms     104ms      84ms          -      1.0   6.66ms/call   1767  (objects=1000)
+rss_max_kb=1812592 user=63.80 sys=40.58 wall=342.47
++ gsutil -q cp /var/log/bench5/seq_rustthin_r1.txt gs://cpriti-thickthin-poc-asse1/results/vm5/
++ for round in 1 2
++ stage seq-round2
+++ date -u
++ echo '=== STAGE: seq-round2 Tue Oct 13 08:45:20 UTC 2026 ==='
+=== STAGE: seq-round2 Tue Oct 13 08:45:20 UTC 2026 ===
++ echo seq-round2
++ gsutil -q cp /var/log/bench5/STAGE gs://cpriti-thickthin-poc-asse1/results/vm5/STAGE
++ run seq_native_h2_r2 ./bin/bench2_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ local name=seq_native_h2_r2
++ shift
+++ date -u
++ echo '##### seq_native_h2_r2 Tue Oct 13 08:45:21 UTC 2026'
+##### seq_native_h2_r2 Tue Oct 13 08:45:21 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./bin/bench2_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ tee /var/log/bench5/seq_native_h2_r2.txt
+backend=go-json bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend    style  op      size          p50       p90       max      mean  p50 MiB/s   ffi/op cpu s/GiB  peak MiB
+go-json    whole  write   1MiB         92ms     108ms     118ms      94ms       10.8      0.0      4.21        82
+go-json    whole  read    1MiB         38ms      55ms      69ms      41ms       26.6      0.0      4.21        82
+go-json    whole  write   16MiB       257ms     314ms     332ms     279ms       62.4      0.0      2.47       133
+go-json    whole  read    16MiB        93ms     115ms     128ms      95ms      172.4      0.0      2.47       133
+go-json    whole  write   128MiB     1.452s    1.942s    2.037s    1.575s       88.2      0.0      2.33       489
+go-json    whole  read    128MiB      524ms     760ms    2.538s     626ms      244.1      0.0      2.33       489
+go-json    whole  write   512MiB      4.89s    5.263s    5.774s    5.064s      104.7      0.0      2.32      1517
+go-json    whole  read    512MiB      1.86s    2.604s    3.258s        2s      275.3      0.0      2.32      1517
+go-json    32k    write   1MiB         93ms     107ms     114ms      95ms       10.8      0.0      3.20      1523
+go-json    32k    read    1MiB         36ms      49ms      56ms      38ms       27.8      0.0      3.20      1523
+go-json    32k    write   16MiB       254ms     324ms     408ms     280ms       62.9      0.0      2.39      1699
+go-json    32k    read    16MiB       110ms     144ms     173ms     114ms      146.1      0.0      2.39      1699
+go-json    32k    write   128MiB     1.239s    1.685s    1.831s    1.384s      103.3      0.0      2.32      1845
+go-json    32k    read    128MiB      552ms     686ms     768ms     563ms      231.8      0.0      2.32      1845
+go-json    32k    write   512MiB      4.94s    5.461s      5.9s    5.092s      103.6      0.0      2.33      1040
+go-json    32k    read    512MiB     1.984s    2.493s    3.267s    2.057s      258.1      0.0      2.33      1040
+go-json    -      list    -            59ms      90ms      94ms      65ms          -      0.0  10.45ms/call   1056  (objects=1000)
+rss_max_kb=1081856 user=71.90 sys=51.30 wall=308.91
++ gsutil -q cp /var/log/bench5/seq_native_h2_r2.txt gs://cpriti-thickthin-poc-asse1/results/vm5/
++ run seq_native_h1_r2 env NATIVE_HTTP1=1 ./bin/bench2_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ local name=seq_native_h1_r2
++ shift
+++ date -u
++ echo '##### seq_native_h1_r2 Tue Oct 13 08:50:31 UTC 2026'
+##### seq_native_h1_r2 Tue Oct 13 08:50:31 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' env NATIVE_HTTP1=1 ./bin/bench2_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ tee /var/log/bench5/seq_native_h1_r2.txt
+backend=go-json-h1 bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend    style  op      size          p50       p90       max      mean  p50 MiB/s   ffi/op cpu s/GiB  peak MiB
+go-json-h1 whole  write   1MiB        101ms     114ms     131ms     102ms        9.9      0.0      3.37        85
+go-json-h1 whole  read    1MiB         42ms      57ms      80ms      46ms       23.6      0.0      3.37        85
+go-json-h1 whole  write   16MiB       341ms     459ms     697ms     378ms       46.9      0.0      1.43       134
+go-json-h1 whole  read    16MiB       125ms     178ms     221ms     131ms      127.7      0.0      1.43       134
+go-json-h1 whole  write   128MiB     1.609s    1.823s    1.882s    1.629s       79.6      0.0      1.42       470
+go-json-h1 whole  read    128MiB      657ms     946ms    1.015s     709ms      194.9      0.0      1.42       470
+go-json-h1 whole  write   512MiB     5.894s    6.021s    6.107s    5.888s       86.9      0.0      1.45      1497
+go-json-h1 whole  read    512MiB     2.482s    4.004s    5.521s    2.856s      206.3      0.0      1.45      1497
+go-json-h1 32k    write   1MiB         97ms     103ms     104ms      97ms       10.3      0.0      2.19      1389
+go-json-h1 32k    read    1MiB         46ms      59ms     111ms      50ms       21.8      0.0      2.19      1389
+go-json-h1 32k    write   16MiB       310ms     400ms     414ms     336ms       51.5      0.0      1.46      1509
+go-json-h1 32k    read    16MiB       119ms     154ms     294ms     127ms      134.0      0.0      1.46      1509
+go-json-h1 32k    write   128MiB     1.637s    1.838s     1.84s    1.692s       78.2      0.0      1.43      1799
+go-json-h1 32k    read    128MiB      655ms     803ms    1.417s     674ms      195.4      0.0      1.43      1799
+go-json-h1 32k    write   512MiB     6.207s    6.486s    6.806s    6.229s       82.5      0.0      1.33      2312
+go-json-h1 32k    read    512MiB     2.215s    2.859s    3.624s     2.32s      231.2      0.0      1.33      2312
+go-json-h1 -      list    -            70ms      76ms     101ms      72ms          -      0.0   9.26ms/call   1442  (objects=1000)
+rss_max_kb=1477212 user=42.82 sys=32.61 wall=375.25
++ gsutil -q cp /var/log/bench5/seq_native_h1_r2.txt gs://cpriti-thickthin-poc-asse1/results/vm5/
++ run seq_rustthin_r2 ./bin/bench2_rust -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ local name=seq_rustthin_r2
++ shift
+++ date -u
++ echo '##### seq_rustthin_r2 Tue Oct 13 08:56:48 UTC 2026'
+##### seq_rustthin_r2 Tue Oct 13 08:56:48 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./bin/bench2_rust -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ tee /var/log/bench5/seq_rustthin_r2.txt
+client init: 32.097872ms
+backend=go-rustthin bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend    style  op      size          p50       p90       max      mean  p50 MiB/s   ffi/op cpu s/GiB  peak MiB
+go-rustthin whole  write   1MiB         95ms     122ms     140ms     101ms       10.5      4.0      3.11        59
+go-rustthin whole  read    1MiB         38ms      50ms     164ms      43ms       26.2      4.0      3.11        59
+go-rustthin whole  write   16MiB       283ms     311ms     320ms     288ms       56.6      4.0      1.44       169
+go-rustthin whole  read    16MiB       120ms     165ms     186ms     122ms      132.8      4.0      1.44       169
+go-rustthin whole  write   128MiB     1.343s    1.546s    1.718s    1.391s       95.3      4.0      1.39       555
+go-rustthin whole  read    128MiB      535ms     816ms    1.354s     599ms      239.3      4.0      1.39       555
+go-rustthin whole  write   512MiB     5.501s     5.86s    6.225s    5.536s       93.1      4.0      1.36      1966
+go-rustthin whole  read    512MiB      1.89s     2.42s    5.483s    2.071s      270.8      4.0      1.36      1966
+go-rustthin 32k    write   1MiB         91ms     103ms     106ms      93ms       11.0      4.0      3.27      1454
+go-rustthin 32k    read    1MiB         42ms      55ms      91ms      45ms       23.9     36.0      3.27      1454
+go-rustthin 32k    write   16MiB       295ms     320ms     354ms     301ms       54.2      5.0      2.70      1469
+go-rustthin 32k    read    16MiB       109ms     179ms     486ms     138ms      146.7    516.0      2.70      1469
+go-rustthin 32k    write   128MiB     1.464s    1.669s    1.879s    1.544s       87.4   3589.0      2.58       785
+go-rustthin 32k    read    128MiB      572ms     836ms     1.27s     650ms      223.7   4100.0      2.58       785
+go-rustthin 32k    write   512MiB     6.042s    6.599s    6.992s    6.152s       84.7  15877.0      2.56      1686
+go-rustthin 32k    read    512MiB      2.16s    3.009s    3.751s    2.322s      237.0  16388.0      2.56      1686
+go-rustthin -      list    -            88ms     109ms     148ms      91ms          -      1.0   6.84ms/call   1686  (objects=1000)
+rss_max_kb=1728784 user=63.93 sys=40.73 wall=338.30
++ gsutil -q cp /var/log/bench5/seq_rustthin_r2.txt gs://cpriti-thickthin-poc-asse1/results/vm5/
++ stage parallel
+++ date -u
++ echo '=== STAGE: parallel Tue Oct 13 09:02:27 UTC 2026 ==='
+=== STAGE: parallel Tue Oct 13 09:02:27 UTC 2026 ===
++ echo parallel
++ gsutil -q cp /var/log/bench5/STAGE gs://cpriti-thickthin-poc-asse1/results/vm5/STAGE
++ for par in 16 64 256
++ threads par16_native_h1 env NATIVE_HTTP1=1 ./bin/bench2_native -sizes 16MiB -iters 256 -parallel 16 -list-iters 0
++ local name=par16_native_h1
++ shift
++ local pid=7522
++ local max=0
++ kill -0 7522
++ env NATIVE_HTTP1=1 ./bin/bench2_native -sizes 16MiB -iters 256 -parallel 16 -list-iters 0
+++ wc -l
+++ ls /proc/7522/task
++ local t=1
++ '[' 1 -gt 0 ']'
++ max=1
++ cat /proc/7522/task/7522/comm /proc/7522/task/7526/comm /proc/7522/task/7527/comm /proc/7522/task/7528/comm
++ sort
++ uniq -c
++ sort -rn
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 1 ']'
++ max=11
++ cat /proc/7522/task/7522/comm /proc/7522/task/7526/comm /proc/7522/task/7527/comm /proc/7522/task/7528/comm /proc/7522/task/7533/comm /proc/7522/task/7535/comm /proc/7522/task/7536/comm /proc/7522/task/7537/comm /proc/7522/task/7538/comm /proc/7522/task/7539/comm /proc/7522/task/7540/comm
++ sort
++ uniq -c
++ sort -rn
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 11 ']'
++ max=12
++ cat /proc/7522/task/7522/comm /proc/7522/task/7526/comm /proc/7522/task/7527/comm /proc/7522/task/7528/comm /proc/7522/task/7533/comm /proc/7522/task/7535/comm /proc/7522/task/7536/comm /proc/7522/task/7537/comm /proc/7522/task/7538/comm /proc/7522/task/7539/comm /proc/7522/task/7540/comm /proc/7522/task/7557/comm
++ sort
++ uniq -c
++ sort -rn
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ wc -l
+++ ls /proc/7522/task
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ wc -l
+++ ls /proc/7522/task
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ wc -l
+++ ls /proc/7522/task
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ wc -l
+++ ls /proc/7522/task
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 12 ']'
++ max=13
++ cat /proc/7522/task/7522/comm /proc/7522/task/7526/comm /proc/7522/task/7527/comm /proc/7522/task/7528/comm /proc/7522/task/7533/comm /proc/7522/task/7535/comm /proc/7522/task/7536/comm /proc/7522/task/7537/comm /proc/7522/task/7538/comm /proc/7522/task/7539/comm /proc/7522/task/7540/comm /proc/7522/task/7557/comm /proc/7522/task/7795/comm
++ sort -rn
++ uniq -c
++ sort
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ wc -l
+++ ls /proc/7522/task
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ wc -l
+++ ls /proc/7522/task
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ wc -l
+++ ls /proc/7522/task
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ wc -l
+++ ls /proc/7522/task
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ wc -l
+++ ls /proc/7522/task
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ wc -l
+++ ls /proc/7522/task
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
+++ ls /proc/7522/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 7522
++ wait 7522
++ echo max_os_threads=13
++ tee -a /var/log/bench5/par16_native_h1.txt
+max_os_threads=13
++ cat /var/log/bench5/par16_native_h1.txt
+backend=go-json-h1 bucket=cpriti-thickthin-poc-asse1 parallel=16
+backend    style  op      size          p50       p90       max      mean  p50 MiB/s   ffi/op cpu s/GiB  peak MiB
+go-json-h1 whole  write   16MiB       274ms     389ms    4.252s     310ms       58.4      0.0      1.77       981
+go-json-h1 whole  read    16MiB       107ms     165ms     540ms     117ms      149.7      0.0      1.77       981
+go-json-h1 32k    write   16MiB       273ms     375ms     958ms     292ms       58.6      0.0      1.78       882
+go-json-h1 32k    read    16MiB       107ms     168ms     2.99s     121ms      149.2      0.0      1.78       882
+go-json-h1 -      list    -              0s        0s        0s        0s          -      0.0   0.00ms/call    811  (objects=0)
+max_os_threads=13
++ gsutil -q cp /var/log/bench5/par16_native_h1.txt /var/log/bench5/par16_native_h1.threads.txt gs://cpriti-thickthin-poc-asse1/results/vm5/
++ threads par16_rustthin ./bin/bench2_rust -sizes 16MiB -iters 256 -parallel 16 -list-iters 0
++ local name=par16_rustthin
++ shift
++ local pid=8189
++ local max=0
++ kill -0 8189
++ ./bin/bench2_rust -sizes 16MiB -iters 256 -parallel 16 -list-iters 0
+++ ls /proc/8189/task
+++ wc -l
++ local t=1
++ '[' 1 -gt 0 ']'
++ max=1
++ cat /proc/8189/task/8189/comm
++ sort
++ uniq -c
++ sort -rn
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 1 ']'
++ max=40
++ sort
++ uniq -c
++ sort -rn
++ cat /proc/8189/task/8189/comm /proc/8189/task/8197/comm /proc/8189/task/8198/comm /proc/8189/task/8199/comm /proc/8189/task/8200/comm /proc/8189/task/8202/comm /proc/8189/task/8203/comm /proc/8189/task/8204/comm /proc/8189/task/8205/comm /proc/8189/task/8206/comm /proc/8189/task/8207/comm /proc/8189/task/8208/comm /proc/8189/task/8209/comm /proc/8189/task/8210/comm /proc/8189/task/8211/comm /proc/8189/task/8212/comm /proc/8189/task/8213/comm /proc/8189/task/8214/comm /proc/8189/task/8215/comm /proc/8189/task/8216/comm /proc/8189/task/8217/comm /proc/8189/task/8218/comm /proc/8189/task/8219/comm /proc/8189/task/8220/comm /proc/8189/task/8221/comm /proc/8189/task/8222/comm /proc/8189/task/8223/comm /proc/8189/task/8224/comm /proc/8189/task/8225/comm /proc/8189/task/8226/comm /proc/8189/task/8227/comm /proc/8189/task/8228/comm /proc/8189/task/8229/comm /proc/8189/task/8230/comm /proc/8189/task/8231/comm /proc/8189/task/8232/comm /proc/8189/task/8233/comm /proc/8189/task/8234/comm /proc/8189/task/8235/comm /proc/8189/task/8236/comm
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ wc -l
+++ ls /proc/8189/task
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ wc -l
+++ ls /proc/8189/task
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ wc -l
+++ ls /proc/8189/task
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ wc -l
+++ ls /proc/8189/task
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ wc -l
+++ ls /proc/8189/task
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ wc -l
+++ ls /proc/8189/task
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ wc -l
+++ ls /proc/8189/task
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=40
++ '[' 40 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=25
++ '[' 25 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=25
++ '[' 25 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=25
++ '[' 25 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=25
++ '[' 25 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=25
++ '[' 25 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=25
++ '[' 25 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=25
++ '[' 25 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=25
++ '[' 25 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=25
++ '[' 25 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=25
++ '[' 25 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=25
++ '[' 25 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=25
++ '[' 25 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=25
++ '[' 25 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=25
++ '[' 25 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=25
++ '[' 25 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ wc -l
+++ ls /proc/8189/task
++ local t=25
++ '[' 25 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=25
++ '[' 25 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=25
++ '[' 25 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=25
++ '[' 25 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ wc -l
+++ ls /proc/8189/task
++ local t=25
++ '[' 25 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=25
++ '[' 25 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=25
++ '[' 25 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ wc -l
+++ ls /proc/8189/task
++ local t=25
++ '[' 25 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=25
++ '[' 25 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=25
++ '[' 25 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ wc -l
+++ ls /proc/8189/task
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ wc -l
+++ ls /proc/8189/task
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ wc -l
+++ ls /proc/8189/task
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ wc -l
+++ ls /proc/8189/task
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
+++ ls /proc/8189/task
+++ wc -l
++ local t=24
++ '[' 24 -gt 40 ']'
++ sleep 0.2
++ kill -0 8189
++ wait 8189
++ echo max_os_threads=40
++ tee -a /var/log/bench5/par16_rustthin.txt
+max_os_threads=40
++ cat /var/log/bench5/par16_rustthin.txt
+client init: 32.453085ms
+backend=go-rustthin bucket=cpriti-thickthin-poc-asse1 parallel=16
+backend    style  op      size          p50       p90       max      mean  p50 MiB/s   ffi/op cpu s/GiB  peak MiB
+go-rustthin whole  write   16MiB       267ms     378ms     721ms     286ms       60.0    109.7      1.83       777
+go-rustthin whole  read    16MiB       104ms     149ms     645ms     111ms      154.2     47.2      1.83       777
+go-rustthin 32k    write   16MiB       291ms     382ms     824ms     308ms       54.9   9941.8      2.63      1711
+go-rustthin 32k    read    16MiB       108ms     158ms    1.276s     116ms      148.5   4800.2      2.63      1711
+go-rustthin -      list    -              0s        0s        0s        0s          -      0.0   0.00ms/call   1460  (objects=0)
+max_os_threads=40
++ gsutil -q cp /var/log/bench5/par16_rustthin.txt /var/log/bench5/par16_rustthin.threads.txt gs://cpriti-thickthin-poc-asse1/results/vm5/
++ for par in 16 64 256
++ threads par64_native_h1 env NATIVE_HTTP1=1 ./bin/bench2_native -sizes 16MiB -iters 256 -parallel 64 -list-iters 0
++ local name=par64_native_h1
++ shift
++ local pid=8834
++ local max=0
++ kill -0 8834
++ env NATIVE_HTTP1=1 ./bin/bench2_native -sizes 16MiB -iters 256 -parallel 64 -list-iters 0
+++ ls /proc/8834/task
+++ wc -l
++ local t=1
++ '[' 1 -gt 0 ']'
++ max=1
++ cat /proc/8834/task/8834/comm
++ sort
++ uniq -c
++ sort -rn
++ sleep 0.2
++ kill -0 8834
+++ ls /proc/8834/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 1 ']'
++ max=11
++ sort
++ cat /proc/8834/task/8834/comm /proc/8834/task/8842/comm /proc/8834/task/8843/comm /proc/8834/task/8844/comm /proc/8834/task/8845/comm /proc/8834/task/8847/comm /proc/8834/task/8848/comm /proc/8834/task/8849/comm /proc/8834/task/8850/comm /proc/8834/task/8851/comm /proc/8834/task/8852/comm
++ uniq -c
++ sort -rn
++ sleep 0.2
++ kill -0 8834
+++ ls /proc/8834/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 8834
+++ ls /proc/8834/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 8834
+++ ls /proc/8834/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 8834
+++ ls /proc/8834/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 8834
+++ ls /proc/8834/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 11 ']'
++ max=12
++ cat /proc/8834/task/8834/comm /proc/8834/task/8842/comm /proc/8834/task/8843/comm /proc/8834/task/8844/comm /proc/8834/task/8845/comm /proc/8834/task/8847/comm /proc/8834/task/8848/comm /proc/8834/task/8849/comm /proc/8834/task/8850/comm /proc/8834/task/8851/comm /proc/8834/task/8852/comm /proc/8834/task/8880/comm /proc/8834/task/8884/comm
++ uniq -c
++ sort -rn
++ sort
++ sleep 0.2
++ kill -0 8834
+++ ls /proc/8834/task
+++ wc -l
++ local t=14
++ '[' 14 -gt 12 ']'
++ max=14
++ sort
++ cat /proc/8834/task/8834/comm /proc/8834/task/8842/comm /proc/8834/task/8843/comm /proc/8834/task/8844/comm /proc/8834/task/8845/comm /proc/8834/task/8847/comm /proc/8834/task/8848/comm /proc/8834/task/8849/comm /proc/8834/task/8850/comm /proc/8834/task/8851/comm /proc/8834/task/8852/comm /proc/8834/task/8880/comm /proc/8834/task/8884/comm /proc/8834/task/8889/comm
++ uniq -c
++ sort -rn
++ sleep 0.2
++ kill -0 8834
+++ wc -l
+++ ls /proc/8834/task
++ local t=14
++ '[' 14 -gt 14 ']'
++ sleep 0.2
++ kill -0 8834
+++ ls /proc/8834/task
+++ wc -l
++ local t=14
++ '[' 14 -gt 14 ']'
++ sleep 0.2
++ kill -0 8834
+++ ls /proc/8834/task
+++ wc -l
++ local t=14
++ '[' 14 -gt 14 ']'
++ sleep 0.2
++ kill -0 8834
+++ ls /proc/8834/task
+++ wc -l
++ local t=14
++ '[' 14 -gt 14 ']'
++ sleep 0.2
++ kill -0 8834
+++ ls /proc/8834/task
+++ wc -l
++ local t=15
++ '[' 15 -gt 14 ']'
++ max=15
++ uniq -c
++ sort
++ sort -rn
++ cat /proc/8834/task/8834/comm /proc/8834/task/8842/comm /proc/8834/task/8843/comm /proc/8834/task/8844/comm /proc/8834/task/8845/comm /proc/8834/task/8847/comm /proc/8834/task/8848/comm /proc/8834/task/8849/comm /proc/8834/task/8850/comm /proc/8834/task/8851/comm /proc/8834/task/8852/comm /proc/8834/task/8880/comm /proc/8834/task/8884/comm /proc/8834/task/8889/comm /proc/8834/task/8915/comm
++ sleep 0.2
++ kill -0 8834
+++ wc -l
+++ ls /proc/8834/task
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 8834
+++ ls /proc/8834/task
+++ wc -l
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 8834
+++ wc -l
+++ ls /proc/8834/task
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 8834
+++ wc -l
+++ ls /proc/8834/task
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 8834
+++ wc -l
+++ ls /proc/8834/task
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 8834
+++ wc -l
+++ ls /proc/8834/task
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 8834
+++ ls /proc/8834/task
+++ wc -l
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 8834
+++ ls /proc/8834/task
+++ wc -l
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 8834
+++ ls /proc/8834/task
+++ wc -l
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 8834
+++ ls /proc/8834/task
+++ wc -l
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 8834
+++ wc -l
+++ ls /proc/8834/task
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 8834
+++ ls /proc/8834/task
+++ wc -l
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 8834
+++ ls /proc/8834/task
+++ wc -l
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 8834
+++ ls /proc/8834/task
+++ wc -l
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 8834
+++ wc -l
+++ ls /proc/8834/task
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 8834
+++ ls /proc/8834/task
+++ wc -l
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 8834
+++ wc -l
+++ ls /proc/8834/task
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 8834
+++ wc -l
+++ ls /proc/8834/task
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 8834
+++ ls /proc/8834/task
+++ wc -l
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 8834
+++ wc -l
+++ ls /proc/8834/task
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 8834
+++ ls /proc/8834/task
+++ wc -l
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 8834
+++ wc -l
+++ ls /proc/8834/task
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 8834
+++ ls /proc/8834/task
+++ wc -l
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 8834
+++ ls /proc/8834/task
+++ wc -l
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 8834
+++ ls /proc/8834/task
+++ wc -l
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 8834
+++ wc -l
+++ ls /proc/8834/task
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 8834
+++ wc -l
+++ ls /proc/8834/task
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 8834
+++ ls /proc/8834/task
+++ wc -l
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 8834
+++ ls /proc/8834/task
+++ wc -l
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 8834
++ wait 8834
++ echo max_os_threads=15
++ tee -a /var/log/bench5/par64_native_h1.txt
+max_os_threads=15
++ cat /var/log/bench5/par64_native_h1.txt
+backend=go-json-h1 bucket=cpriti-thickthin-poc-asse1 parallel=64
+backend    style  op      size          p50       p90       max      mean  p50 MiB/s   ffi/op cpu s/GiB  peak MiB
+go-json-h1 whole  write   16MiB       448ms     963ms    1.114s     545ms       35.7      0.0      1.72      3304
+go-json-h1 whole  read    16MiB       157ms     263ms    3.046s     178ms      101.7      0.0      1.72      3304
+go-json-h1 32k    write   16MiB       351ms     928ms    1.637s     474ms       45.5      0.0      1.60      3258
+go-json-h1 32k    read    16MiB       139ms     232ms    1.096s     159ms      115.1      0.0      1.60      3258
+go-json-h1 -      list    -              0s        0s        0s        0s          -      0.0   0.00ms/call   3014  (objects=0)
+max_os_threads=15
++ gsutil -q cp /var/log/bench5/par64_native_h1.txt /var/log/bench5/par64_native_h1.threads.txt gs://cpriti-thickthin-poc-asse1/results/vm5/
++ threads par64_rustthin ./bin/bench2_rust -sizes 16MiB -iters 256 -parallel 64 -list-iters 0
++ local name=par64_rustthin
++ shift
++ local pid=9211
++ local max=0
++ kill -0 9211
++ ./bin/bench2_rust -sizes 16MiB -iters 256 -parallel 64 -list-iters 0
+++ ls /proc/9211/task
+++ wc -l
++ local t=1
++ '[' 1 -gt 0 ']'
++ max=1
++ cat /proc/9211/task/9211/comm
++ sort
++ uniq -c
++ sort -rn
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 1 ']'
++ max=55
++ sort
++ uniq -c
++ cat /proc/9211/task/9211/comm /proc/9211/task/9219/comm /proc/9211/task/9221/comm /proc/9211/task/9222/comm /proc/9211/task/9223/comm /proc/9211/task/9224/comm /proc/9211/task/9225/comm /proc/9211/task/9226/comm /proc/9211/task/9227/comm /proc/9211/task/9228/comm /proc/9211/task/9229/comm /proc/9211/task/9230/comm /proc/9211/task/9231/comm /proc/9211/task/9232/comm /proc/9211/task/9233/comm /proc/9211/task/9234/comm /proc/9211/task/9235/comm /proc/9211/task/9236/comm /proc/9211/task/9237/comm /proc/9211/task/9238/comm /proc/9211/task/9239/comm /proc/9211/task/9240/comm /proc/9211/task/9241/comm /proc/9211/task/9242/comm /proc/9211/task/9243/comm /proc/9211/task/9244/comm /proc/9211/task/9245/comm /proc/9211/task/9246/comm /proc/9211/task/9247/comm /proc/9211/task/9248/comm /proc/9211/task/9249/comm /proc/9211/task/9250/comm /proc/9211/task/9251/comm /proc/9211/task/9252/comm /proc/9211/task/9253/comm /proc/9211/task/9254/comm /proc/9211/task/9255/comm /proc/9211/task/9256/comm /proc/9211/task/9257/comm /proc/9211/task/9258/comm /proc/9211/task/9259/comm /proc/9211/task/9260/comm /proc/9211/task/9261/comm /proc/9211/task/9262/comm /proc/9211/task/9263/comm /proc/9211/task/9264/comm /proc/9211/task/9265/comm /proc/9211/task/9266/comm /proc/9211/task/9267/comm /proc/9211/task/9268/comm /proc/9211/task/9269/comm /proc/9211/task/9270/comm /proc/9211/task/9271/comm /proc/9211/task/9272/comm /proc/9211/task/9273/comm
++ sort -rn
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ wc -l
+++ ls /proc/9211/task
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ wc -l
+++ ls /proc/9211/task
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ wc -l
+++ ls /proc/9211/task
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ wc -l
+++ ls /proc/9211/task
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ wc -l
+++ ls /proc/9211/task
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ wc -l
+++ ls /proc/9211/task
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ wc -l
+++ ls /proc/9211/task
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ wc -l
+++ ls /proc/9211/task
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ wc -l
+++ ls /proc/9211/task
++ local t=55
++ '[' 55 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=50
++ '[' 50 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=50
++ '[' 50 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=50
++ '[' 50 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=50
++ '[' 50 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=50
++ '[' 50 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ wc -l
+++ ls /proc/9211/task
++ local t=50
++ '[' 50 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=50
++ '[' 50 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=49
++ '[' 49 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=49
++ '[' 49 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ wc -l
+++ ls /proc/9211/task
++ local t=49
++ '[' 49 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=49
++ '[' 49 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ wc -l
+++ ls /proc/9211/task
++ local t=49
++ '[' 49 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=49
++ '[' 49 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=49
++ '[' 49 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=49
++ '[' 49 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
+++ ls /proc/9211/task
+++ wc -l
++ local t=2
++ '[' 2 -gt 55 ']'
++ sleep 0.2
++ kill -0 9211
++ wait 9211
++ echo max_os_threads=55
++ tee -a /var/log/bench5/par64_rustthin.txt
+max_os_threads=55
++ cat /var/log/bench5/par64_rustthin.txt
+client init: 33.472399ms
+backend=go-rustthin bucket=cpriti-thickthin-poc-asse1 parallel=64
+backend    style  op      size          p50       p90       max      mean  p50 MiB/s   ffi/op cpu s/GiB  peak MiB
+go-rustthin whole  write   16MiB       521ms    1.026s    1.103s     603ms       30.7    417.8      1.85      2379
+go-rustthin whole  read    16MiB       159ms     292ms    1.007s     184ms      100.9    180.2      1.85      2379
+go-rustthin 32k    write   16MiB       318ms     785ms    1.259s     416ms       50.4  19804.6      2.61      4281
+go-rustthin 32k    read    16MiB       356ms     427ms     833ms     339ms       45.0  24739.7      2.61      4281
+go-rustthin -      list    -              0s        0s        0s        0s          -      0.0   0.00ms/call   3371  (objects=0)
+max_os_threads=55
++ gsutil -q cp /var/log/bench5/par64_rustthin.txt /var/log/bench5/par64_rustthin.threads.txt gs://cpriti-thickthin-poc-asse1/results/vm5/
++ for par in 16 64 256
++ threads par256_native_h1 env NATIVE_HTTP1=1 ./bin/bench2_native -sizes 16MiB -iters 256 -parallel 256 -list-iters 0
++ local name=par256_native_h1
++ shift
++ local pid=9707
++ local max=0
++ kill -0 9707
++ env NATIVE_HTTP1=1 ./bin/bench2_native -sizes 16MiB -iters 256 -parallel 256 -list-iters 0
+++ ls /proc/9707/task
+++ wc -l
++ local t=1
++ '[' 1 -gt 0 ']'
++ max=1
++ cat /proc/9707/task/9707/comm
++ sort
++ uniq -c
++ sort -rn
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=10
++ '[' 10 -gt 1 ']'
++ max=10
++ cat /proc/9707/task/9707/comm /proc/9707/task/9715/comm /proc/9707/task/9716/comm /proc/9707/task/9717/comm /proc/9707/task/9718/comm /proc/9707/task/9720/comm /proc/9707/task/9721/comm /proc/9707/task/9722/comm /proc/9707/task/9723/comm /proc/9707/task/9724/comm
++ sort
++ uniq -c
++ sort -rn
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=10
++ '[' 10 -gt 10 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=10
++ '[' 10 -gt 10 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=10
++ '[' 10 -gt 10 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=10
++ '[' 10 -gt 10 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=10
++ '[' 10 -gt 10 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=10
++ '[' 10 -gt 10 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=10
++ '[' 10 -gt 10 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=10
++ '[' 10 -gt 10 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 10 ']'
++ max=11
++ sort -rn
++ uniq -c
++ sort
++ cat /proc/9707/task/9707/comm /proc/9707/task/9715/comm /proc/9707/task/9716/comm /proc/9707/task/9717/comm /proc/9707/task/9718/comm /proc/9707/task/9720/comm /proc/9707/task/9721/comm /proc/9707/task/9722/comm /proc/9707/task/9723/comm /proc/9707/task/9724/comm /proc/9707/task/9766/comm /proc/9707/task/9773/comm
++ sleep 0.2
++ kill -0 9707
+++ wc -l
+++ ls /proc/9707/task
++ local t=13
++ '[' 13 -gt 11 ']'
++ max=13
++ cat /proc/9707/task/9707/comm /proc/9707/task/9715/comm /proc/9707/task/9716/comm /proc/9707/task/9717/comm /proc/9707/task/9718/comm /proc/9707/task/9720/comm /proc/9707/task/9721/comm /proc/9707/task/9722/comm /proc/9707/task/9723/comm /proc/9707/task/9724/comm /proc/9707/task/9766/comm /proc/9707/task/9773/comm /proc/9707/task/9775/comm
++ sort -rn
++ sort
++ uniq -c
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 9707
+++ wc -l
+++ ls /proc/9707/task
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=15
++ '[' 15 -gt 13 ']'
++ max=15
++ sort -rn
++ sort
++ uniq -c
++ cat /proc/9707/task/9707/comm /proc/9707/task/9715/comm /proc/9707/task/9716/comm /proc/9707/task/9717/comm /proc/9707/task/9718/comm /proc/9707/task/9720/comm /proc/9707/task/9721/comm /proc/9707/task/9722/comm /proc/9707/task/9723/comm /proc/9707/task/9724/comm /proc/9707/task/9766/comm /proc/9707/task/9773/comm /proc/9707/task/9775/comm /proc/9707/task/9795/comm /proc/9707/task/9796/comm
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=18
++ '[' 18 -gt 15 ']'
++ max=18
++ cat /proc/9707/task/9707/comm /proc/9707/task/9715/comm /proc/9707/task/9716/comm /proc/9707/task/9717/comm /proc/9707/task/9718/comm /proc/9707/task/9720/comm /proc/9707/task/9721/comm /proc/9707/task/9722/comm /proc/9707/task/9723/comm /proc/9707/task/9724/comm /proc/9707/task/9766/comm /proc/9707/task/9773/comm /proc/9707/task/9775/comm /proc/9707/task/9795/comm /proc/9707/task/9796/comm /proc/9707/task/9802/comm /proc/9707/task/9803/comm /proc/9707/task/9804/comm
++ uniq -c
++ sort
++ sort -rn
++ sleep 0.2
++ kill -0 9707
+++ wc -l
+++ ls /proc/9707/task
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ wc -l
+++ ls /proc/9707/task
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ wc -l
+++ ls /proc/9707/task
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ wc -l
+++ ls /proc/9707/task
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ wc -l
+++ ls /proc/9707/task
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ wc -l
+++ ls /proc/9707/task
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ wc -l
+++ ls /proc/9707/task
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ wc -l
+++ ls /proc/9707/task
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ wc -l
+++ ls /proc/9707/task
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ wc -l
+++ ls /proc/9707/task
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ wc -l
+++ ls /proc/9707/task
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ wc -l
+++ ls /proc/9707/task
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ wc -l
+++ ls /proc/9707/task
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
+++ ls /proc/9707/task
+++ wc -l
++ local t=18
++ '[' 18 -gt 18 ']'
++ sleep 0.2
++ kill -0 9707
++ wait 9707
++ echo max_os_threads=18
++ tee -a /var/log/bench5/par256_native_h1.txt
+max_os_threads=18
++ cat /var/log/bench5/par256_native_h1.txt
+backend=go-json-h1 bucket=cpriti-thickthin-poc-asse1 parallel=256
+backend    style  op      size          p50       p90       max      mean  p50 MiB/s   ffi/op cpu s/GiB  peak MiB
+go-json-h1 whole  write   16MiB        2.6s    2.953s    4.441s    2.542s        6.2      0.0      1.92      8464
+go-json-h1 whole  read    16MiB       518ms    1.166s    2.354s     601ms       30.9      0.0      1.92      8464
+go-json-h1 32k    write   16MiB      2.164s    2.676s    3.464s    2.124s        7.4      0.0      1.70     11897
+go-json-h1 32k    read    16MiB       471ms    1.009s    2.235s     544ms       34.0      0.0      1.70     11897
+go-json-h1 -      list    -              0s        0s        0s        0s          -      0.0   0.00ms/call  11897  (objects=0)
+max_os_threads=18
++ gsutil -q cp /var/log/bench5/par256_native_h1.txt /var/log/bench5/par256_native_h1.threads.txt gs://cpriti-thickthin-poc-asse1/results/vm5/
++ threads par256_rustthin ./bin/bench2_rust -sizes 16MiB -iters 256 -parallel 256 -list-iters 0
++ local name=par256_rustthin
++ shift
++ local pid=10138
++ local max=0
++ kill -0 10138
++ ./bin/bench2_rust -sizes 16MiB -iters 256 -parallel 256 -list-iters 0
+++ ls /proc/10138/task
+++ wc -l
++ local t=1
++ '[' 1 -gt 0 ']'
++ max=1
++ cat /proc/10138/task/10138/comm
++ sort
++ uniq -c
++ sort -rn
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=49
++ '[' 49 -gt 1 ']'
++ max=49
++ uniq -c
++ cat /proc/10138/task/10138/comm /proc/10138/task/10146/comm /proc/10138/task/10148/comm /proc/10138/task/10149/comm /proc/10138/task/10150/comm /proc/10138/task/10151/comm /proc/10138/task/10152/comm /proc/10138/task/10153/comm /proc/10138/task/10154/comm /proc/10138/task/10155/comm /proc/10138/task/10156/comm /proc/10138/task/10157/comm /proc/10138/task/10158/comm /proc/10138/task/10159/comm /proc/10138/task/10160/comm /proc/10138/task/10161/comm /proc/10138/task/10162/comm /proc/10138/task/10163/comm /proc/10138/task/10164/comm /proc/10138/task/10165/comm /proc/10138/task/10166/comm /proc/10138/task/10167/comm /proc/10138/task/10168/comm /proc/10138/task/10169/comm /proc/10138/task/10170/comm /proc/10138/task/10171/comm /proc/10138/task/10172/comm /proc/10138/task/10173/comm /proc/10138/task/10174/comm /proc/10138/task/10175/comm /proc/10138/task/10176/comm /proc/10138/task/10177/comm /proc/10138/task/10178/comm /proc/10138/task/10179/comm /proc/10138/task/10180/comm /proc/10138/task/10181/comm /proc/10138/task/10182/comm /proc/10138/task/10183/comm /proc/10138/task/10184/comm /proc/10138/task/10185/comm /proc/10138/task/10186/comm /proc/10138/task/10187/comm /proc/10138/task/10188/comm /proc/10138/task/10189/comm /proc/10138/task/10190/comm /proc/10138/task/10191/comm /proc/10138/task/10192/comm /proc/10138/task/10193/comm /proc/10138/task/10197/comm
++ sort
++ sort -rn
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=95
++ '[' 95 -gt 49 ']'
++ max=95
++ sort
++ uniq -c
++ sort -rn
++ cat /proc/10138/task/10138/comm /proc/10138/task/10146/comm /proc/10138/task/10148/comm /proc/10138/task/10149/comm /proc/10138/task/10150/comm /proc/10138/task/10151/comm /proc/10138/task/10152/comm /proc/10138/task/10153/comm /proc/10138/task/10154/comm /proc/10138/task/10155/comm /proc/10138/task/10156/comm /proc/10138/task/10157/comm /proc/10138/task/10158/comm /proc/10138/task/10159/comm /proc/10138/task/10160/comm /proc/10138/task/10161/comm /proc/10138/task/10162/comm /proc/10138/task/10163/comm /proc/10138/task/10164/comm /proc/10138/task/10165/comm /proc/10138/task/10166/comm /proc/10138/task/10167/comm /proc/10138/task/10168/comm /proc/10138/task/10169/comm /proc/10138/task/10170/comm /proc/10138/task/10171/comm /proc/10138/task/10172/comm /proc/10138/task/10173/comm /proc/10138/task/10174/comm /proc/10138/task/10175/comm /proc/10138/task/10176/comm /proc/10138/task/10177/comm /proc/10138/task/10178/comm /proc/10138/task/10179/comm /proc/10138/task/10180/comm /proc/10138/task/10181/comm /proc/10138/task/10182/comm /proc/10138/task/10183/comm /proc/10138/task/10184/comm /proc/10138/task/10185/comm /proc/10138/task/10186/comm /proc/10138/task/10187/comm /proc/10138/task/10188/comm /proc/10138/task/10189/comm /proc/10138/task/10190/comm /proc/10138/task/10191/comm /proc/10138/task/10192/comm /proc/10138/task/10193/comm /proc/10138/task/10197/comm /proc/10138/task/10203/comm /proc/10138/task/10204/comm /proc/10138/task/10205/comm /proc/10138/task/10206/comm /proc/10138/task/10207/comm /proc/10138/task/10208/comm /proc/10138/task/10209/comm /proc/10138/task/10210/comm /proc/10138/task/10211/comm /proc/10138/task/10212/comm /proc/10138/task/10213/comm /proc/10138/task/10214/comm /proc/10138/task/10215/comm /proc/10138/task/10216/comm /proc/10138/task/10217/comm /proc/10138/task/10218/comm /proc/10138/task/10219/comm /proc/10138/task/10220/comm /proc/10138/task/10221/comm /proc/10138/task/10222/comm /proc/10138/task/10223/comm /proc/10138/task/10224/comm /proc/10138/task/10225/comm /proc/10138/task/10226/comm /proc/10138/task/10227/comm /proc/10138/task/10228/comm /proc/10138/task/10229/comm /proc/10138/task/10230/comm /proc/10138/task/10231/comm /proc/10138/task/10232/comm /proc/10138/task/10233/comm /proc/10138/task/10234/comm /proc/10138/task/10235/comm /proc/10138/task/10236/comm /proc/10138/task/10237/comm /proc/10138/task/10238/comm /proc/10138/task/10239/comm /proc/10138/task/10240/comm /proc/10138/task/10241/comm /proc/10138/task/10242/comm /proc/10138/task/10243/comm /proc/10138/task/10244/comm /proc/10138/task/10245/comm /proc/10138/task/10246/comm /proc/10138/task/10250/comm /proc/10138/task/10251/comm
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=163
++ '[' 163 -gt 95 ']'
++ max=163
++ uniq -c
++ sort -rn
++ sort
++ cat /proc/10138/task/10138/comm /proc/10138/task/10146/comm /proc/10138/task/10148/comm /proc/10138/task/10149/comm /proc/10138/task/10150/comm /proc/10138/task/10151/comm /proc/10138/task/10152/comm /proc/10138/task/10153/comm /proc/10138/task/10154/comm /proc/10138/task/10155/comm /proc/10138/task/10156/comm /proc/10138/task/10157/comm /proc/10138/task/10158/comm /proc/10138/task/10159/comm /proc/10138/task/10160/comm /proc/10138/task/10161/comm /proc/10138/task/10162/comm /proc/10138/task/10163/comm /proc/10138/task/10164/comm /proc/10138/task/10165/comm /proc/10138/task/10166/comm /proc/10138/task/10167/comm /proc/10138/task/10168/comm /proc/10138/task/10169/comm /proc/10138/task/10170/comm /proc/10138/task/10171/comm /proc/10138/task/10172/comm /proc/10138/task/10173/comm /proc/10138/task/10174/comm /proc/10138/task/10175/comm /proc/10138/task/10176/comm /proc/10138/task/10177/comm /proc/10138/task/10178/comm /proc/10138/task/10179/comm /proc/10138/task/10180/comm /proc/10138/task/10181/comm /proc/10138/task/10182/comm /proc/10138/task/10183/comm /proc/10138/task/10184/comm /proc/10138/task/10185/comm /proc/10138/task/10186/comm /proc/10138/task/10187/comm /proc/10138/task/10188/comm /proc/10138/task/10189/comm /proc/10138/task/10190/comm /proc/10138/task/10191/comm /proc/10138/task/10192/comm /proc/10138/task/10193/comm /proc/10138/task/10197/comm /proc/10138/task/10203/comm /proc/10138/task/10204/comm /proc/10138/task/10205/comm /proc/10138/task/10206/comm /proc/10138/task/10207/comm /proc/10138/task/10208/comm /proc/10138/task/10209/comm /proc/10138/task/10210/comm /proc/10138/task/10211/comm /proc/10138/task/10212/comm /proc/10138/task/10213/comm /proc/10138/task/10214/comm /proc/10138/task/10215/comm /proc/10138/task/10216/comm /proc/10138/task/10217/comm /proc/10138/task/10218/comm /proc/10138/task/10219/comm /proc/10138/task/10220/comm /proc/10138/task/10221/comm /proc/10138/task/10222/comm /proc/10138/task/10223/comm /proc/10138/task/10224/comm /proc/10138/task/10225/comm /proc/10138/task/10226/comm /proc/10138/task/10227/comm /proc/10138/task/10228/comm /proc/10138/task/10229/comm /proc/10138/task/10230/comm /proc/10138/task/10231/comm /proc/10138/task/10232/comm /proc/10138/task/10233/comm /proc/10138/task/10234/comm /proc/10138/task/10235/comm /proc/10138/task/10236/comm /proc/10138/task/10237/comm /proc/10138/task/10238/comm /proc/10138/task/10239/comm /proc/10138/task/10240/comm /proc/10138/task/10241/comm /proc/10138/task/10242/comm /proc/10138/task/10243/comm /proc/10138/task/10244/comm /proc/10138/task/10245/comm /proc/10138/task/10246/comm /proc/10138/task/10250/comm /proc/10138/task/10251/comm /proc/10138/task/10256/comm /proc/10138/task/10258/comm /proc/10138/task/10259/comm /proc/10138/task/10260/comm /proc/10138/task/10261/comm /proc/10138/task/10262/comm /proc/10138/task/10263/comm /proc/10138/task/10264/comm /proc/10138/task/10265/comm /proc/10138/task/10266/comm /proc/10138/task/10267/comm /proc/10138/task/10268/comm /proc/10138/task/10269/comm /proc/10138/task/10270/comm /proc/10138/task/10271/comm /proc/10138/task/10272/comm /proc/10138/task/10273/comm /proc/10138/task/10274/comm /proc/10138/task/10275/comm /proc/10138/task/10276/comm /proc/10138/task/10277/comm /proc/10138/task/10278/comm /proc/10138/task/10279/comm /proc/10138/task/10280/comm /proc/10138/task/10281/comm /proc/10138/task/10282/comm /proc/10138/task/10283/comm /proc/10138/task/10284/comm /proc/10138/task/10285/comm /proc/10138/task/10286/comm /proc/10138/task/10287/comm /proc/10138/task/10288/comm /proc/10138/task/10289/comm /proc/10138/task/10290/comm /proc/10138/task/10291/comm /proc/10138/task/10292/comm /proc/10138/task/10293/comm /proc/10138/task/10294/comm /proc/10138/task/10295/comm /proc/10138/task/10296/comm /proc/10138/task/10297/comm /proc/10138/task/10298/comm /proc/10138/task/10299/comm /proc/10138/task/10300/comm /proc/10138/task/10301/comm /proc/10138/task/10302/comm /proc/10138/task/10303/comm /proc/10138/task/10304/comm /proc/10138/task/10305/comm /proc/10138/task/10306/comm /proc/10138/task/10307/comm /proc/10138/task/10308/comm /proc/10138/task/10309/comm /proc/10138/task/10310/comm /proc/10138/task/10311/comm /proc/10138/task/10312/comm /proc/10138/task/10313/comm /proc/10138/task/10314/comm /proc/10138/task/10315/comm /proc/10138/task/10316/comm /proc/10138/task/10317/comm /proc/10138/task/10318/comm /proc/10138/task/10319/comm /proc/10138/task/10320/comm /proc/10138/task/10321/comm /proc/10138/task/10322/comm /proc/10138/task/10323/comm /proc/10138/task/10324/comm
++ sleep 0.2
++ kill -0 10138
+++ wc -l
+++ ls /proc/10138/task
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ wc -l
+++ ls /proc/10138/task
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ wc -l
+++ ls /proc/10138/task
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ wc -l
+++ ls /proc/10138/task
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ wc -l
+++ ls /proc/10138/task
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ wc -l
+++ ls /proc/10138/task
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ wc -l
+++ ls /proc/10138/task
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ wc -l
+++ ls /proc/10138/task
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ wc -l
+++ ls /proc/10138/task
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ wc -l
+++ ls /proc/10138/task
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ wc -l
+++ ls /proc/10138/task
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ wc -l
+++ ls /proc/10138/task
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ wc -l
+++ ls /proc/10138/task
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ wc -l
+++ ls /proc/10138/task
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ wc -l
+++ ls /proc/10138/task
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ wc -l
+++ ls /proc/10138/task
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ wc -l
+++ ls /proc/10138/task
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ wc -l
+++ ls /proc/10138/task
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ wc -l
+++ ls /proc/10138/task
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ wc -l
+++ ls /proc/10138/task
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=163
++ '[' 163 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=154
++ '[' 154 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=154
++ '[' 154 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=154
++ '[' 154 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ wc -l
+++ ls /proc/10138/task
++ local t=154
++ '[' 154 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=154
++ '[' 154 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ wc -l
+++ ls /proc/10138/task
++ local t=154
++ '[' 154 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=154
++ '[' 154 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ ls /proc/10138/task
+++ wc -l
++ local t=154
++ '[' 154 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ wc -l
+++ ls /proc/10138/task
++ local t=154
++ '[' 154 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ wc -l
+++ ls /proc/10138/task
++ local t=154
++ '[' 154 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
+++ wc -l
+++ ls /proc/10138/task
++ local t=154
++ '[' 154 -gt 163 ']'
++ sleep 0.2
++ kill -0 10138
++ wait 10138
++ echo max_os_threads=163
++ tee -a /var/log/bench5/par256_rustthin.txt
+max_os_threads=163
++ cat /var/log/bench5/par256_rustthin.txt
+client init: 31.949248ms
+backend=go-rustthin bucket=cpriti-thickthin-poc-asse1 parallel=256
+backend    style  op      size          p50       p90       max      mean  p50 MiB/s   ffi/op cpu s/GiB  peak MiB
+go-rustthin whole  write   16MiB      2.542s    2.867s    3.485s    2.519s        6.3   1146.4      2.08      4513
+go-rustthin whole  read    16MiB       624ms    1.761s    2.808s     821ms       25.6    668.9      2.08      4513
+go-rustthin 32k    write   16MiB      2.669s    3.201s    3.563s    2.445s        6.0  50665.8      2.90     15557
+go-rustthin 32k    read    16MiB       1.12s    1.438s    2.109s    1.141s       14.3  98096.9      2.90     15557
+go-rustthin -      list    -              0s        0s        0s        0s          -      0.0   0.00ms/call  14648  (objects=0)
+max_os_threads=163
++ gsutil -q cp /var/log/bench5/par256_rustthin.txt /var/log/bench5/par256_rustthin.threads.txt gs://cpriti-thickthin-poc-asse1/results/vm5/
++ stage upload
+++ date -u
++ echo '=== STAGE: upload Tue Oct 13 09:04:07 UTC 2026 ==='
+=== STAGE: upload Tue Oct 13 09:04:07 UTC 2026 ===
++ echo upload
++ gsutil -q cp /var/log/bench5/STAGE gs://cpriti-thickthin-poc-asse1/results/vm5/STAGE
++ gsutil -q cp -r /var/log/bench5 gs://cpriti-thickthin-poc-asse1/results/vm5/

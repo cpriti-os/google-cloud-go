@@ -1,0 +1,2 @@
+     11 bench_native
+max_os_threads=11

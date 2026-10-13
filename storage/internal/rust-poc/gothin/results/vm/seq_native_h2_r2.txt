@@ -1,0 +1,12 @@
+backend=go-json bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-json  write      1MiB         87ms     107ms     114ms       11.6       10.7
+go-json  read       1MiB         38ms      50ms      66ms       26.0       24.8
+go-json  write      16MiB       286ms     355ms     355ms       55.9       55.3
+go-json  read       16MiB       131ms     156ms     164ms      122.2      118.9
+go-json  write      128MiB      1.41s    1.511s    1.618s       90.8       89.9
+go-json  read       128MiB      799ms     913ms    1.294s      160.3      159.1
+go-json  write      512MiB     5.247s    5.699s    5.709s       97.6       96.6
+go-json  read       512MiB     3.244s    4.176s     7.78s      157.8      146.9
+go-json  list       -            62ms      80ms      85ms  (objects=1000)
+rss_max_kb=1557228 user=42.87 sys=33.04 wall=207.49

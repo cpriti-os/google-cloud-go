@@ -1,0 +1,8 @@
+backend=go-json-h1 bucket=cpriti-thickthin-poc-asse1 parallel=64
+backend    style  op      size          p50       p90       max      mean  p50 MiB/s   ffi/op
+go-json-h1 whole  write   16MiB       404ms     995ms    1.561s     550ms       39.6      0.0
+go-json-h1 whole  read    16MiB       154ms     257ms    7.959s     178ms      104.1      0.0
+go-json-h1 32k    write   16MiB       363ms     925ms    1.246s     480ms       44.1      0.0
+go-json-h1 32k    read    16MiB       149ms     241ms     598ms     162ms      107.7      0.0
+go-json-h1 -      list    -              0s        0s        0s        0s          -      0.0  (objects=0)
+max_os_threads=16

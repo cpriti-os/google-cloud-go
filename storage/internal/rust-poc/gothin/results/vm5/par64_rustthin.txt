@@ -1,0 +1,9 @@
+client init: 33.472399ms
+backend=go-rustthin bucket=cpriti-thickthin-poc-asse1 parallel=64
+backend    style  op      size          p50       p90       max      mean  p50 MiB/s   ffi/op cpu s/GiB  peak MiB
+go-rustthin whole  write   16MiB       521ms    1.026s    1.103s     603ms       30.7    417.8      1.85      2379
+go-rustthin whole  read    16MiB       159ms     292ms    1.007s     184ms      100.9    180.2      1.85      2379
+go-rustthin 32k    write   16MiB       318ms     785ms    1.259s     416ms       50.4  19804.6      2.61      4281
+go-rustthin 32k    read    16MiB       356ms     427ms     833ms     339ms       45.0  24739.7      2.61      4281
+go-rustthin -      list    -              0s        0s        0s        0s          -      0.0   0.00ms/call   3371  (objects=0)
+max_os_threads=55

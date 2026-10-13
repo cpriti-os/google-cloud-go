@@ -1,0 +1,20 @@
+backend=go-json bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend    style  op      size          p50       p90       max      mean  p50 MiB/s   ffi/op cpu s/GiB  peak MiB
+go-json    whole  write   1MiB         92ms     108ms     118ms      94ms       10.8      0.0      4.21        82
+go-json    whole  read    1MiB         38ms      55ms      69ms      41ms       26.6      0.0      4.21        82
+go-json    whole  write   16MiB       257ms     314ms     332ms     279ms       62.4      0.0      2.47       133
+go-json    whole  read    16MiB        93ms     115ms     128ms      95ms      172.4      0.0      2.47       133
+go-json    whole  write   128MiB     1.452s    1.942s    2.037s    1.575s       88.2      0.0      2.33       489
+go-json    whole  read    128MiB      524ms     760ms    2.538s     626ms      244.1      0.0      2.33       489
+go-json    whole  write   512MiB      4.89s    5.263s    5.774s    5.064s      104.7      0.0      2.32      1517
+go-json    whole  read    512MiB      1.86s    2.604s    3.258s        2s      275.3      0.0      2.32      1517
+go-json    32k    write   1MiB         93ms     107ms     114ms      95ms       10.8      0.0      3.20      1523
+go-json    32k    read    1MiB         36ms      49ms      56ms      38ms       27.8      0.0      3.20      1523
+go-json    32k    write   16MiB       254ms     324ms     408ms     280ms       62.9      0.0      2.39      1699
+go-json    32k    read    16MiB       110ms     144ms     173ms     114ms      146.1      0.0      2.39      1699
+go-json    32k    write   128MiB     1.239s    1.685s    1.831s    1.384s      103.3      0.0      2.32      1845
+go-json    32k    read    128MiB      552ms     686ms     768ms     563ms      231.8      0.0      2.32      1845
+go-json    32k    write   512MiB      4.94s    5.461s      5.9s    5.092s      103.6      0.0      2.33      1040
+go-json    32k    read    512MiB     1.984s    2.493s    3.267s    2.057s      258.1      0.0      2.33      1040
+go-json    -      list    -            59ms      90ms      94ms      65ms          -      0.0  10.45ms/call   1056  (objects=1000)
+rss_max_kb=1081856 user=71.90 sys=51.30 wall=308.91

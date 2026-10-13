@@ -1,0 +1,4401 @@
+++ date -u
+++ hostname
++ echo '=== START Tue Oct 13 07:41:07 UTC 2026 host=cpriti-thickthin-bench2 ==='
+=== START Tue Oct 13 07:41:07 UTC 2026 host=cpriti-thickthin-bench2 ===
++ stage apt
+++ date -u
++ echo '=== STAGE: apt Tue Oct 13 07:41:07 UTC 2026 ==='
+=== STAGE: apt Tue Oct 13 07:41:07 UTC 2026 ===
++ echo apt
++ gsutil -q cp /var/log/bench4/STAGE gs://cpriti-thickthin-poc-asse1/results/vm4/STAGE
++ export DEBIAN_FRONTEND=noninteractive
++ DEBIAN_FRONTEND=noninteractive
++ apt-get update -qq
++ apt-get install -y -qq build-essential cmake curl file procps time
++ stage toolchains
+++ date -u
++ echo '=== STAGE: toolchains Tue Oct 13 07:41:24 UTC 2026 ==='
+=== STAGE: toolchains Tue Oct 13 07:41:24 UTC 2026 ===
++ echo toolchains
++ gsutil -q cp /var/log/bench4/STAGE gs://cpriti-thickthin-poc-asse1/results/vm4/STAGE
++ curl -sSL https://go.dev/dl/go1.26.6.linux-amd64.tar.gz -o /tmp/go.tgz
++ rm -rf /usr/local/go
++ tar -C /usr/local -xzf /tmp/go.tgz
++ export HOME=/root
++ HOME=/root
++ curl -sSf https://sh.rustup.rs -o /tmp/rustup-init.sh
++ sh /tmp/rustup-init.sh -y --profile minimal --default-toolchain stable --no-modify-path
+info: downloading installer
+info: profile set to minimal
+info: default host tuple is x86_64-unknown-linux-gnu
+info: syncing channel updates for stable-x86_64-unknown-linux-gnu
+info: latest update on 2026-10-01 for version 1.99.0 (b940084d7 2026-09-28)
+info: downloading 3 components
+info: default toolchain set to stable-x86_64-unknown-linux-gnu
+
+  stable-x86_64-unknown-linux-gnu installed - rustc 1.99.0 (b940084d7 2026-09-28)
+
+
+Rust is installed now. Great!
+
+To get started you need Cargo's bin directory ($HOME/.cargo/bin) in your PATH
+environment variable. This has not been done automatically.
+
+To configure your current shell, you need to source
+the corresponding env file under $HOME/.cargo.
+
+Consider running the right command for your shell (note the leading DOT):
+. "$HOME/.cargo/env" # For sh/ash/dash/pdksh/bash
+cargo:rerun-if-env-changed=CC_x86_64-unknown-linux-gnu
+CC_x86_64-unknown-linux-gnu = None
+cargo:rerun-if-env-changed=CC_x86_64_unknown_linux_gnu
+CC_x86_64_unknown_linux_gnu = None
+cargo:rerun-if-env-changed=HOST_CC
+HOST_CC = None
+cargo:rerun-if-env-changed=CC
+CC = None
+cargo:rerun-if-env-changed=CC_ENABLE_DEBUG_OUTPUT
+cargo:rerun-if-env-changed=CRATE_CC_NO_DEFAULTS
+CRATE_CC_NO_DEFAULTS = None
+cargo:rerun-if-env-changed=CFLAGS
+CFLAGS = None
+cargo:rerun-if-env-changed=HOST_CFLAGS
+HOST_CFLAGS = None
+cargo:rerun-if-env-changed=CFLAGS_x86_64_unknown_linux_gnu
+CFLAGS_x86_64_unknown_linux_gnu = None
+cargo:rerun-if-env-changed=CFLAGS_x86_64-unknown-linux-gnu
+CFLAGS_x86_64-unknown-linux-gnu = None
++ export PATH=/root/.cargo/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
++ PATH=/root/.cargo/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
++ go version
+go version go1.26.6 linux/amd64
++ cargo --version
+cargo 1.99.0 (5f94df478 2026-08-27)
++ ldd --version
++ head -1
+ldd (Debian GLIBC 2.36-9+deb12u14) 2.36
++ nproc
+8
++ free -g
++ head -2
+               total        used        free      shared  buff/cache   available
+Mem:              31           0          28           0           2          30
++ stage fetch-src
+++ date -u
++ echo '=== STAGE: fetch-src Tue Oct 13 07:41:36 UTC 2026 ==='
+=== STAGE: fetch-src Tue Oct 13 07:41:36 UTC 2026 ===
++ echo fetch-src
++ gsutil -q cp /var/log/bench4/STAGE gs://cpriti-thickthin-poc-asse1/results/vm4/STAGE
++ mkdir -p /opt/poc
++ cd /opt/poc
++ gsutil -q cp gs://cpriti-thickthin-poc-asse1/poc/poc2.tgz /tmp/poc.tgz
++ tar -xzf /tmp/poc.tgz
++ stage build-rust
+++ date -u
++ echo '=== STAGE: build-rust Tue Oct 13 07:41:39 UTC 2026 ==='
+=== STAGE: build-rust Tue Oct 13 07:41:39 UTC 2026 ===
++ echo build-rust
++ gsutil -q cp /var/log/bench4/STAGE gs://cpriti-thickthin-poc-asse1/results/vm4/STAGE
++ cd /opt/poc/gcs_core
++ rm -rf target
++ /usr/bin/time -f 'rust build: wall=%e s user=%U sys=%S maxrss_kb=%M' cargo build --release
++ tail -3
+   Compiling gcs_core v0.1.0 (/opt/poc/gcs_core)
+    Finished `release` profile [optimized] target(s) in 3m 17s
+rust build: wall=197.55 s user=364.61 sys=18.16 maxrss_kb=1365024
++ ls -la target/release/libgcs_core.a
+-rw-r--r-- 2 root root 39850250 Oct 13 07:44 target/release/libgcs_core.a
++ stage build-go
+++ date -u
++ echo '=== STAGE: build-go Tue Oct 13 07:44:57 UTC 2026 ==='
+=== STAGE: build-go Tue Oct 13 07:44:57 UTC 2026 ===
++ echo build-go
++ gsutil -q cp /var/log/bench4/STAGE gs://cpriti-thickthin-poc-asse1/results/vm4/STAGE
++ cd /opt/poc/gothin
++ rm -rf bin
++ mkdir bin
++ export GOFLAGS=-mod=mod GOPATH=/root/go GOCACHE=/root/.cache/go-build
++ GOFLAGS=-mod=mod
++ GOPATH=/root/go
++ GOCACHE=/root/.cache/go-build
++ /usr/bin/time -f 'go native build: wall=%e s' env CGO_ENABLED=0 go build -o bin/bench2_native ./cmd/bench2_native
+go: downloading google.golang.org/api v0.302.0
+go: downloading cloud.google.com/go/storage v1.69.0
+go: downloading cloud.google.com/go v0.123.0
+go: downloading cloud.google.com/go/compute/metadata v0.10.0
+go: downloading cloud.google.com/go/auth v0.24.1-0.20261001053825-dbc26066f70a
+go: downloading cloud.google.com/go/iam v1.12.0
+go: downloading github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.57.0
+go: downloading github.com/google/uuid v1.6.0
+go: downloading github.com/googleapis/gax-go/v2 v2.26.2
+go: downloading go.opentelemetry.io/contrib/detectors/gcp v1.45.0
+go: downloading go.opentelemetry.io/otel v1.45.0
+go: downloading go.opentelemetry.io/otel/metric v1.45.0
+go: downloading go.opentelemetry.io/otel/sdk/metric v1.45.0
+go: downloading go.opentelemetry.io/otel/sdk v1.45.0
+go: downloading go.opentelemetry.io/otel/trace v1.45.0
+go: downloading golang.org/x/oauth2 v0.37.0
+go: downloading golang.org/x/sync v0.24.0
+go: downloading google.golang.org/genproto v0.0.0-20260715232425-e75dac1f907d
+go: downloading google.golang.org/grpc v1.84.0
+go: downloading google.golang.org/protobuf v1.36.12
+go: downloading google.golang.org/genproto/googleapis/api v0.0.0-20260715232425-e75dac1f907d
+go: downloading google.golang.org/genproto/googleapis/rpc v0.0.0-20261005182115-fad411399dd8
+go: downloading cloud.google.com/go/monitoring v1.30.0
+go: downloading github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.57.0
+go: downloading github.com/go-logr/logr v1.4.4
+go: downloading golang.org/x/sys v0.49.0
+go: downloading github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.35.0
+go: downloading cloud.google.com/go/auth/oauth2adapt v0.3.0
+go: downloading go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.69.0
+go: downloading golang.org/x/net v0.61.0
+go: downloading go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.68.0
+go: downloading golang.org/x/time v0.16.0
+go: downloading github.com/go-logr/stdr v1.2.2
+go: downloading go.opentelemetry.io/auto/sdk v1.2.1
+go: downloading github.com/cespare/xxhash/v2 v2.3.0
+go: downloading github.com/google/s2a-go v0.1.11
+go: downloading github.com/googleapis/enterprise-certificate-proxy v0.3.23
+go: downloading github.com/felixge/httpsnoop v1.1.0
+go: downloading github.com/envoyproxy/go-control-plane/envoy v1.37.0
+go: downloading github.com/spiffe/go-spiffe/v2 v2.8.1
+go: downloading github.com/cncf/xds/go v0.0.0-20260202195803-dba9d589def2
+go: downloading github.com/go-jose/go-jose/v4 v4.1.4
+go: downloading cel.dev/expr v0.25.2
+go: downloading github.com/envoyproxy/protoc-gen-validate v1.3.3
+go: downloading golang.org/x/text v0.43.0
+go: downloading golang.org/x/crypto v0.58.0
+go native build: wall=30.98 s
++ /usr/bin/time -f 'go cgo build: wall=%e s' go build -o bin/bench2_rust ./cmd/bench2_rust
+go cgo build: wall=14.83 s
++ go build -o bin/bench_rust ./cmd/bench_rust
++ CGO_ENABLED=0
++ go build '-ldflags=-s -w' -o bin/bench2_native_stripped ./cmd/bench2_native
++ go build '-ldflags=-s -w' -o bin/bench2_rust_stripped ./cmd/bench2_rust
++ ls -la bin/
+total 206148
+drwxr-xr-x 2 root   root      4096 Oct 13 07:45 .
+drwxr-xr-x 8 cpriti 89939     4096 Oct 13 07:44 ..
+-rwxr-xr-x 1 root   root  49887522 Oct 13 07:45 bench2_native
+-rwxr-xr-x 1 root   root  34046114 Oct 13 07:45 bench2_native_stripped
+-rwxr-xr-x 1 root   root  62416616 Oct 13 07:45 bench2_rust
+-rwxr-xr-x 1 root   root  45076824 Oct 13 07:45 bench2_rust_stripped
+-rwxr-xr-x 1 root   root  19646656 Oct 13 07:45 bench_rust
++ ldd bin/bench2_rust
+	linux-vdso.so.1 (0x00007ffd82aa9000)
+	libm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x00007f2573f48000)
+	libgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007f2573f28000)
+	libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007f2573d46000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007f2574030000)
++ stage ffi-micro-and-check
+++ date -u
++ echo '=== STAGE: ffi-micro-and-check Tue Oct 13 07:45:47 UTC 2026 ==='
+=== STAGE: ffi-micro-and-check Tue Oct 13 07:45:47 UTC 2026 ===
++ echo ffi-micro-and-check
++ gsutil -q cp /var/log/bench4/STAGE gs://cpriti-thickthin-poc-asse1/results/vm4/STAGE
++ ./bin/bench_rust ffi
+cgo Go->Rust call: 36ns/call
+Rust->Go callback (inside one cgo call): 47ns/call
++ ./bin/bench2_rust check
++ tee /var/log/bench4/check.txt
+client init: 32.850201ms
+missing object -> errors.Is(ErrObjectNotExist)=true (storage: object doesn't exist)
+create -> err=<nil> attrs=&{Bucket:cpriti-thickthin-poc-asse1 Name:check/exists ContentType: ContentLanguage: CacheControl: EventBasedHold:false TemporaryHold:false RetentionExpirationTime:0001-01-01 00:00:00 +0000 UTC ACL:[] PredefinedACL: Owner: Size:1 ContentEncoding: ContentDisposition: MD5:[] CRC32C:0 MediaLink: Metadata:map[] Generation:1791877549246829 Metageneration:0 StorageClass: Created:0001-01-01 00:00:00 +0000 UTC Finalized:0001-01-01 00:00:00 +0000 UTC Deleted:0001-01-01 00:00:00 +0000 UTC Updated:0001-01-01 00:00:00 +0000 UTC CustomerKeySHA256: KMSKeyName: Prefix: Etag: CustomTime:0001-01-01 00:00:00 +0000 UTC ComponentCount:0 Retention:<nil> SoftDeleteTime:0001-01-01 00:00:00 +0000 UTC HardDeleteTime:0001-01-01 00:00:00 +0000 UTC Contexts:<nil>}
+DoesNotExist on existing -> googleapi.Error=false code=0 (gcs_core: code=1 http=0: the service reports an error with code UNKNOWN described as: At least one of the pre-conditions you specified did not hold.)
+range read -> attrs={Size:1 StartOffset:0 ContentType:application/octet-stream ContentEncoding:identity CacheControl: LastModified:0001-01-01 00:00:00 +0000 UTC Generation:1791877549246829 Metageneration:1 CRC32C:0 Decompressed:false} remain=0 data="x"
+ctx timeout 30ms mid-stream -> after 30ms copied=0 err=context deadline exceeded (errors.Is(ctx.Err))=true
++ gsutil -q cp /var/log/bench4/check.txt gs://cpriti-thickthin-poc-asse1/results/vm4/
++ SIZES=1MiB,16MiB,128MiB,512MiB
++ ITERS=10
++ for round in 1 2
++ stage seq-round1
+++ date -u
++ echo '=== STAGE: seq-round1 Tue Oct 13 07:45:51 UTC 2026 ==='
+=== STAGE: seq-round1 Tue Oct 13 07:45:51 UTC 2026 ===
++ echo seq-round1
++ gsutil -q cp /var/log/bench4/STAGE gs://cpriti-thickthin-poc-asse1/results/vm4/STAGE
++ run seq_native_h2_r1 ./bin/bench2_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ local name=seq_native_h2_r1
++ shift
+++ date -u
++ echo '##### seq_native_h2_r1 Tue Oct 13 07:45:52 UTC 2026'
+##### seq_native_h2_r1 Tue Oct 13 07:45:52 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./bin/bench2_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ tee /var/log/bench4/seq_native_h2_r1.txt
+backend=go-json bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend    style  op      size          p50       p90       max      mean  p50 MiB/s   ffi/op
+go-json    whole  write   1MiB         83ms     100ms     105ms      89ms       12.0      0.0
+go-json    whole  read    1MiB         44ms      60ms      65ms      45ms       22.7      0.0
+go-json    whole  write   16MiB       291ms     330ms     389ms     290ms       55.0      0.0
+go-json    whole  read    16MiB       138ms     175ms     209ms     141ms      116.2      0.0
+go-json    whole  write   128MiB     1.354s    1.474s    1.592s    1.379s       94.6      0.0
+go-json    whole  read    128MiB      710ms     821ms    1.133s     729ms      180.2      0.0
+go-json    whole  write   512MiB     5.235s    5.744s    5.854s    5.365s       97.8      0.0
+go-json    whole  read    512MiB     2.527s    2.861s    3.556s    2.578s      202.6      0.0
+go-json    32k    write   1MiB         82ms      94ms      99ms      85ms       12.2      0.0
+go-json    32k    read    1MiB         38ms      51ms     152ms      44ms       26.0      0.0
+go-json    32k    write   16MiB       268ms     283ms     309ms     270ms       59.6      0.0
+go-json    32k    read    16MiB       118ms     175ms     294ms     134ms      135.3      0.0
+go-json    32k    write   128MiB     1.444s    1.573s    1.914s    1.475s       88.7      0.0
+go-json    32k    read    128MiB      685ms     804ms     949ms     695ms      186.9      0.0
+go-json    32k    write   512MiB     5.536s    5.679s    5.727s    5.494s       92.5      0.0
+go-json    32k    read    512MiB     2.498s    2.839s    2.952s    2.542s      205.0      0.0
+go-json    -      list    -            70ms      89ms     103ms      75ms          -      0.0  (objects=1000)
+rss_max_kb=2445244 user=79.47 sys=60.24 wall=356.05
++ gsutil -q cp /var/log/bench4/seq_native_h2_r1.txt gs://cpriti-thickthin-poc-asse1/results/vm4/
++ run seq_native_h1_r1 env NATIVE_HTTP1=1 ./bin/bench2_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ local name=seq_native_h1_r1
++ shift
+++ date -u
++ echo '##### seq_native_h1_r1 Tue Oct 13 07:51:49 UTC 2026'
+##### seq_native_h1_r1 Tue Oct 13 07:51:49 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' env NATIVE_HTTP1=1 ./bin/bench2_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ tee /var/log/bench4/seq_native_h1_r1.txt
+backend=go-json-h1 bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend    style  op      size          p50       p90       max      mean  p50 MiB/s   ffi/op
+go-json-h1 whole  write   1MiB         87ms      94ms      97ms      86ms       11.6      0.0
+go-json-h1 whole  read    1MiB         43ms      56ms      67ms      44ms       23.1      0.0
+go-json-h1 whole  write   16MiB       298ms     330ms     360ms     299ms       53.7      0.0
+go-json-h1 whole  read    16MiB       131ms     186ms     204ms     135ms      121.8      0.0
+go-json-h1 whole  write   128MiB       1.4s    1.653s    1.693s    1.455s       91.4      0.0
+go-json-h1 whole  read    128MiB      518ms     625ms    1.818s     582ms      247.1      0.0
+go-json-h1 whole  write   512MiB     5.325s    5.544s    6.058s    5.374s       96.1      0.0
+go-json-h1 whole  read    512MiB     1.776s    2.676s    3.294s     1.98s      288.3      0.0
+go-json-h1 32k    write   1MiB         83ms      89ms     109ms      83ms       12.1      0.0
+go-json-h1 32k    read    1MiB         36ms      49ms      57ms      39ms       27.9      0.0
+go-json-h1 32k    write   16MiB       269ms     314ms     328ms     273ms       59.6      0.0
+go-json-h1 32k    read    16MiB       106ms     145ms     187ms     110ms      150.5      0.0
+go-json-h1 32k    write   128MiB     1.352s    1.614s    1.728s    1.435s       94.7      0.0
+go-json-h1 32k    read    128MiB      574ms     719ms    1.256s     601ms      223.0      0.0
+go-json-h1 32k    write   512MiB     5.467s     5.67s    6.344s    5.563s       93.6      0.0
+go-json-h1 32k    read    512MiB     2.204s    3.012s    3.345s    2.248s      232.3      0.0
+go-json-h1 -      list    -            62ms      78ms      91ms      67ms          -      0.0  (objects=1000)
+rss_max_kb=1659888 user=43.25 sys=32.94 wall=322.05
++ gsutil -q cp /var/log/bench4/seq_native_h1_r1.txt gs://cpriti-thickthin-poc-asse1/results/vm4/
++ run seq_rustthin_r1 ./bin/bench2_rust -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ local name=seq_rustthin_r1
++ shift
+++ date -u
++ echo '##### seq_rustthin_r1 Tue Oct 13 07:57:12 UTC 2026'
+##### seq_rustthin_r1 Tue Oct 13 07:57:12 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./bin/bench2_rust -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ tee /var/log/bench4/seq_rustthin_r1.txt
+client init: 31.75937ms
+backend=go-rustthin bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend    style  op      size          p50       p90       max      mean  p50 MiB/s   ffi/op
+go-rustthin whole  write   1MiB        133ms     145ms     207ms     139ms        7.5      4.0
+go-rustthin whole  read    1MiB         38ms      53ms      73ms      42ms       26.0      4.0
+go-rustthin whole  write   16MiB       256ms     288ms     294ms     253ms       62.4      4.0
+go-rustthin whole  read    16MiB       110ms     137ms     182ms     111ms      144.9      4.0
+go-rustthin whole  write   128MiB     1.398s    1.517s    1.563s    1.393s       91.6      4.0
+go-rustthin whole  read    128MiB      560ms     757ms    1.106s     601ms      228.4      4.0
+go-rustthin whole  write   512MiB     5.214s    6.037s    6.251s    5.431s       98.2      4.0
+go-rustthin whole  read    512MiB     2.089s    2.573s    2.984s    2.127s      245.0      4.0
+go-rustthin 32k    write   1MiB        144ms     153ms     162ms     143ms        6.9     35.0
+go-rustthin 32k    read    1MiB         38ms      55ms      66ms      41ms       26.1     36.0
+go-rustthin 32k    write   16MiB       287ms     308ms     317ms     282ms       55.8    515.0
+go-rustthin 32k    read    16MiB       108ms     157ms     181ms     116ms      148.2    516.0
+go-rustthin 32k    write   128MiB     1.522s    1.706s    1.823s    1.564s       84.1   4099.0
+go-rustthin 32k    read    128MiB      553ms     738ms    1.198s     609ms      231.6   4100.0
+go-rustthin 32k    write   512MiB     5.691s    5.953s     6.42s    5.779s       90.0  16387.0
+go-rustthin 32k    read    512MiB     2.086s    2.726s    3.168s    2.148s      245.5  16388.0
+go-rustthin -      list    -            74ms      80ms      83ms      74ms          -      1.0  (objects=1000)
+rss_max_kb=1973468 user=61.47 sys=40.39 wall=328.00
++ gsutil -q cp /var/log/bench4/seq_rustthin_r1.txt gs://cpriti-thickthin-poc-asse1/results/vm4/
++ for round in 1 2
++ stage seq-round2
+++ date -u
++ echo '=== STAGE: seq-round2 Tue Oct 13 08:02:41 UTC 2026 ==='
+=== STAGE: seq-round2 Tue Oct 13 08:02:41 UTC 2026 ===
++ echo seq-round2
++ gsutil -q cp /var/log/bench4/STAGE gs://cpriti-thickthin-poc-asse1/results/vm4/STAGE
++ run seq_native_h2_r2 ./bin/bench2_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ local name=seq_native_h2_r2
++ shift
+++ date -u
++ echo '##### seq_native_h2_r2 Tue Oct 13 08:02:42 UTC 2026'
+##### seq_native_h2_r2 Tue Oct 13 08:02:42 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./bin/bench2_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ tee /var/log/bench4/seq_native_h2_r2.txt
+backend=go-json bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend    style  op      size          p50       p90       max      mean  p50 MiB/s   ffi/op
+go-json    whole  write   1MiB         94ms     135ms     148ms     102ms       10.6      0.0
+go-json    whole  read    1MiB         38ms      48ms      63ms      39ms       26.3      0.0
+go-json    whole  write   16MiB       299ms     345ms     358ms     294ms       53.5      0.0
+go-json    whole  read    16MiB       110ms     153ms     220ms     119ms      145.5      0.0
+go-json    whole  write   128MiB     1.379s    1.466s    1.525s    1.388s       92.8      0.0
+go-json    whole  read    128MiB      642ms     761ms     942ms     676ms      199.5      0.0
+go-json    whole  write   512MiB      5.08s    5.329s    5.384s    5.059s      100.8      0.0
+go-json    whole  read    512MiB     2.481s    2.997s    3.189s     2.55s      206.4      0.0
+go-json    32k    write   1MiB         95ms     113ms     121ms      99ms       10.5      0.0
+go-json    32k    read    1MiB         40ms      53ms      55ms      41ms       24.7      0.0
+go-json    32k    write   16MiB       280ms     341ms     388ms     287ms       57.1      0.0
+go-json    32k    read    16MiB       112ms     142ms     210ms     120ms      142.5      0.0
+go-json    32k    write   128MiB     1.291s    1.423s     1.91s    1.368s       99.2      0.0
+go-json    32k    read    128MiB      631ms     780ms    1.031s     677ms      202.7      0.0
+go-json    32k    write   512MiB     4.884s    5.375s   11.924s    5.633s      104.8      0.0
+go-json    32k    read    512MiB     2.551s    3.061s    3.656s    2.631s      200.7      0.0
+go-json    -      list    -            67ms      79ms      88ms      68ms          -      0.0  (objects=1000)
+rss_max_kb=2432364 user=78.66 sys=58.24 wall=352.20
++ gsutil -q cp /var/log/bench4/seq_native_h2_r2.txt gs://cpriti-thickthin-poc-asse1/results/vm4/
++ run seq_native_h1_r2 env NATIVE_HTTP1=1 ./bin/bench2_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ local name=seq_native_h1_r2
++ shift
+++ date -u
++ echo '##### seq_native_h1_r2 Tue Oct 13 08:08:35 UTC 2026'
+##### seq_native_h1_r2 Tue Oct 13 08:08:35 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' env NATIVE_HTTP1=1 ./bin/bench2_native -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ tee /var/log/bench4/seq_native_h1_r2.txt
+backend=go-json-h1 bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend    style  op      size          p50       p90       max      mean  p50 MiB/s   ffi/op
+go-json-h1 whole  write   1MiB         97ms     107ms     116ms     100ms       10.3      0.0
+go-json-h1 whole  read    1MiB         39ms      49ms      65ms      40ms       25.7      0.0
+go-json-h1 whole  write   16MiB       294ms     326ms     361ms     295ms       54.5      0.0
+go-json-h1 whole  read    16MiB       122ms     153ms     217ms     126ms      130.8      0.0
+go-json-h1 whole  write   128MiB     1.353s    1.416s    1.643s    1.375s       94.6      0.0
+go-json-h1 whole  read    128MiB      645ms     772ms     879ms     651ms      198.4      0.0
+go-json-h1 whole  write   512MiB     5.215s     5.53s     5.59s    5.201s       98.2      0.0
+go-json-h1 whole  read    512MiB     2.529s    2.888s    3.244s    2.551s      202.4      0.0
+go-json-h1 32k    write   1MiB         91ms      93ms      97ms      90ms       11.0      0.0
+go-json-h1 32k    read    1MiB         41ms      47ms      71ms      40ms       24.3      0.0
+go-json-h1 32k    write   16MiB       273ms     304ms     322ms     274ms       58.7      0.0
+go-json-h1 32k    read    16MiB       113ms     143ms     156ms     117ms      141.5      0.0
+go-json-h1 32k    write   128MiB     1.371s    1.515s    1.544s    1.384s       93.4      0.0
+go-json-h1 32k    read    128MiB      624ms     809ms    1.221s     682ms      205.1      0.0
+go-json-h1 32k    write   512MiB     5.026s    5.097s     5.48s    5.013s      101.9      0.0
+go-json-h1 32k    read    512MiB      2.22s    2.764s     3.49s    2.322s      230.6      0.0
+go-json-h1 -      list    -            63ms      90ms      91ms      66ms          -      0.0  (objects=1000)
+rss_max_kb=2361748 user=46.53 sys=36.45 wall=337.47
++ gsutil -q cp /var/log/bench4/seq_native_h1_r2.txt gs://cpriti-thickthin-poc-asse1/results/vm4/
++ run seq_rustthin_r2 ./bin/bench2_rust -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ local name=seq_rustthin_r2
++ shift
+++ date -u
++ echo '##### seq_rustthin_r2 Tue Oct 13 08:14:14 UTC 2026'
+##### seq_rustthin_r2 Tue Oct 13 08:14:14 UTC 2026
++ /usr/bin/time -f 'rss_max_kb=%M user=%U sys=%S wall=%e' ./bin/bench2_rust -sizes 1MiB,16MiB,128MiB,512MiB -iters 10 -list-iters 10
++ tee /var/log/bench4/seq_rustthin_r2.txt
+client init: 31.1225ms
+backend=go-rustthin bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend    style  op      size          p50       p90       max      mean  p50 MiB/s   ffi/op
+go-rustthin whole  write   1MiB        138ms     148ms     206ms     144ms        7.2      4.0
+go-rustthin whole  read    1MiB         38ms      47ms      57ms      39ms       26.6      4.0
+go-rustthin whole  write   16MiB       257ms     426ms     689ms     317ms       62.4      4.0
+go-rustthin whole  read    16MiB       104ms     131ms     146ms     104ms      154.2      4.0
+go-rustthin whole  write   128MiB     1.333s    1.469s    1.559s     1.33s       96.0      4.0
+go-rustthin whole  read    128MiB      417ms     615ms     886ms     464ms      307.1      4.0
+go-rustthin whole  write   512MiB     5.167s    5.725s    8.366s    5.434s       99.1      4.0
+go-rustthin whole  read    512MiB     1.615s     2.26s    3.927s     1.84s      317.0      4.0
+go-rustthin 32k    write   1MiB        144ms     149ms     168ms     143ms        7.0     35.0
+go-rustthin 32k    read    1MiB         37ms      55ms      72ms      40ms       26.9     36.0
+go-rustthin 32k    write   16MiB       288ms     323ms     356ms     292ms       55.5    515.0
+go-rustthin 32k    read    16MiB        88ms     125ms     129ms      94ms      181.6    516.0
+go-rustthin 32k    write   128MiB     1.409s    1.609s     1.76s    1.456s       90.8   4099.0
+go-rustthin 32k    read    128MiB      432ms     618ms     714ms     478ms      296.0   4100.0
+go-rustthin 32k    write   512MiB     5.323s    5.675s    6.046s    5.317s       96.2  16387.0
+go-rustthin 32k    read    512MiB     1.672s    2.252s    2.394s    1.768s      306.3  16388.0
+go-rustthin -      list    -            75ms      81ms      91ms      75ms          -      1.0  (objects=1000)
+rss_max_kb=1970108 user=59.01 sys=39.36 wall=293.54
++ gsutil -q cp /var/log/bench4/seq_rustthin_r2.txt gs://cpriti-thickthin-poc-asse1/results/vm4/
++ stage parallel
+++ date -u
++ echo '=== STAGE: parallel Tue Oct 13 08:19:08 UTC 2026 ==='
+=== STAGE: parallel Tue Oct 13 08:19:08 UTC 2026 ===
++ echo parallel
++ gsutil -q cp /var/log/bench4/STAGE gs://cpriti-thickthin-poc-asse1/results/vm4/STAGE
++ for par in 16 64 256
++ threads par16_native_h1 env NATIVE_HTTP1=1 ./bin/bench2_native -sizes 16MiB -iters 256 -parallel 16 -list-iters 0
++ local name=par16_native_h1
++ shift
++ local pid=18062
++ local max=0
++ kill -0 18062
++ env NATIVE_HTTP1=1 ./bin/bench2_native -sizes 16MiB -iters 256 -parallel 16 -list-iters 0
+++ ls /proc/18062/task
+++ wc -l
++ local t=1
++ '[' 1 -gt 0 ']'
++ max=1
++ cat /proc/18062/task/18062/comm /proc/18062/task/18066/comm /proc/18062/task/18068/comm /proc/18062/task/18069/comm
++ sort
++ sort -rn
++ uniq -c
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=10
++ '[' 10 -gt 1 ']'
++ max=10
++ cat /proc/18062/task/18062/comm /proc/18062/task/18066/comm /proc/18062/task/18068/comm /proc/18062/task/18069/comm /proc/18062/task/18071/comm /proc/18062/task/18075/comm /proc/18062/task/18076/comm /proc/18062/task/18077/comm /proc/18062/task/18078/comm /proc/18062/task/18079/comm
++ sort
++ uniq -c
++ sort -rn
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=10
++ '[' 10 -gt 10 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=10
++ '[' 10 -gt 10 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 10 ']'
++ max=11
++ cat /proc/18062/task/18062/comm /proc/18062/task/18066/comm /proc/18062/task/18068/comm /proc/18062/task/18069/comm /proc/18062/task/18071/comm /proc/18062/task/18075/comm /proc/18062/task/18076/comm /proc/18062/task/18077/comm /proc/18062/task/18078/comm /proc/18062/task/18079/comm /proc/18062/task/18096/comm
++ sort
++ sort -rn
++ uniq -c
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ wc -l
+++ ls /proc/18062/task
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ wc -l
+++ ls /proc/18062/task
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ wc -l
+++ ls /proc/18062/task
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ wc -l
+++ ls /proc/18062/task
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 11 ']'
++ sleep 0.2
++ kill -0 18062
+++ wc -l
+++ ls /proc/18062/task
++ local t=12
++ '[' 12 -gt 11 ']'
++ max=12
++ sort
++ cat /proc/18062/task/18062/comm /proc/18062/task/18066/comm /proc/18062/task/18068/comm /proc/18062/task/18069/comm /proc/18062/task/18071/comm /proc/18062/task/18075/comm /proc/18062/task/18076/comm /proc/18062/task/18077/comm /proc/18062/task/18078/comm /proc/18062/task/18079/comm /proc/18062/task/18096/comm /proc/18062/task/18268/comm
++ sort -rn
++ uniq -c
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ wc -l
+++ ls /proc/18062/task
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ wc -l
+++ ls /proc/18062/task
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ wc -l
+++ ls /proc/18062/task
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ wc -l
+++ ls /proc/18062/task
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ wc -l
+++ ls /proc/18062/task
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ wc -l
+++ ls /proc/18062/task
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ wc -l
+++ ls /proc/18062/task
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ wc -l
+++ ls /proc/18062/task
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ wc -l
+++ ls /proc/18062/task
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ wc -l
+++ ls /proc/18062/task
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
+++ ls /proc/18062/task
+++ wc -l
++ local t=12
++ '[' 12 -gt 12 ']'
++ sleep 0.2
++ kill -0 18062
++ wait 18062
++ echo max_os_threads=12
++ tee -a /var/log/bench4/par16_native_h1.txt
+max_os_threads=12
++ cat /var/log/bench4/par16_native_h1.txt
+backend=go-json-h1 bucket=cpriti-thickthin-poc-asse1 parallel=16
+backend    style  op      size          p50       p90       max      mean  p50 MiB/s   ffi/op
+go-json-h1 whole  write   16MiB       280ms     427ms   10.548s     367ms       57.1      0.0
+go-json-h1 whole  read    16MiB       107ms     155ms     938ms     118ms      149.8      0.0
+go-json-h1 32k    write   16MiB       277ms     380ms     671ms     293ms       57.7      0.0
+go-json-h1 32k    read    16MiB       109ms     164ms   14.312s     136ms      146.5      0.0
+go-json-h1 -      list    -              0s        0s        0s        0s          -      0.0  (objects=0)
+max_os_threads=12
++ gsutil -q cp /var/log/bench4/par16_native_h1.txt /var/log/bench4/par16_native_h1.threads.txt gs://cpriti-thickthin-poc-asse1/results/vm4/
++ threads par16_rustthin ./bin/bench2_rust -sizes 16MiB -iters 256 -parallel 16 -list-iters 0
++ local name=par16_rustthin
++ shift
++ local pid=18934
++ local max=0
++ kill -0 18934
++ ./bin/bench2_rust -sizes 16MiB -iters 256 -parallel 16 -list-iters 0
+++ ls /proc/18934/task
+++ wc -l
++ local t=1
++ '[' 1 -gt 0 ']'
++ max=1
++ cat /proc/18934/task/18934/comm
++ sort
++ uniq -c
++ sort -rn
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 1 ']'
++ max=36
++ sort
++ uniq -c
++ cat /proc/18934/task/18934/comm /proc/18934/task/18942/comm /proc/18934/task/18943/comm /proc/18934/task/18944/comm /proc/18934/task/18945/comm /proc/18934/task/18946/comm /proc/18934/task/18948/comm /proc/18934/task/18949/comm /proc/18934/task/18950/comm /proc/18934/task/18951/comm /proc/18934/task/18952/comm /proc/18934/task/18953/comm /proc/18934/task/18954/comm /proc/18934/task/18955/comm /proc/18934/task/18956/comm /proc/18934/task/18957/comm /proc/18934/task/18958/comm /proc/18934/task/18959/comm /proc/18934/task/18960/comm /proc/18934/task/18961/comm /proc/18934/task/18962/comm /proc/18934/task/18963/comm /proc/18934/task/18964/comm /proc/18934/task/18965/comm /proc/18934/task/18966/comm /proc/18934/task/18967/comm /proc/18934/task/18968/comm /proc/18934/task/18969/comm /proc/18934/task/18970/comm /proc/18934/task/18971/comm /proc/18934/task/18972/comm /proc/18934/task/18973/comm /proc/18934/task/18974/comm /proc/18934/task/18975/comm /proc/18934/task/18976/comm /proc/18934/task/18977/comm
++ sort -rn
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ wc -l
+++ ls /proc/18934/task
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ wc -l
+++ ls /proc/18934/task
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ wc -l
+++ ls /proc/18934/task
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ wc -l
+++ ls /proc/18934/task
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ wc -l
+++ ls /proc/18934/task
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ wc -l
+++ ls /proc/18934/task
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ wc -l
+++ ls /proc/18934/task
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=36
++ '[' 36 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ wc -l
+++ ls /proc/18934/task
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ wc -l
+++ ls /proc/18934/task
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ wc -l
+++ ls /proc/18934/task
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ wc -l
+++ ls /proc/18934/task
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ wc -l
+++ ls /proc/18934/task
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ wc -l
+++ ls /proc/18934/task
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ wc -l
+++ ls /proc/18934/task
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ wc -l
+++ ls /proc/18934/task
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ wc -l
+++ ls /proc/18934/task
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=30
++ '[' 30 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
+++ ls /proc/18934/task
+++ wc -l
++ local t=2
++ '[' 2 -gt 36 ']'
++ sleep 0.2
++ kill -0 18934
++ wait 18934
++ echo max_os_threads=36
++ tee -a /var/log/bench4/par16_rustthin.txt
+max_os_threads=36
++ cat /var/log/bench4/par16_rustthin.txt
+client init: 30.944432ms
+backend=go-rustthin bucket=cpriti-thickthin-poc-asse1 parallel=16
+backend    style  op      size          p50       p90       max      mean  p50 MiB/s   ffi/op
+go-rustthin whole  write   16MiB       268ms     363ms     753ms     287ms       59.7    106.4
+go-rustthin whole  read    16MiB       109ms     152ms     874ms     117ms      147.0     48.5
+go-rustthin 32k    write   16MiB       290ms     407ms     612ms     312ms       55.2  14571.9
+go-rustthin 32k    read    16MiB       109ms     151ms     631ms     115ms      146.6   6010.6
+go-rustthin -      list    -              0s        0s        0s        0s          -      0.0  (objects=0)
+max_os_threads=36
++ gsutil -q cp /var/log/bench4/par16_rustthin.txt /var/log/bench4/par16_rustthin.threads.txt gs://cpriti-thickthin-poc-asse1/results/vm4/
++ for par in 16 64 256
++ threads par64_native_h1 env NATIVE_HTTP1=1 ./bin/bench2_native -sizes 16MiB -iters 256 -parallel 64 -list-iters 0
++ local name=par64_native_h1
++ shift
++ local pid=19586
++ local max=0
++ kill -0 19586
++ env NATIVE_HTTP1=1 ./bin/bench2_native -sizes 16MiB -iters 256 -parallel 64 -list-iters 0
+++ ls /proc/19586/task
+++ wc -l
++ local t=1
++ '[' 1 -gt 0 ']'
++ max=1
++ cat /proc/19586/task/19586/comm
++ sort
++ uniq -c
++ sort -rn
++ sleep 0.2
++ kill -0 19586
+++ wc -l
+++ ls /proc/19586/task
++ local t=10
++ '[' 10 -gt 1 ']'
++ max=10
++ cat /proc/19586/task/19586/comm /proc/19586/task/19594/comm /proc/19586/task/19595/comm /proc/19586/task/19596/comm /proc/19586/task/19597/comm /proc/19586/task/19599/comm /proc/19586/task/19600/comm /proc/19586/task/19601/comm /proc/19586/task/19602/comm /proc/19586/task/19603/comm
++ uniq -c
++ sort -rn
++ sort
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=10
++ '[' 10 -gt 10 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=10
++ '[' 10 -gt 10 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=10
++ '[' 10 -gt 10 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=11
++ '[' 11 -gt 10 ']'
++ max=11
++ cat /proc/19586/task/19586/comm /proc/19586/task/19594/comm /proc/19586/task/19595/comm /proc/19586/task/19596/comm /proc/19586/task/19597/comm /proc/19586/task/19599/comm /proc/19586/task/19600/comm /proc/19586/task/19601/comm /proc/19586/task/19602/comm /proc/19586/task/19603/comm /proc/19586/task/19624/comm
++ sort
++ uniq -c
++ sort -rn
++ sleep 0.2
++ kill -0 19586
+++ wc -l
+++ ls /proc/19586/task
++ local t=13
++ '[' 13 -gt 11 ']'
++ max=13
++ sort -rn
++ uniq -c
++ sort
++ cat /proc/19586/task/19586/comm /proc/19586/task/19594/comm /proc/19586/task/19595/comm /proc/19586/task/19596/comm /proc/19586/task/19597/comm /proc/19586/task/19599/comm /proc/19586/task/19600/comm /proc/19586/task/19601/comm /proc/19586/task/19602/comm /proc/19586/task/19603/comm /proc/19586/task/19624/comm /proc/19586/task/19633/comm /proc/19586/task/19634/comm
++ sleep 0.2
++ kill -0 19586
+++ wc -l
+++ ls /proc/19586/task
++ local t=14
++ '[' 14 -gt 13 ']'
++ max=14
++ cat /proc/19586/task/19586/comm /proc/19586/task/19594/comm /proc/19586/task/19595/comm /proc/19586/task/19596/comm /proc/19586/task/19597/comm /proc/19586/task/19599/comm /proc/19586/task/19600/comm /proc/19586/task/19601/comm /proc/19586/task/19602/comm /proc/19586/task/19603/comm /proc/19586/task/19624/comm /proc/19586/task/19633/comm /proc/19586/task/19634/comm /proc/19586/task/19642/comm
++ sort
++ sort -rn
++ uniq -c
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=14
++ '[' 14 -gt 14 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=14
++ '[' 14 -gt 14 ']'
++ sleep 0.2
++ kill -0 19586
+++ wc -l
+++ ls /proc/19586/task
++ local t=14
++ '[' 14 -gt 14 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=14
++ '[' 14 -gt 14 ']'
++ sleep 0.2
++ kill -0 19586
+++ wc -l
+++ ls /proc/19586/task
++ local t=14
++ '[' 14 -gt 14 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=14
++ '[' 14 -gt 14 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=15
++ '[' 15 -gt 14 ']'
++ max=15
++ uniq -c
++ sort -rn
++ cat /proc/19586/task/19586/comm /proc/19586/task/19594/comm /proc/19586/task/19595/comm /proc/19586/task/19596/comm /proc/19586/task/19597/comm /proc/19586/task/19599/comm /proc/19586/task/19600/comm /proc/19586/task/19601/comm /proc/19586/task/19602/comm /proc/19586/task/19603/comm /proc/19586/task/19624/comm /proc/19586/task/19633/comm /proc/19586/task/19634/comm /proc/19586/task/19642/comm /proc/19586/task/19675/comm
++ sort
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 19586
+++ wc -l
+++ ls /proc/19586/task
++ local t=16
++ '[' 16 -gt 15 ']'
++ max=16
++ sort -rn
++ sort
++ cat /proc/19586/task/19586/comm /proc/19586/task/19594/comm /proc/19586/task/19595/comm /proc/19586/task/19596/comm /proc/19586/task/19597/comm /proc/19586/task/19599/comm /proc/19586/task/19600/comm /proc/19586/task/19601/comm /proc/19586/task/19602/comm /proc/19586/task/19603/comm /proc/19586/task/19624/comm /proc/19586/task/19633/comm /proc/19586/task/19634/comm /proc/19586/task/19642/comm /proc/19586/task/19675/comm /proc/19586/task/19700/comm
++ uniq -c
++ sleep 0.2
++ kill -0 19586
+++ wc -l
+++ ls /proc/19586/task
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ wc -l
+++ ls /proc/19586/task
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ wc -l
+++ ls /proc/19586/task
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ wc -l
+++ ls /proc/19586/task
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ wc -l
+++ ls /proc/19586/task
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ wc -l
+++ ls /proc/19586/task
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ wc -l
+++ ls /proc/19586/task
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ wc -l
+++ ls /proc/19586/task
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ wc -l
+++ ls /proc/19586/task
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ wc -l
+++ ls /proc/19586/task
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ wc -l
+++ ls /proc/19586/task
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
+++ ls /proc/19586/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 19586
++ wait 19586
++ echo max_os_threads=16
++ tee -a /var/log/bench4/par64_native_h1.txt
+max_os_threads=16
++ cat /var/log/bench4/par64_native_h1.txt
+backend=go-json-h1 bucket=cpriti-thickthin-poc-asse1 parallel=64
+backend    style  op      size          p50       p90       max      mean  p50 MiB/s   ffi/op
+go-json-h1 whole  write   16MiB       404ms     995ms    1.561s     550ms       39.6      0.0
+go-json-h1 whole  read    16MiB       154ms     257ms    7.959s     178ms      104.1      0.0
+go-json-h1 32k    write   16MiB       363ms     925ms    1.246s     480ms       44.1      0.0
+go-json-h1 32k    read    16MiB       149ms     241ms     598ms     162ms      107.7      0.0
+go-json-h1 -      list    -              0s        0s        0s        0s          -      0.0  (objects=0)
+max_os_threads=16
++ gsutil -q cp /var/log/bench4/par64_native_h1.txt /var/log/bench4/par64_native_h1.threads.txt gs://cpriti-thickthin-poc-asse1/results/vm4/
++ threads par64_rustthin ./bin/bench2_rust -sizes 16MiB -iters 256 -parallel 64 -list-iters 0
++ local name=par64_rustthin
++ shift
++ local pid=20067
++ local max=0
++ kill -0 20067
++ ./bin/bench2_rust -sizes 16MiB -iters 256 -parallel 64 -list-iters 0
+++ ls /proc/20067/task
+++ wc -l
++ local t=1
++ '[' 1 -gt 0 ']'
++ max=1
++ cat /proc/20067/task/20067/comm
++ sort
++ uniq -c
++ sort -rn
++ sleep 0.2
++ kill -0 20067
+++ wc -l
+++ ls /proc/20067/task
++ local t=56
++ '[' 56 -gt 1 ']'
++ max=56
++ sort
++ sort -rn
++ cat /proc/20067/task/20067/comm /proc/20067/task/20075/comm /proc/20067/task/20076/comm /proc/20067/task/20077/comm /proc/20067/task/20078/comm /proc/20067/task/20080/comm /proc/20067/task/20081/comm /proc/20067/task/20082/comm /proc/20067/task/20083/comm /proc/20067/task/20084/comm /proc/20067/task/20085/comm /proc/20067/task/20086/comm /proc/20067/task/20087/comm /proc/20067/task/20088/comm /proc/20067/task/20089/comm /proc/20067/task/20090/comm /proc/20067/task/20091/comm /proc/20067/task/20092/comm /proc/20067/task/20093/comm /proc/20067/task/20094/comm /proc/20067/task/20095/comm /proc/20067/task/20096/comm /proc/20067/task/20097/comm /proc/20067/task/20098/comm /proc/20067/task/20099/comm /proc/20067/task/20100/comm /proc/20067/task/20101/comm /proc/20067/task/20102/comm /proc/20067/task/20103/comm /proc/20067/task/20104/comm /proc/20067/task/20105/comm /proc/20067/task/20106/comm /proc/20067/task/20107/comm /proc/20067/task/20108/comm /proc/20067/task/20109/comm /proc/20067/task/20110/comm /proc/20067/task/20111/comm /proc/20067/task/20112/comm /proc/20067/task/20113/comm /proc/20067/task/20114/comm /proc/20067/task/20115/comm /proc/20067/task/20116/comm /proc/20067/task/20117/comm /proc/20067/task/20118/comm /proc/20067/task/20119/comm /proc/20067/task/20120/comm /proc/20067/task/20121/comm /proc/20067/task/20122/comm /proc/20067/task/20123/comm /proc/20067/task/20124/comm /proc/20067/task/20125/comm /proc/20067/task/20126/comm /proc/20067/task/20127/comm /proc/20067/task/20128/comm /proc/20067/task/20129/comm /proc/20067/task/20130/comm
++ uniq -c
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=56
++ '[' 56 -gt 56 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=56
++ '[' 56 -gt 56 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=56
++ '[' 56 -gt 56 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=56
++ '[' 56 -gt 56 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=56
++ '[' 56 -gt 56 ']'
++ sleep 0.2
++ kill -0 20067
+++ wc -l
+++ ls /proc/20067/task
++ local t=56
++ '[' 56 -gt 56 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=56
++ '[' 56 -gt 56 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=56
++ '[' 56 -gt 56 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=56
++ '[' 56 -gt 56 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=56
++ '[' 56 -gt 56 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=56
++ '[' 56 -gt 56 ']'
++ sleep 0.2
++ kill -0 20067
+++ wc -l
+++ ls /proc/20067/task
++ local t=56
++ '[' 56 -gt 56 ']'
++ sleep 0.2
++ kill -0 20067
+++ wc -l
+++ ls /proc/20067/task
++ local t=56
++ '[' 56 -gt 56 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=56
++ '[' 56 -gt 56 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=56
++ '[' 56 -gt 56 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=56
++ '[' 56 -gt 56 ']'
++ sleep 0.2
++ kill -0 20067
+++ wc -l
+++ ls /proc/20067/task
++ local t=56
++ '[' 56 -gt 56 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=56
++ '[' 56 -gt 56 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=56
++ '[' 56 -gt 56 ']'
++ sleep 0.2
++ kill -0 20067
+++ wc -l
+++ ls /proc/20067/task
++ local t=56
++ '[' 56 -gt 56 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=56
++ '[' 56 -gt 56 ']'
++ sleep 0.2
++ kill -0 20067
+++ wc -l
+++ ls /proc/20067/task
++ local t=56
++ '[' 56 -gt 56 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=56
++ '[' 56 -gt 56 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=65
++ '[' 65 -gt 56 ']'
++ max=65
++ sort
++ uniq -c
++ cat /proc/20067/task/20067/comm /proc/20067/task/20075/comm /proc/20067/task/20076/comm /proc/20067/task/20077/comm /proc/20067/task/20078/comm /proc/20067/task/20080/comm /proc/20067/task/20081/comm /proc/20067/task/20082/comm /proc/20067/task/20083/comm /proc/20067/task/20084/comm /proc/20067/task/20085/comm /proc/20067/task/20086/comm /proc/20067/task/20087/comm /proc/20067/task/20088/comm /proc/20067/task/20089/comm /proc/20067/task/20090/comm /proc/20067/task/20091/comm /proc/20067/task/20092/comm /proc/20067/task/20093/comm /proc/20067/task/20094/comm /proc/20067/task/20095/comm /proc/20067/task/20096/comm /proc/20067/task/20097/comm /proc/20067/task/20098/comm /proc/20067/task/20099/comm /proc/20067/task/20100/comm /proc/20067/task/20101/comm /proc/20067/task/20102/comm /proc/20067/task/20103/comm /proc/20067/task/20104/comm /proc/20067/task/20105/comm /proc/20067/task/20106/comm /proc/20067/task/20107/comm /proc/20067/task/20108/comm /proc/20067/task/20109/comm /proc/20067/task/20110/comm /proc/20067/task/20111/comm /proc/20067/task/20112/comm /proc/20067/task/20113/comm /proc/20067/task/20114/comm /proc/20067/task/20115/comm /proc/20067/task/20116/comm /proc/20067/task/20117/comm /proc/20067/task/20118/comm /proc/20067/task/20119/comm /proc/20067/task/20120/comm /proc/20067/task/20121/comm /proc/20067/task/20122/comm /proc/20067/task/20123/comm /proc/20067/task/20124/comm /proc/20067/task/20125/comm /proc/20067/task/20126/comm /proc/20067/task/20127/comm /proc/20067/task/20128/comm /proc/20067/task/20129/comm /proc/20067/task/20130/comm /proc/20067/task/20234/comm /proc/20067/task/20235/comm /proc/20067/task/20236/comm /proc/20067/task/20237/comm /proc/20067/task/20238/comm /proc/20067/task/20239/comm /proc/20067/task/20240/comm /proc/20067/task/20241/comm /proc/20067/task/20242/comm
++ sort -rn
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=66
++ '[' 66 -gt 65 ']'
++ max=66
++ uniq -c
++ sort -rn
++ cat /proc/20067/task/20067/comm /proc/20067/task/20075/comm /proc/20067/task/20076/comm /proc/20067/task/20077/comm /proc/20067/task/20078/comm /proc/20067/task/20080/comm /proc/20067/task/20081/comm /proc/20067/task/20082/comm /proc/20067/task/20083/comm /proc/20067/task/20084/comm /proc/20067/task/20085/comm /proc/20067/task/20086/comm /proc/20067/task/20087/comm /proc/20067/task/20088/comm /proc/20067/task/20089/comm /proc/20067/task/20090/comm /proc/20067/task/20091/comm /proc/20067/task/20092/comm /proc/20067/task/20093/comm /proc/20067/task/20094/comm /proc/20067/task/20095/comm /proc/20067/task/20096/comm /proc/20067/task/20097/comm /proc/20067/task/20098/comm /proc/20067/task/20099/comm /proc/20067/task/20100/comm /proc/20067/task/20101/comm /proc/20067/task/20102/comm /proc/20067/task/20103/comm /proc/20067/task/20104/comm /proc/20067/task/20105/comm /proc/20067/task/20106/comm /proc/20067/task/20107/comm /proc/20067/task/20108/comm /proc/20067/task/20109/comm /proc/20067/task/20110/comm /proc/20067/task/20111/comm /proc/20067/task/20112/comm /proc/20067/task/20113/comm /proc/20067/task/20114/comm /proc/20067/task/20115/comm /proc/20067/task/20116/comm /proc/20067/task/20117/comm /proc/20067/task/20118/comm /proc/20067/task/20119/comm /proc/20067/task/20120/comm /proc/20067/task/20121/comm /proc/20067/task/20122/comm /proc/20067/task/20123/comm /proc/20067/task/20124/comm /proc/20067/task/20125/comm /proc/20067/task/20126/comm /proc/20067/task/20127/comm /proc/20067/task/20128/comm /proc/20067/task/20129/comm /proc/20067/task/20130/comm /proc/20067/task/20234/comm /proc/20067/task/20235/comm /proc/20067/task/20236/comm /proc/20067/task/20237/comm /proc/20067/task/20238/comm /proc/20067/task/20239/comm /proc/20067/task/20240/comm /proc/20067/task/20241/comm /proc/20067/task/20242/comm /proc/20067/task/20251/comm
++ sort
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=66
++ '[' 66 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=66
++ '[' 66 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=66
++ '[' 66 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ wc -l
+++ ls /proc/20067/task
++ local t=66
++ '[' 66 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ wc -l
+++ ls /proc/20067/task
++ local t=66
++ '[' 66 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=66
++ '[' 66 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=66
++ '[' 66 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ wc -l
+++ ls /proc/20067/task
++ local t=66
++ '[' 66 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ wc -l
+++ ls /proc/20067/task
++ local t=66
++ '[' 66 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ wc -l
+++ ls /proc/20067/task
++ local t=66
++ '[' 66 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=66
++ '[' 66 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ wc -l
+++ ls /proc/20067/task
++ local t=66
++ '[' 66 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=66
++ '[' 66 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=66
++ '[' 66 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ wc -l
+++ ls /proc/20067/task
++ local t=66
++ '[' 66 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=66
++ '[' 66 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ wc -l
+++ ls /proc/20067/task
++ local t=66
++ '[' 66 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ wc -l
+++ ls /proc/20067/task
++ local t=66
++ '[' 66 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=66
++ '[' 66 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=66
++ '[' 66 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=66
++ '[' 66 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ wc -l
+++ ls /proc/20067/task
++ local t=61
++ '[' 61 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=61
++ '[' 61 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=61
++ '[' 61 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=61
++ '[' 61 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=61
++ '[' 61 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=61
++ '[' 61 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=61
++ '[' 61 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=59
++ '[' 59 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=59
++ '[' 59 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=59
++ '[' 59 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
+++ ls /proc/20067/task
+++ wc -l
++ local t=59
++ '[' 59 -gt 66 ']'
++ sleep 0.2
++ kill -0 20067
++ wait 20067
++ echo max_os_threads=66
++ tee -a /var/log/bench4/par64_rustthin.txt
+max_os_threads=66
++ cat /var/log/bench4/par64_rustthin.txt
+client init: 31.354325ms
+backend=go-rustthin bucket=cpriti-thickthin-poc-asse1 parallel=64
+backend    style  op      size          p50       p90       max      mean  p50 MiB/s   ffi/op
+go-rustthin whole  write   16MiB       462ms    1.031s     1.17s     588ms       34.6    408.6
+go-rustthin whole  read    16MiB       158ms     305ms    1.917s     186ms      101.3    183.9
+go-rustthin 32k    write   16MiB       617ms    1.054s    1.319s     672ms       26.0  55475.7
+go-rustthin 32k    read    16MiB       267ms     319ms    2.117s     243ms       59.9  23338.1
+go-rustthin -      list    -              0s        0s        0s        0s          -      0.0  (objects=0)
+max_os_threads=66
++ gsutil -q cp /var/log/bench4/par64_rustthin.txt /var/log/bench4/par64_rustthin.threads.txt gs://cpriti-thickthin-poc-asse1/results/vm4/
++ for par in 16 64 256
++ threads par256_native_h1 env NATIVE_HTTP1=1 ./bin/bench2_native -sizes 16MiB -iters 256 -parallel 256 -list-iters 0
++ local name=par256_native_h1
++ shift
++ local pid=20560
++ local max=0
++ kill -0 20560
++ env NATIVE_HTTP1=1 ./bin/bench2_native -sizes 16MiB -iters 256 -parallel 256 -list-iters 0
+++ ls /proc/20560/task
+++ wc -l
++ local t=1
++ '[' 1 -gt 0 ']'
++ max=1
++ cat /proc/20560/task/20560/comm
++ sort
++ uniq -c
++ sort -rn
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=10
++ '[' 10 -gt 1 ']'
++ max=10
++ cat /proc/20560/task/20560/comm /proc/20560/task/20568/comm /proc/20560/task/20569/comm /proc/20560/task/20570/comm /proc/20560/task/20571/comm /proc/20560/task/20573/comm /proc/20560/task/20574/comm /proc/20560/task/20575/comm /proc/20560/task/20576/comm /proc/20560/task/20577/comm
++ sort -rn
++ uniq -c
++ sort
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=10
++ '[' 10 -gt 10 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=10
++ '[' 10 -gt 10 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=10
++ '[' 10 -gt 10 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=10
++ '[' 10 -gt 10 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=10
++ '[' 10 -gt 10 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=10
++ '[' 10 -gt 10 ']'
++ sleep 0.2
++ kill -0 20560
+++ wc -l
+++ ls /proc/20560/task
++ local t=11
++ '[' 11 -gt 10 ']'
++ max=11
++ sort
++ cat /proc/20560/task/20560/comm /proc/20560/task/20568/comm /proc/20560/task/20569/comm /proc/20560/task/20570/comm /proc/20560/task/20571/comm /proc/20560/task/20573/comm /proc/20560/task/20574/comm /proc/20560/task/20575/comm /proc/20560/task/20576/comm /proc/20560/task/20577/comm /proc/20560/task/20615/comm
++ uniq -c
++ sort -rn
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 11 ']'
++ max=13
++ sort
++ uniq -c
++ sort -rn
++ cat /proc/20560/task/20560/comm /proc/20560/task/20568/comm /proc/20560/task/20569/comm /proc/20560/task/20570/comm /proc/20560/task/20571/comm /proc/20560/task/20573/comm /proc/20560/task/20574/comm /proc/20560/task/20575/comm /proc/20560/task/20576/comm /proc/20560/task/20577/comm /proc/20560/task/20615/comm /proc/20560/task/20621/comm /proc/20560/task/20625/comm
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=13
++ '[' 13 -gt 13 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=15
++ '[' 15 -gt 13 ']'
++ max=15
++ sort
++ uniq -c
++ sort -rn
++ cat /proc/20560/task/20560/comm /proc/20560/task/20568/comm /proc/20560/task/20569/comm /proc/20560/task/20570/comm /proc/20560/task/20571/comm /proc/20560/task/20573/comm /proc/20560/task/20574/comm /proc/20560/task/20575/comm /proc/20560/task/20576/comm /proc/20560/task/20577/comm /proc/20560/task/20615/comm /proc/20560/task/20621/comm /proc/20560/task/20625/comm /proc/20560/task/20635/comm /proc/20560/task/20636/comm
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 20560
+++ wc -l
+++ ls /proc/20560/task
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=15
++ '[' 15 -gt 15 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 15 ']'
++ max=16
++ uniq -c
++ cat /proc/20560/task/20560/comm /proc/20560/task/20568/comm /proc/20560/task/20569/comm /proc/20560/task/20570/comm /proc/20560/task/20571/comm /proc/20560/task/20573/comm /proc/20560/task/20574/comm /proc/20560/task/20575/comm /proc/20560/task/20576/comm /proc/20560/task/20577/comm /proc/20560/task/20615/comm /proc/20560/task/20621/comm /proc/20560/task/20625/comm /proc/20560/task/20635/comm /proc/20560/task/20636/comm /proc/20560/task/20657/comm
++ sort -rn
++ sort
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ wc -l
+++ ls /proc/20560/task
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ wc -l
+++ ls /proc/20560/task
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ wc -l
+++ ls /proc/20560/task
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ wc -l
+++ ls /proc/20560/task
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ wc -l
+++ ls /proc/20560/task
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ wc -l
+++ ls /proc/20560/task
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ wc -l
+++ ls /proc/20560/task
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ wc -l
+++ ls /proc/20560/task
++ local t=16
++ '[' 16 -gt 16 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 16 ']'
++ max=17
++ uniq -c
++ sort -rn
++ cat /proc/20560/task/20560/comm /proc/20560/task/20568/comm /proc/20560/task/20569/comm /proc/20560/task/20570/comm /proc/20560/task/20571/comm /proc/20560/task/20573/comm /proc/20560/task/20574/comm /proc/20560/task/20575/comm /proc/20560/task/20576/comm /proc/20560/task/20577/comm /proc/20560/task/20615/comm /proc/20560/task/20621/comm /proc/20560/task/20625/comm /proc/20560/task/20635/comm /proc/20560/task/20636/comm /proc/20560/task/20657/comm /proc/20560/task/20953/comm
++ sort
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ wc -l
+++ ls /proc/20560/task
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ wc -l
+++ ls /proc/20560/task
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ wc -l
+++ ls /proc/20560/task
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
+++ ls /proc/20560/task
+++ wc -l
++ local t=17
++ '[' 17 -gt 17 ']'
++ sleep 0.2
++ kill -0 20560
++ wait 20560
++ echo max_os_threads=17
++ tee -a /var/log/bench4/par256_native_h1.txt
+max_os_threads=17
++ cat /var/log/bench4/par256_native_h1.txt
+backend=go-json-h1 bucket=cpriti-thickthin-poc-asse1 parallel=256
+backend    style  op      size          p50       p90       max      mean  p50 MiB/s   ffi/op
+go-json-h1 whole  write   16MiB      2.268s    2.839s    4.399s    2.214s        7.1      0.0
+go-json-h1 whole  read    16MiB       574ms    1.136s   13.994s     643ms       27.9      0.0
+go-json-h1 32k    write   16MiB      1.969s    2.272s    2.919s    1.846s        8.1      0.0
+go-json-h1 32k    read    16MiB       374ms     958ms    6.108s     480ms       42.8      0.0
+go-json-h1 -      list    -              0s        0s        0s        0s          -      0.0  (objects=0)
+max_os_threads=17
++ gsutil -q cp /var/log/bench4/par256_native_h1.txt /var/log/bench4/par256_native_h1.threads.txt gs://cpriti-thickthin-poc-asse1/results/vm4/
++ threads par256_rustthin ./bin/bench2_rust -sizes 16MiB -iters 256 -parallel 256 -list-iters 0
++ local name=par256_rustthin
++ shift
++ ./bin/bench2_rust -sizes 16MiB -iters 256 -parallel 256 -list-iters 0
++ local pid=21280
++ local max=0
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=1
++ '[' 1 -gt 0 ']'
++ max=1
++ cat /proc/21280/task/21280/comm
++ sort
++ uniq -c
++ sort -rn
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=65
++ '[' 65 -gt 1 ']'
++ max=65
++ sort
++ uniq -c
++ sort -rn
++ cat /proc/21280/task/21280/comm /proc/21280/task/21288/comm /proc/21280/task/21289/comm /proc/21280/task/21290/comm /proc/21280/task/21291/comm /proc/21280/task/21292/comm /proc/21280/task/21294/comm /proc/21280/task/21295/comm /proc/21280/task/21296/comm /proc/21280/task/21297/comm /proc/21280/task/21298/comm /proc/21280/task/21299/comm /proc/21280/task/21300/comm /proc/21280/task/21301/comm /proc/21280/task/21302/comm /proc/21280/task/21303/comm /proc/21280/task/21304/comm /proc/21280/task/21305/comm /proc/21280/task/21306/comm /proc/21280/task/21307/comm /proc/21280/task/21308/comm /proc/21280/task/21309/comm /proc/21280/task/21310/comm /proc/21280/task/21311/comm /proc/21280/task/21312/comm /proc/21280/task/21313/comm /proc/21280/task/21314/comm /proc/21280/task/21315/comm /proc/21280/task/21316/comm /proc/21280/task/21317/comm /proc/21280/task/21318/comm /proc/21280/task/21319/comm /proc/21280/task/21320/comm /proc/21280/task/21321/comm /proc/21280/task/21322/comm /proc/21280/task/21323/comm /proc/21280/task/21324/comm /proc/21280/task/21325/comm /proc/21280/task/21326/comm /proc/21280/task/21327/comm /proc/21280/task/21328/comm /proc/21280/task/21329/comm /proc/21280/task/21330/comm /proc/21280/task/21331/comm /proc/21280/task/21332/comm /proc/21280/task/21333/comm /proc/21280/task/21334/comm /proc/21280/task/21335/comm /proc/21280/task/21336/comm /proc/21280/task/21337/comm /proc/21280/task/21338/comm /proc/21280/task/21339/comm /proc/21280/task/21340/comm /proc/21280/task/21341/comm /proc/21280/task/21342/comm /proc/21280/task/21343/comm /proc/21280/task/21344/comm /proc/21280/task/21345/comm /proc/21280/task/21346/comm /proc/21280/task/21347/comm /proc/21280/task/21348/comm /proc/21280/task/21349/comm /proc/21280/task/21350/comm /proc/21280/task/21351/comm /proc/21280/task/21355/comm
++ sleep 0.2
++ kill -0 21280
+++ wc -l
+++ ls /proc/21280/task
++ local t=169
++ '[' 169 -gt 65 ']'
++ max=169
++ uniq -c
++ sort -rn
++ sort
++ cat /proc/21280/task/21280/comm /proc/21280/task/21288/comm /proc/21280/task/21289/comm /proc/21280/task/21290/comm /proc/21280/task/21291/comm /proc/21280/task/21292/comm /proc/21280/task/21294/comm /proc/21280/task/21295/comm /proc/21280/task/21296/comm /proc/21280/task/21297/comm /proc/21280/task/21298/comm /proc/21280/task/21299/comm /proc/21280/task/21300/comm /proc/21280/task/21301/comm /proc/21280/task/21302/comm /proc/21280/task/21303/comm /proc/21280/task/21304/comm /proc/21280/task/21305/comm /proc/21280/task/21306/comm /proc/21280/task/21307/comm /proc/21280/task/21308/comm /proc/21280/task/21309/comm /proc/21280/task/21310/comm /proc/21280/task/21311/comm /proc/21280/task/21312/comm /proc/21280/task/21313/comm /proc/21280/task/21314/comm /proc/21280/task/21315/comm /proc/21280/task/21316/comm /proc/21280/task/21317/comm /proc/21280/task/21318/comm /proc/21280/task/21319/comm /proc/21280/task/21320/comm /proc/21280/task/21321/comm /proc/21280/task/21322/comm /proc/21280/task/21323/comm /proc/21280/task/21324/comm /proc/21280/task/21325/comm /proc/21280/task/21326/comm /proc/21280/task/21327/comm /proc/21280/task/21328/comm /proc/21280/task/21329/comm /proc/21280/task/21330/comm /proc/21280/task/21331/comm /proc/21280/task/21332/comm /proc/21280/task/21333/comm /proc/21280/task/21334/comm /proc/21280/task/21335/comm /proc/21280/task/21336/comm /proc/21280/task/21337/comm /proc/21280/task/21338/comm /proc/21280/task/21339/comm /proc/21280/task/21340/comm /proc/21280/task/21341/comm /proc/21280/task/21342/comm /proc/21280/task/21343/comm /proc/21280/task/21344/comm /proc/21280/task/21345/comm /proc/21280/task/21346/comm /proc/21280/task/21347/comm /proc/21280/task/21348/comm /proc/21280/task/21349/comm /proc/21280/task/21350/comm /proc/21280/task/21351/comm /proc/21280/task/21355/comm /proc/21280/task/21361/comm /proc/21280/task/21362/comm /proc/21280/task/21363/comm /proc/21280/task/21364/comm /proc/21280/task/21365/comm /proc/21280/task/21366/comm /proc/21280/task/21367/comm /proc/21280/task/21368/comm /proc/21280/task/21369/comm /proc/21280/task/21370/comm /proc/21280/task/21371/comm /proc/21280/task/21372/comm /proc/21280/task/21373/comm /proc/21280/task/21374/comm /proc/21280/task/21375/comm /proc/21280/task/21376/comm /proc/21280/task/21377/comm /proc/21280/task/21378/comm /proc/21280/task/21379/comm /proc/21280/task/21380/comm /proc/21280/task/21381/comm /proc/21280/task/21382/comm /proc/21280/task/21383/comm /proc/21280/task/21384/comm /proc/21280/task/21385/comm /proc/21280/task/21386/comm /proc/21280/task/21387/comm /proc/21280/task/21388/comm /proc/21280/task/21389/comm /proc/21280/task/21390/comm /proc/21280/task/21391/comm /proc/21280/task/21392/comm /proc/21280/task/21393/comm /proc/21280/task/21394/comm /proc/21280/task/21395/comm /proc/21280/task/21396/comm /proc/21280/task/21397/comm /proc/21280/task/21398/comm /proc/21280/task/21399/comm /proc/21280/task/21400/comm /proc/21280/task/21401/comm /proc/21280/task/21402/comm /proc/21280/task/21403/comm /proc/21280/task/21404/comm /proc/21280/task/21405/comm /proc/21280/task/21406/comm /proc/21280/task/21407/comm /proc/21280/task/21408/comm /proc/21280/task/21409/comm /proc/21280/task/21410/comm /proc/21280/task/21411/comm /proc/21280/task/21412/comm /proc/21280/task/21413/comm /proc/21280/task/21414/comm /proc/21280/task/21415/comm /proc/21280/task/21416/comm /proc/21280/task/21417/comm /proc/21280/task/21418/comm /proc/21280/task/21419/comm /proc/21280/task/21420/comm /proc/21280/task/21421/comm /proc/21280/task/21422/comm /proc/21280/task/21423/comm /proc/21280/task/21424/comm /proc/21280/task/21425/comm /proc/21280/task/21426/comm /proc/21280/task/21427/comm /proc/21280/task/21428/comm /proc/21280/task/21429/comm /proc/21280/task/21430/comm /proc/21280/task/21431/comm /proc/21280/task/21432/comm /proc/21280/task/21433/comm /proc/21280/task/21434/comm /proc/21280/task/21435/comm /proc/21280/task/21436/comm /proc/21280/task/21437/comm /proc/21280/task/21438/comm /proc/21280/task/21439/comm /proc/21280/task/21440/comm /proc/21280/task/21441/comm /proc/21280/task/21442/comm /proc/21280/task/21443/comm /proc/21280/task/21444/comm /proc/21280/task/21445/comm /proc/21280/task/21446/comm /proc/21280/task/21447/comm /proc/21280/task/21448/comm /proc/21280/task/21449/comm /proc/21280/task/21450/comm /proc/21280/task/21451/comm /proc/21280/task/21452/comm /proc/21280/task/21453/comm /proc/21280/task/21454/comm /proc/21280/task/21455/comm /proc/21280/task/21456/comm /proc/21280/task/21457/comm /proc/21280/task/21458/comm /proc/21280/task/21459/comm /proc/21280/task/21460/comm /proc/21280/task/21461/comm /proc/21280/task/21462/comm /proc/21280/task/21463/comm /proc/21280/task/21467/comm
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=221
++ '[' 221 -gt 169 ']'
++ max=221
++ sort
++ uniq -c
++ sort -rn
++ cat /proc/21280/task/21280/comm /proc/21280/task/21288/comm /proc/21280/task/21289/comm /proc/21280/task/21290/comm /proc/21280/task/21291/comm /proc/21280/task/21292/comm /proc/21280/task/21294/comm /proc/21280/task/21295/comm /proc/21280/task/21296/comm /proc/21280/task/21297/comm /proc/21280/task/21298/comm /proc/21280/task/21299/comm /proc/21280/task/21300/comm /proc/21280/task/21301/comm /proc/21280/task/21302/comm /proc/21280/task/21303/comm /proc/21280/task/21304/comm /proc/21280/task/21305/comm /proc/21280/task/21306/comm /proc/21280/task/21307/comm /proc/21280/task/21308/comm /proc/21280/task/21309/comm /proc/21280/task/21310/comm /proc/21280/task/21311/comm /proc/21280/task/21312/comm /proc/21280/task/21313/comm /proc/21280/task/21314/comm /proc/21280/task/21315/comm /proc/21280/task/21316/comm /proc/21280/task/21317/comm /proc/21280/task/21318/comm /proc/21280/task/21319/comm /proc/21280/task/21320/comm /proc/21280/task/21321/comm /proc/21280/task/21322/comm /proc/21280/task/21323/comm /proc/21280/task/21324/comm /proc/21280/task/21325/comm /proc/21280/task/21326/comm /proc/21280/task/21327/comm /proc/21280/task/21328/comm /proc/21280/task/21329/comm /proc/21280/task/21330/comm /proc/21280/task/21331/comm /proc/21280/task/21332/comm /proc/21280/task/21333/comm /proc/21280/task/21334/comm /proc/21280/task/21335/comm /proc/21280/task/21336/comm /proc/21280/task/21337/comm /proc/21280/task/21338/comm /proc/21280/task/21339/comm /proc/21280/task/21340/comm /proc/21280/task/21341/comm /proc/21280/task/21342/comm /proc/21280/task/21343/comm /proc/21280/task/21344/comm /proc/21280/task/21345/comm /proc/21280/task/21346/comm /proc/21280/task/21347/comm /proc/21280/task/21348/comm /proc/21280/task/21349/comm /proc/21280/task/21350/comm /proc/21280/task/21351/comm /proc/21280/task/21355/comm /proc/21280/task/21361/comm /proc/21280/task/21362/comm /proc/21280/task/21363/comm /proc/21280/task/21364/comm /proc/21280/task/21365/comm /proc/21280/task/21366/comm /proc/21280/task/21367/comm /proc/21280/task/21368/comm /proc/21280/task/21369/comm /proc/21280/task/21370/comm /proc/21280/task/21371/comm /proc/21280/task/21372/comm /proc/21280/task/21373/comm /proc/21280/task/21374/comm /proc/21280/task/21375/comm /proc/21280/task/21376/comm /proc/21280/task/21377/comm /proc/21280/task/21378/comm /proc/21280/task/21379/comm /proc/21280/task/21380/comm /proc/21280/task/21381/comm /proc/21280/task/21382/comm /proc/21280/task/21383/comm /proc/21280/task/21384/comm /proc/21280/task/21385/comm /proc/21280/task/21386/comm /proc/21280/task/21387/comm /proc/21280/task/21388/comm /proc/21280/task/21389/comm /proc/21280/task/21390/comm /proc/21280/task/21391/comm /proc/21280/task/21392/comm /proc/21280/task/21393/comm /proc/21280/task/21394/comm /proc/21280/task/21395/comm /proc/21280/task/21396/comm /proc/21280/task/21397/comm /proc/21280/task/21398/comm /proc/21280/task/21399/comm /proc/21280/task/21400/comm /proc/21280/task/21401/comm /proc/21280/task/21402/comm /proc/21280/task/21403/comm /proc/21280/task/21404/comm /proc/21280/task/21405/comm /proc/21280/task/21406/comm /proc/21280/task/21407/comm /proc/21280/task/21408/comm /proc/21280/task/21409/comm /proc/21280/task/21410/comm /proc/21280/task/21411/comm /proc/21280/task/21412/comm /proc/21280/task/21413/comm /proc/21280/task/21414/comm /proc/21280/task/21415/comm /proc/21280/task/21416/comm /proc/21280/task/21417/comm /proc/21280/task/21418/comm /proc/21280/task/21419/comm /proc/21280/task/21420/comm /proc/21280/task/21421/comm /proc/21280/task/21422/comm /proc/21280/task/21423/comm /proc/21280/task/21424/comm /proc/21280/task/21425/comm /proc/21280/task/21426/comm /proc/21280/task/21427/comm /proc/21280/task/21428/comm /proc/21280/task/21429/comm /proc/21280/task/21430/comm /proc/21280/task/21431/comm /proc/21280/task/21432/comm /proc/21280/task/21433/comm /proc/21280/task/21434/comm /proc/21280/task/21435/comm /proc/21280/task/21436/comm /proc/21280/task/21437/comm /proc/21280/task/21438/comm /proc/21280/task/21439/comm /proc/21280/task/21440/comm /proc/21280/task/21441/comm /proc/21280/task/21442/comm /proc/21280/task/21443/comm /proc/21280/task/21444/comm /proc/21280/task/21445/comm /proc/21280/task/21446/comm /proc/21280/task/21447/comm /proc/21280/task/21448/comm /proc/21280/task/21449/comm /proc/21280/task/21450/comm /proc/21280/task/21451/comm /proc/21280/task/21452/comm /proc/21280/task/21453/comm /proc/21280/task/21454/comm /proc/21280/task/21455/comm /proc/21280/task/21456/comm /proc/21280/task/21457/comm /proc/21280/task/21458/comm /proc/21280/task/21459/comm /proc/21280/task/21460/comm /proc/21280/task/21461/comm /proc/21280/task/21462/comm /proc/21280/task/21463/comm /proc/21280/task/21467/comm /proc/21280/task/21472/comm /proc/21280/task/21473/comm /proc/21280/task/21475/comm /proc/21280/task/21476/comm /proc/21280/task/21477/comm /proc/21280/task/21478/comm /proc/21280/task/21479/comm /proc/21280/task/21480/comm /proc/21280/task/21481/comm /proc/21280/task/21482/comm /proc/21280/task/21483/comm /proc/21280/task/21484/comm /proc/21280/task/21485/comm /proc/21280/task/21486/comm /proc/21280/task/21487/comm /proc/21280/task/21488/comm /proc/21280/task/21489/comm /proc/21280/task/21490/comm /proc/21280/task/21491/comm /proc/21280/task/21492/comm /proc/21280/task/21493/comm /proc/21280/task/21494/comm /proc/21280/task/21495/comm /proc/21280/task/21496/comm /proc/21280/task/21497/comm /proc/21280/task/21498/comm /proc/21280/task/21499/comm /proc/21280/task/21500/comm /proc/21280/task/21501/comm /proc/21280/task/21502/comm /proc/21280/task/21503/comm /proc/21280/task/21504/comm /proc/21280/task/21505/comm /proc/21280/task/21506/comm /proc/21280/task/21507/comm /proc/21280/task/21508/comm /proc/21280/task/21509/comm /proc/21280/task/21510/comm /proc/21280/task/21511/comm /proc/21280/task/21512/comm /proc/21280/task/21513/comm /proc/21280/task/21514/comm /proc/21280/task/21515/comm /proc/21280/task/21516/comm /proc/21280/task/21517/comm /proc/21280/task/21518/comm /proc/21280/task/21519/comm /proc/21280/task/21520/comm /proc/21280/task/21521/comm /proc/21280/task/21522/comm /proc/21280/task/21523/comm /proc/21280/task/21524/comm
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=221
++ '[' 221 -gt 221 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=221
++ '[' 221 -gt 221 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=221
++ '[' 221 -gt 221 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=221
++ '[' 221 -gt 221 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=221
++ '[' 221 -gt 221 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=221
++ '[' 221 -gt 221 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=221
++ '[' 221 -gt 221 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=221
++ '[' 221 -gt 221 ']'
++ sleep 0.2
++ kill -0 21280
+++ wc -l
+++ ls /proc/21280/task
++ local t=221
++ '[' 221 -gt 221 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=221
++ '[' 221 -gt 221 ']'
++ sleep 0.2
++ kill -0 21280
+++ wc -l
+++ ls /proc/21280/task
++ local t=221
++ '[' 221 -gt 221 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=221
++ '[' 221 -gt 221 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=221
++ '[' 221 -gt 221 ']'
++ sleep 0.2
++ kill -0 21280
+++ wc -l
+++ ls /proc/21280/task
++ local t=221
++ '[' 221 -gt 221 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=221
++ '[' 221 -gt 221 ']'
++ sleep 0.2
++ kill -0 21280
+++ wc -l
+++ ls /proc/21280/task
++ local t=221
++ '[' 221 -gt 221 ']'
++ sleep 0.2
++ kill -0 21280
+++ wc -l
+++ ls /proc/21280/task
++ local t=221
++ '[' 221 -gt 221 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=221
++ '[' 221 -gt 221 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=221
++ '[' 221 -gt 221 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=221
++ '[' 221 -gt 221 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=221
++ '[' 221 -gt 221 ']'
++ sleep 0.2
++ kill -0 21280
+++ wc -l
+++ ls /proc/21280/task
++ local t=221
++ '[' 221 -gt 221 ']'
++ sleep 0.2
++ kill -0 21280
+++ wc -l
+++ ls /proc/21280/task
++ local t=221
++ '[' 221 -gt 221 ']'
++ sleep 0.2
++ kill -0 21280
+++ wc -l
+++ ls /proc/21280/task
++ local t=221
++ '[' 221 -gt 221 ']'
++ sleep 0.2
++ kill -0 21280
+++ wc -l
+++ ls /proc/21280/task
++ local t=221
++ '[' 221 -gt 221 ']'
++ sleep 0.2
++ kill -0 21280
+++ wc -l
+++ ls /proc/21280/task
++ local t=221
++ '[' 221 -gt 221 ']'
++ sleep 0.2
++ kill -0 21280
+++ wc -l
+++ ls /proc/21280/task
++ local t=221
++ '[' 221 -gt 221 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=221
++ '[' 221 -gt 221 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=222
++ '[' 222 -gt 221 ']'
++ max=222
++ sort
++ uniq -c
++ sort -rn
++ cat /proc/21280/task/21280/comm /proc/21280/task/21288/comm /proc/21280/task/21289/comm /proc/21280/task/21290/comm /proc/21280/task/21291/comm /proc/21280/task/21292/comm /proc/21280/task/21294/comm /proc/21280/task/21295/comm /proc/21280/task/21296/comm /proc/21280/task/21297/comm /proc/21280/task/21298/comm /proc/21280/task/21299/comm /proc/21280/task/21300/comm /proc/21280/task/21301/comm /proc/21280/task/21302/comm /proc/21280/task/21303/comm /proc/21280/task/21304/comm /proc/21280/task/21305/comm /proc/21280/task/21306/comm /proc/21280/task/21307/comm /proc/21280/task/21308/comm /proc/21280/task/21309/comm /proc/21280/task/21310/comm /proc/21280/task/21311/comm /proc/21280/task/21312/comm /proc/21280/task/21313/comm /proc/21280/task/21314/comm /proc/21280/task/21315/comm /proc/21280/task/21316/comm /proc/21280/task/21317/comm /proc/21280/task/21318/comm /proc/21280/task/21319/comm /proc/21280/task/21320/comm /proc/21280/task/21321/comm /proc/21280/task/21322/comm /proc/21280/task/21323/comm /proc/21280/task/21324/comm /proc/21280/task/21325/comm /proc/21280/task/21326/comm /proc/21280/task/21327/comm /proc/21280/task/21328/comm /proc/21280/task/21329/comm /proc/21280/task/21330/comm /proc/21280/task/21331/comm /proc/21280/task/21332/comm /proc/21280/task/21333/comm /proc/21280/task/21334/comm /proc/21280/task/21335/comm /proc/21280/task/21336/comm /proc/21280/task/21337/comm /proc/21280/task/21338/comm /proc/21280/task/21339/comm /proc/21280/task/21340/comm /proc/21280/task/21341/comm /proc/21280/task/21342/comm /proc/21280/task/21343/comm /proc/21280/task/21344/comm /proc/21280/task/21345/comm /proc/21280/task/21346/comm /proc/21280/task/21347/comm /proc/21280/task/21348/comm /proc/21280/task/21349/comm /proc/21280/task/21350/comm /proc/21280/task/21351/comm /proc/21280/task/21355/comm /proc/21280/task/21361/comm /proc/21280/task/21362/comm /proc/21280/task/21363/comm /proc/21280/task/21364/comm /proc/21280/task/21365/comm /proc/21280/task/21366/comm /proc/21280/task/21367/comm /proc/21280/task/21368/comm /proc/21280/task/21369/comm /proc/21280/task/21370/comm /proc/21280/task/21371/comm /proc/21280/task/21372/comm /proc/21280/task/21373/comm /proc/21280/task/21374/comm /proc/21280/task/21375/comm /proc/21280/task/21376/comm /proc/21280/task/21377/comm /proc/21280/task/21378/comm /proc/21280/task/21379/comm /proc/21280/task/21380/comm /proc/21280/task/21381/comm /proc/21280/task/21382/comm /proc/21280/task/21383/comm /proc/21280/task/21384/comm /proc/21280/task/21385/comm /proc/21280/task/21386/comm /proc/21280/task/21387/comm /proc/21280/task/21388/comm /proc/21280/task/21389/comm /proc/21280/task/21390/comm /proc/21280/task/21391/comm /proc/21280/task/21392/comm /proc/21280/task/21393/comm /proc/21280/task/21394/comm /proc/21280/task/21395/comm /proc/21280/task/21396/comm /proc/21280/task/21397/comm /proc/21280/task/21398/comm /proc/21280/task/21399/comm /proc/21280/task/21400/comm /proc/21280/task/21401/comm /proc/21280/task/21402/comm /proc/21280/task/21403/comm /proc/21280/task/21404/comm /proc/21280/task/21405/comm /proc/21280/task/21406/comm /proc/21280/task/21407/comm /proc/21280/task/21408/comm /proc/21280/task/21409/comm /proc/21280/task/21410/comm /proc/21280/task/21411/comm /proc/21280/task/21412/comm /proc/21280/task/21413/comm /proc/21280/task/21414/comm /proc/21280/task/21415/comm /proc/21280/task/21416/comm /proc/21280/task/21417/comm /proc/21280/task/21418/comm /proc/21280/task/21419/comm /proc/21280/task/21420/comm /proc/21280/task/21421/comm /proc/21280/task/21422/comm /proc/21280/task/21423/comm /proc/21280/task/21424/comm /proc/21280/task/21425/comm /proc/21280/task/21426/comm /proc/21280/task/21427/comm /proc/21280/task/21428/comm /proc/21280/task/21429/comm /proc/21280/task/21430/comm /proc/21280/task/21431/comm /proc/21280/task/21432/comm /proc/21280/task/21433/comm /proc/21280/task/21434/comm /proc/21280/task/21435/comm /proc/21280/task/21436/comm /proc/21280/task/21437/comm /proc/21280/task/21438/comm /proc/21280/task/21439/comm /proc/21280/task/21440/comm /proc/21280/task/21441/comm /proc/21280/task/21442/comm /proc/21280/task/21443/comm /proc/21280/task/21444/comm /proc/21280/task/21445/comm /proc/21280/task/21446/comm /proc/21280/task/21447/comm /proc/21280/task/21448/comm /proc/21280/task/21449/comm /proc/21280/task/21450/comm /proc/21280/task/21451/comm /proc/21280/task/21452/comm /proc/21280/task/21453/comm /proc/21280/task/21454/comm /proc/21280/task/21455/comm /proc/21280/task/21456/comm /proc/21280/task/21457/comm /proc/21280/task/21458/comm /proc/21280/task/21459/comm /proc/21280/task/21460/comm /proc/21280/task/21461/comm /proc/21280/task/21462/comm /proc/21280/task/21463/comm /proc/21280/task/21467/comm /proc/21280/task/21472/comm /proc/21280/task/21473/comm /proc/21280/task/21475/comm /proc/21280/task/21476/comm /proc/21280/task/21477/comm /proc/21280/task/21478/comm /proc/21280/task/21479/comm /proc/21280/task/21480/comm /proc/21280/task/21481/comm /proc/21280/task/21482/comm /proc/21280/task/21483/comm /proc/21280/task/21484/comm /proc/21280/task/21485/comm /proc/21280/task/21486/comm /proc/21280/task/21487/comm /proc/21280/task/21488/comm /proc/21280/task/21489/comm /proc/21280/task/21490/comm /proc/21280/task/21491/comm /proc/21280/task/21492/comm /proc/21280/task/21493/comm /proc/21280/task/21494/comm /proc/21280/task/21495/comm /proc/21280/task/21496/comm /proc/21280/task/21497/comm /proc/21280/task/21498/comm /proc/21280/task/21499/comm /proc/21280/task/21500/comm /proc/21280/task/21501/comm /proc/21280/task/21502/comm /proc/21280/task/21503/comm /proc/21280/task/21504/comm /proc/21280/task/21505/comm /proc/21280/task/21506/comm /proc/21280/task/21507/comm /proc/21280/task/21508/comm /proc/21280/task/21509/comm /proc/21280/task/21510/comm /proc/21280/task/21511/comm /proc/21280/task/21512/comm /proc/21280/task/21513/comm /proc/21280/task/21514/comm /proc/21280/task/21515/comm /proc/21280/task/21516/comm /proc/21280/task/21517/comm /proc/21280/task/21518/comm /proc/21280/task/21519/comm /proc/21280/task/21520/comm /proc/21280/task/21521/comm /proc/21280/task/21522/comm /proc/21280/task/21523/comm /proc/21280/task/21524/comm /proc/21280/task/21648/comm
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=222
++ '[' 222 -gt 222 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=223
++ '[' 223 -gt 222 ']'
++ max=223
++ sort -rn
++ sort
++ uniq -c
++ cat /proc/21280/task/21280/comm /proc/21280/task/21288/comm /proc/21280/task/21289/comm /proc/21280/task/21290/comm /proc/21280/task/21291/comm /proc/21280/task/21292/comm /proc/21280/task/21294/comm /proc/21280/task/21295/comm /proc/21280/task/21296/comm /proc/21280/task/21297/comm /proc/21280/task/21298/comm /proc/21280/task/21299/comm /proc/21280/task/21300/comm /proc/21280/task/21301/comm /proc/21280/task/21302/comm /proc/21280/task/21303/comm /proc/21280/task/21304/comm /proc/21280/task/21305/comm /proc/21280/task/21306/comm /proc/21280/task/21307/comm /proc/21280/task/21308/comm /proc/21280/task/21309/comm /proc/21280/task/21310/comm /proc/21280/task/21311/comm /proc/21280/task/21312/comm /proc/21280/task/21313/comm /proc/21280/task/21314/comm /proc/21280/task/21315/comm /proc/21280/task/21316/comm /proc/21280/task/21317/comm /proc/21280/task/21318/comm /proc/21280/task/21319/comm /proc/21280/task/21320/comm /proc/21280/task/21321/comm /proc/21280/task/21322/comm /proc/21280/task/21323/comm /proc/21280/task/21324/comm /proc/21280/task/21325/comm /proc/21280/task/21326/comm /proc/21280/task/21327/comm /proc/21280/task/21328/comm /proc/21280/task/21329/comm /proc/21280/task/21330/comm /proc/21280/task/21331/comm /proc/21280/task/21332/comm /proc/21280/task/21333/comm /proc/21280/task/21334/comm /proc/21280/task/21335/comm /proc/21280/task/21336/comm /proc/21280/task/21337/comm /proc/21280/task/21338/comm /proc/21280/task/21339/comm /proc/21280/task/21340/comm /proc/21280/task/21341/comm /proc/21280/task/21342/comm /proc/21280/task/21343/comm /proc/21280/task/21344/comm /proc/21280/task/21345/comm /proc/21280/task/21346/comm /proc/21280/task/21347/comm /proc/21280/task/21348/comm /proc/21280/task/21349/comm /proc/21280/task/21350/comm /proc/21280/task/21351/comm /proc/21280/task/21355/comm /proc/21280/task/21361/comm /proc/21280/task/21362/comm /proc/21280/task/21363/comm /proc/21280/task/21364/comm /proc/21280/task/21365/comm /proc/21280/task/21366/comm /proc/21280/task/21367/comm /proc/21280/task/21368/comm /proc/21280/task/21369/comm /proc/21280/task/21370/comm /proc/21280/task/21371/comm /proc/21280/task/21372/comm /proc/21280/task/21373/comm /proc/21280/task/21374/comm /proc/21280/task/21375/comm /proc/21280/task/21376/comm /proc/21280/task/21377/comm /proc/21280/task/21378/comm /proc/21280/task/21379/comm /proc/21280/task/21380/comm /proc/21280/task/21381/comm /proc/21280/task/21382/comm /proc/21280/task/21383/comm /proc/21280/task/21384/comm /proc/21280/task/21385/comm /proc/21280/task/21386/comm /proc/21280/task/21387/comm /proc/21280/task/21388/comm /proc/21280/task/21389/comm /proc/21280/task/21390/comm /proc/21280/task/21391/comm /proc/21280/task/21392/comm /proc/21280/task/21393/comm /proc/21280/task/21394/comm /proc/21280/task/21395/comm /proc/21280/task/21396/comm /proc/21280/task/21397/comm /proc/21280/task/21398/comm /proc/21280/task/21399/comm /proc/21280/task/21400/comm /proc/21280/task/21401/comm /proc/21280/task/21402/comm /proc/21280/task/21403/comm /proc/21280/task/21404/comm /proc/21280/task/21405/comm /proc/21280/task/21406/comm /proc/21280/task/21407/comm /proc/21280/task/21408/comm /proc/21280/task/21409/comm /proc/21280/task/21410/comm /proc/21280/task/21411/comm /proc/21280/task/21412/comm /proc/21280/task/21413/comm /proc/21280/task/21414/comm /proc/21280/task/21415/comm /proc/21280/task/21416/comm /proc/21280/task/21417/comm /proc/21280/task/21418/comm /proc/21280/task/21419/comm /proc/21280/task/21420/comm /proc/21280/task/21421/comm /proc/21280/task/21422/comm /proc/21280/task/21423/comm /proc/21280/task/21424/comm /proc/21280/task/21425/comm /proc/21280/task/21426/comm /proc/21280/task/21427/comm /proc/21280/task/21428/comm /proc/21280/task/21429/comm /proc/21280/task/21430/comm /proc/21280/task/21431/comm /proc/21280/task/21432/comm /proc/21280/task/21433/comm /proc/21280/task/21434/comm /proc/21280/task/21435/comm /proc/21280/task/21436/comm /proc/21280/task/21437/comm /proc/21280/task/21438/comm /proc/21280/task/21439/comm /proc/21280/task/21440/comm /proc/21280/task/21441/comm /proc/21280/task/21442/comm /proc/21280/task/21443/comm /proc/21280/task/21444/comm /proc/21280/task/21445/comm /proc/21280/task/21446/comm /proc/21280/task/21447/comm /proc/21280/task/21448/comm /proc/21280/task/21449/comm /proc/21280/task/21450/comm /proc/21280/task/21451/comm /proc/21280/task/21452/comm /proc/21280/task/21453/comm /proc/21280/task/21454/comm /proc/21280/task/21455/comm /proc/21280/task/21456/comm /proc/21280/task/21457/comm /proc/21280/task/21458/comm /proc/21280/task/21459/comm /proc/21280/task/21460/comm /proc/21280/task/21461/comm /proc/21280/task/21462/comm /proc/21280/task/21463/comm /proc/21280/task/21467/comm /proc/21280/task/21472/comm /proc/21280/task/21473/comm /proc/21280/task/21475/comm /proc/21280/task/21476/comm /proc/21280/task/21477/comm /proc/21280/task/21478/comm /proc/21280/task/21479/comm /proc/21280/task/21480/comm /proc/21280/task/21481/comm /proc/21280/task/21482/comm /proc/21280/task/21483/comm /proc/21280/task/21484/comm /proc/21280/task/21485/comm /proc/21280/task/21486/comm /proc/21280/task/21487/comm /proc/21280/task/21488/comm /proc/21280/task/21489/comm /proc/21280/task/21490/comm /proc/21280/task/21491/comm /proc/21280/task/21492/comm /proc/21280/task/21493/comm /proc/21280/task/21494/comm /proc/21280/task/21495/comm /proc/21280/task/21496/comm /proc/21280/task/21497/comm /proc/21280/task/21498/comm /proc/21280/task/21499/comm /proc/21280/task/21500/comm /proc/21280/task/21501/comm /proc/21280/task/21502/comm /proc/21280/task/21503/comm /proc/21280/task/21504/comm /proc/21280/task/21505/comm /proc/21280/task/21506/comm /proc/21280/task/21507/comm /proc/21280/task/21508/comm /proc/21280/task/21509/comm /proc/21280/task/21510/comm /proc/21280/task/21511/comm /proc/21280/task/21512/comm /proc/21280/task/21513/comm /proc/21280/task/21514/comm /proc/21280/task/21515/comm /proc/21280/task/21516/comm /proc/21280/task/21517/comm /proc/21280/task/21518/comm /proc/21280/task/21519/comm /proc/21280/task/21520/comm /proc/21280/task/21521/comm /proc/21280/task/21522/comm /proc/21280/task/21523/comm /proc/21280/task/21524/comm /proc/21280/task/21648/comm /proc/21280/task/21661/comm
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=223
++ '[' 223 -gt 223 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=223
++ '[' 223 -gt 223 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=223
++ '[' 223 -gt 223 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=227
++ '[' 227 -gt 223 ']'
++ max=227
++ sort
++ uniq -c
++ sort -rn
++ cat /proc/21280/task/21280/comm /proc/21280/task/21288/comm /proc/21280/task/21289/comm /proc/21280/task/21290/comm /proc/21280/task/21291/comm /proc/21280/task/21292/comm /proc/21280/task/21294/comm /proc/21280/task/21295/comm /proc/21280/task/21296/comm /proc/21280/task/21297/comm /proc/21280/task/21298/comm /proc/21280/task/21299/comm /proc/21280/task/21300/comm /proc/21280/task/21301/comm /proc/21280/task/21302/comm /proc/21280/task/21303/comm /proc/21280/task/21304/comm /proc/21280/task/21305/comm /proc/21280/task/21306/comm /proc/21280/task/21307/comm /proc/21280/task/21308/comm /proc/21280/task/21309/comm /proc/21280/task/21310/comm /proc/21280/task/21311/comm /proc/21280/task/21312/comm /proc/21280/task/21313/comm /proc/21280/task/21314/comm /proc/21280/task/21315/comm /proc/21280/task/21316/comm /proc/21280/task/21317/comm /proc/21280/task/21318/comm /proc/21280/task/21319/comm /proc/21280/task/21320/comm /proc/21280/task/21321/comm /proc/21280/task/21322/comm /proc/21280/task/21323/comm /proc/21280/task/21324/comm /proc/21280/task/21325/comm /proc/21280/task/21326/comm /proc/21280/task/21327/comm /proc/21280/task/21328/comm /proc/21280/task/21329/comm /proc/21280/task/21330/comm /proc/21280/task/21331/comm /proc/21280/task/21332/comm /proc/21280/task/21333/comm /proc/21280/task/21334/comm /proc/21280/task/21335/comm /proc/21280/task/21336/comm /proc/21280/task/21337/comm /proc/21280/task/21338/comm /proc/21280/task/21339/comm /proc/21280/task/21340/comm /proc/21280/task/21341/comm /proc/21280/task/21342/comm /proc/21280/task/21343/comm /proc/21280/task/21344/comm /proc/21280/task/21345/comm /proc/21280/task/21346/comm /proc/21280/task/21347/comm /proc/21280/task/21348/comm /proc/21280/task/21349/comm /proc/21280/task/21350/comm /proc/21280/task/21351/comm /proc/21280/task/21355/comm /proc/21280/task/21361/comm /proc/21280/task/21362/comm /proc/21280/task/21363/comm /proc/21280/task/21364/comm /proc/21280/task/21365/comm /proc/21280/task/21366/comm /proc/21280/task/21367/comm /proc/21280/task/21368/comm /proc/21280/task/21369/comm /proc/21280/task/21370/comm /proc/21280/task/21371/comm /proc/21280/task/21372/comm /proc/21280/task/21373/comm /proc/21280/task/21374/comm /proc/21280/task/21375/comm /proc/21280/task/21376/comm /proc/21280/task/21377/comm /proc/21280/task/21378/comm /proc/21280/task/21379/comm /proc/21280/task/21380/comm /proc/21280/task/21381/comm /proc/21280/task/21382/comm /proc/21280/task/21383/comm /proc/21280/task/21384/comm /proc/21280/task/21385/comm /proc/21280/task/21386/comm /proc/21280/task/21387/comm /proc/21280/task/21388/comm /proc/21280/task/21389/comm /proc/21280/task/21390/comm /proc/21280/task/21391/comm /proc/21280/task/21392/comm /proc/21280/task/21393/comm /proc/21280/task/21394/comm /proc/21280/task/21395/comm /proc/21280/task/21396/comm /proc/21280/task/21397/comm /proc/21280/task/21398/comm /proc/21280/task/21399/comm /proc/21280/task/21400/comm /proc/21280/task/21401/comm /proc/21280/task/21402/comm /proc/21280/task/21403/comm /proc/21280/task/21404/comm /proc/21280/task/21405/comm /proc/21280/task/21406/comm /proc/21280/task/21407/comm /proc/21280/task/21408/comm /proc/21280/task/21409/comm /proc/21280/task/21410/comm /proc/21280/task/21411/comm /proc/21280/task/21412/comm /proc/21280/task/21413/comm /proc/21280/task/21414/comm /proc/21280/task/21415/comm /proc/21280/task/21416/comm /proc/21280/task/21417/comm /proc/21280/task/21418/comm /proc/21280/task/21419/comm /proc/21280/task/21420/comm /proc/21280/task/21421/comm /proc/21280/task/21422/comm /proc/21280/task/21423/comm /proc/21280/task/21424/comm /proc/21280/task/21425/comm /proc/21280/task/21426/comm /proc/21280/task/21427/comm /proc/21280/task/21428/comm /proc/21280/task/21429/comm /proc/21280/task/21430/comm /proc/21280/task/21431/comm /proc/21280/task/21432/comm /proc/21280/task/21433/comm /proc/21280/task/21434/comm /proc/21280/task/21435/comm /proc/21280/task/21436/comm /proc/21280/task/21437/comm /proc/21280/task/21438/comm /proc/21280/task/21439/comm /proc/21280/task/21440/comm /proc/21280/task/21441/comm /proc/21280/task/21442/comm /proc/21280/task/21443/comm /proc/21280/task/21444/comm /proc/21280/task/21445/comm /proc/21280/task/21446/comm /proc/21280/task/21447/comm /proc/21280/task/21448/comm /proc/21280/task/21449/comm /proc/21280/task/21450/comm /proc/21280/task/21451/comm /proc/21280/task/21452/comm /proc/21280/task/21453/comm /proc/21280/task/21454/comm /proc/21280/task/21455/comm /proc/21280/task/21456/comm /proc/21280/task/21457/comm /proc/21280/task/21458/comm /proc/21280/task/21459/comm /proc/21280/task/21460/comm /proc/21280/task/21461/comm /proc/21280/task/21462/comm /proc/21280/task/21463/comm /proc/21280/task/21467/comm /proc/21280/task/21472/comm /proc/21280/task/21473/comm /proc/21280/task/21475/comm /proc/21280/task/21476/comm /proc/21280/task/21477/comm /proc/21280/task/21478/comm /proc/21280/task/21479/comm /proc/21280/task/21480/comm /proc/21280/task/21481/comm /proc/21280/task/21482/comm /proc/21280/task/21483/comm /proc/21280/task/21484/comm /proc/21280/task/21485/comm /proc/21280/task/21486/comm /proc/21280/task/21487/comm /proc/21280/task/21488/comm /proc/21280/task/21489/comm /proc/21280/task/21490/comm /proc/21280/task/21491/comm /proc/21280/task/21492/comm /proc/21280/task/21493/comm /proc/21280/task/21494/comm /proc/21280/task/21495/comm /proc/21280/task/21496/comm /proc/21280/task/21497/comm /proc/21280/task/21498/comm /proc/21280/task/21499/comm /proc/21280/task/21500/comm /proc/21280/task/21501/comm /proc/21280/task/21502/comm /proc/21280/task/21503/comm /proc/21280/task/21504/comm /proc/21280/task/21505/comm /proc/21280/task/21506/comm /proc/21280/task/21507/comm /proc/21280/task/21508/comm /proc/21280/task/21509/comm /proc/21280/task/21510/comm /proc/21280/task/21511/comm /proc/21280/task/21512/comm /proc/21280/task/21513/comm /proc/21280/task/21514/comm /proc/21280/task/21515/comm /proc/21280/task/21516/comm /proc/21280/task/21517/comm /proc/21280/task/21518/comm /proc/21280/task/21519/comm /proc/21280/task/21520/comm /proc/21280/task/21521/comm /proc/21280/task/21522/comm /proc/21280/task/21523/comm /proc/21280/task/21524/comm /proc/21280/task/21648/comm /proc/21280/task/21661/comm /proc/21280/task/21685/comm /proc/21280/task/21686/comm /proc/21280/task/21687/comm /proc/21280/task/21688/comm
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=227
++ '[' 227 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=227
++ '[' 227 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=227
++ '[' 227 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=227
++ '[' 227 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=227
++ '[' 227 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=227
++ '[' 227 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=227
++ '[' 227 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=227
++ '[' 227 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ wc -l
+++ ls /proc/21280/task
++ local t=227
++ '[' 227 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=227
++ '[' 227 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=227
++ '[' 227 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ wc -l
+++ ls /proc/21280/task
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ wc -l
+++ ls /proc/21280/task
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ wc -l
+++ ls /proc/21280/task
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ wc -l
+++ ls /proc/21280/task
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=213
++ '[' 213 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
+++ ls /proc/21280/task
+++ wc -l
++ local t=2
++ '[' 2 -gt 227 ']'
++ sleep 0.2
++ kill -0 21280
++ wait 21280
++ echo max_os_threads=227
++ tee -a /var/log/bench4/par256_rustthin.txt
+max_os_threads=227
++ cat /var/log/bench4/par256_rustthin.txt
+client init: 31.326206ms
+backend=go-rustthin bucket=cpriti-thickthin-poc-asse1 parallel=256
+backend    style  op      size          p50       p90       max      mean  p50 MiB/s   ffi/op
+go-rustthin whole  write   16MiB      2.765s    2.987s    3.742s    2.728s        5.8   1173.3
+go-rustthin whole  read    16MiB       717ms    1.896s    2.462s     904ms       22.3    744.3
+go-rustthin 32k    write   16MiB      4.213s    4.333s    5.621s    4.135s        3.8 173473.2
+go-rustthin 32k    read    16MiB      1.254s    1.317s    9.668s    1.134s       12.8 102601.0
+go-rustthin -      list    -              0s        0s        0s        0s          -      0.0  (objects=0)
+max_os_threads=227
++ gsutil -q cp /var/log/bench4/par256_rustthin.txt /var/log/bench4/par256_rustthin.threads.txt gs://cpriti-thickthin-poc-asse1/results/vm4/
++ stage upload
+++ date -u
++ echo '=== STAGE: upload Tue Oct 13 08:21:25 UTC 2026 ==='
+=== STAGE: upload Tue Oct 13 08:21:25 UTC 2026 ===
++ echo upload
++ gsutil -q cp /var/log/bench4/STAGE gs://cpriti-thickthin-poc-asse1/results/vm4/STAGE
++ gsutil -q cp -r /var/log/bench4 gs://cpriti-thickthin-poc-asse1/results/vm4/

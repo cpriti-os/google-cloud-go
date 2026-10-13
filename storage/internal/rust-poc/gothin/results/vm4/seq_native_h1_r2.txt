@@ -1,0 +1,20 @@
+backend=go-json-h1 bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend    style  op      size          p50       p90       max      mean  p50 MiB/s   ffi/op
+go-json-h1 whole  write   1MiB         97ms     107ms     116ms     100ms       10.3      0.0
+go-json-h1 whole  read    1MiB         39ms      49ms      65ms      40ms       25.7      0.0
+go-json-h1 whole  write   16MiB       294ms     326ms     361ms     295ms       54.5      0.0
+go-json-h1 whole  read    16MiB       122ms     153ms     217ms     126ms      130.8      0.0
+go-json-h1 whole  write   128MiB     1.353s    1.416s    1.643s    1.375s       94.6      0.0
+go-json-h1 whole  read    128MiB      645ms     772ms     879ms     651ms      198.4      0.0
+go-json-h1 whole  write   512MiB     5.215s     5.53s     5.59s    5.201s       98.2      0.0
+go-json-h1 whole  read    512MiB     2.529s    2.888s    3.244s    2.551s      202.4      0.0
+go-json-h1 32k    write   1MiB         91ms      93ms      97ms      90ms       11.0      0.0
+go-json-h1 32k    read    1MiB         41ms      47ms      71ms      40ms       24.3      0.0
+go-json-h1 32k    write   16MiB       273ms     304ms     322ms     274ms       58.7      0.0
+go-json-h1 32k    read    16MiB       113ms     143ms     156ms     117ms      141.5      0.0
+go-json-h1 32k    write   128MiB     1.371s    1.515s    1.544s    1.384s       93.4      0.0
+go-json-h1 32k    read    128MiB      624ms     809ms    1.221s     682ms      205.1      0.0
+go-json-h1 32k    write   512MiB     5.026s    5.097s     5.48s    5.013s      101.9      0.0
+go-json-h1 32k    read    512MiB      2.22s    2.764s     3.49s    2.322s      230.6      0.0
+go-json-h1 -      list    -            63ms      90ms      91ms      66ms          -      0.0  (objects=1000)
+rss_max_kb=2361748 user=46.53 sys=36.45 wall=337.47

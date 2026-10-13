@@ -1,0 +1,13 @@
+client init: 32.350219ms
+backend=go-rust-async bucket=cpriti-thickthin-poc-asse1 parallel=1
+backend  op         size          p50       p90       max  p50 MiB/s mean MiB/s
+go-rust-async write      1MiB         98ms     118ms     127ms       10.2       10.0
+go-rust-async read       1MiB         40ms      52ms      68ms       25.0       24.1
+go-rust-async write      16MiB       277ms     317ms     343ms       57.8       56.1
+go-rust-async read       16MiB       115ms     145ms     212ms      138.8      130.6
+go-rust-async write      128MiB     1.616s    1.773s    1.801s       79.2       76.9
+go-rust-async read       128MiB      843ms    1.098s     1.42s      151.8      144.1
+go-rust-async write      512MiB       6.6s    7.058s    7.112s       77.6       77.6
+go-rust-async read       512MiB     3.069s    3.922s    4.462s      166.8      158.7
+go-rust-async list       -            71ms      89ms     116ms  (objects=1000)
+rss_max_kb=1931272 user=23.36 sys=14.77 wall=217.36

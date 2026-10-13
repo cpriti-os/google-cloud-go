@@ -1,0 +1,20 @@
+[    2.705798] RAPL PMU: hw unit of domain psys 2^-0 Joules
+[    2.708741] cryptd: max_cpu_qlen set to 1000
+[    2.717662] AVX2 version of gcm_enc/dec engaged.
+[    2.718392] AES CTR mode by8 optimization enabled
+[    2.782537] gvnic 0000:00:03.0 ens3: Device link is up.
+[    2.783260] IPv6: ADDRCONF(NETDEV_CHANGE): ens3: link becomes ready
+[    2.866574] FAT-fs (nvme0n1p15): Volume was not properly unmounted. Some data may be corrupt. Please run fsck.
+[    2.958357] audit: type=1400 audit(1791872291.684:2): apparmor="STATUS" operation="profile_load" profile="unconfined" name="/usr/sbin/haveged" pid=465 comm="apparmor_parser"
+[    2.960422] audit: type=1400 audit(1791872291.688:3): apparmor="STATUS" operation="profile_load" profile="unconfined" name="lsb_release" pid=460 comm="apparmor_parser"
+[    2.962416] audit: type=1400 audit(1791872291.688:4): apparmor="STATUS" operation="profile_load" profile="unconfined" name="nvidia_modprobe" pid=461 comm="apparmor_parser"
+[    2.962419] audit: type=1400 audit(1791872291.688:5): apparmor="STATUS" operation="profile_load" profile="unconfined" name="nvidia_modprobe//kmod" pid=461 comm="apparmor_parser"
+[    2.962421] audit: type=1400 audit(1791872291.688:6): apparmor="STATUS" operation="profile_load" profile="unconfined" name="/usr/bin/man" pid=463 comm="apparmor_parser"
+[    2.962424] audit: type=1400 audit(1791872291.688:7): apparmor="STATUS" operation="profile_load" profile="unconfined" name="man_filter" pid=463 comm="apparmor_parser"
+[    2.962426] audit: type=1400 audit(1791872291.688:8): apparmor="STATUS" operation="profile_load" profile="unconfined" name="man_groff" pid=463 comm="apparmor_parser"
+[    2.964570] audit: type=1400 audit(1791872291.692:9): apparmor="STATUS" operation="profile_load" profile="unconfined" name="tcpdump" pid=464 comm="apparmor_parser"
+[    2.974338] audit: type=1400 audit(1791872291.696:10): apparmor="STATUS" operation="profile_load" profile="unconfined" name="/usr/lib/NetworkManager/nm-dhcp-client.action" pid=462 comm="apparmor_parser"
+[    7.797639] Guest personality initialized and is inactive
+[    7.798985] VMCI host device registered (name=vmci, major=10, minor=123)
+[    7.800002] Initialized host personality
+[    7.802986] NET: Registered PF_VSOCK protocol family

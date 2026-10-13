@@ -1,0 +1,5 @@
+client init: 31.773378ms
+ctx timeout=20ms -> returned after 20ms, n=0, err=context deadline exceeded
+ctx timeout=100ms -> returned after 100ms, n=0, err=context deadline exceeded
+ctx timeout=10s -> returned after 755ms, n=134217728, err=<nil>
+rss_max_kb=156956 user=0.25 sys=0.12 wall=2.19
