@@ -182,7 +182,7 @@ func newGRPCStorageClient(ctx context.Context, opts ...storageOption) (client *g
 
 	var clientMetrics *clientMetrics
 	var metricsCleanup func()
-	if isOtelMetricsEnabled(&config) || isOtelDebugMetricsEnabled(&config) {
+	if isOtelMetricsEnabled(&config) || isOtelDebugMetricsEnabled(&config) || isOTelTracingDevEnabled() {
 		clientMetrics, metricsCleanup = initGRPCMetricsAndWrapCredentials(ctx, &config, s)
 		if clientMetrics != nil {
 			unaryInt, streamInt := metricsInterceptors(clientMetrics)
@@ -245,6 +245,9 @@ func newGRPCStorageClient(ctx context.Context, opts ...storageOption) (client *g
 	return c, nil
 }
 
+// initGRPCMetricsAndWrapCredentials initializes client metrics (if enabled)
+// and wraps the auth credentials to record credential refresh metrics and
+// Auth.RefreshAccessToken spans (if tracing is enabled).
 func initGRPCMetricsAndWrapCredentials(ctx context.Context, config *storageConfig, s *settings) (*clientMetrics, func()) {
 	var project string
 	var authCreds *auth.Credentials
@@ -260,11 +263,15 @@ func initGRPCMetricsAndWrapCredentials(ctx context.Context, config *storageConfi
 	}
 
 	clientMetrics, metricsCleanup := initClientMetrics(ctx, project, config)
-	if clientMetrics != nil {
-		if authCreds != nil {
-			authCreds = wrapAuthCredentials(authCreds, clientMetrics)
-			s.clientOption = append(s.clientOption, option.WithAuthCredentials(authCreds))
-		}
+	wrapped := authCreds
+	if clientMetrics != nil && wrapped != nil {
+		wrapped = wrapAuthCredentials(wrapped, clientMetrics)
+	}
+	if isOTelTracingDevEnabled() && wrapped != nil {
+		wrapped = wrapAuthCredentialsForTracing(wrapped)
+	}
+	if wrapped != nil && wrapped != authCreds {
+		s.clientOption = append(s.clientOption, option.WithAuthCredentials(wrapped))
 	}
 	return clientMetrics, metricsCleanup
 }

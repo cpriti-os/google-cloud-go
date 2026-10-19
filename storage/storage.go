@@ -189,6 +189,9 @@ func NewClient(ctx context.Context, opts ...option.ClientOption) (*Client, error
 			if cfg := newStorageConfig(opts...); isOtelMetricsEnabled(&cfg) || isOtelDebugMetricsEnabled(&cfg) {
 				creds, metricsTP = deferredMetricsCredentials(creds)
 			}
+			if isOTelTracingDevEnabled() {
+				creds = wrapAuthCredentialsForTracing(creds)
+			}
 			opts = append(opts, option.WithAuthCredentials(creds))
 		}
 	} else {

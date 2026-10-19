@@ -23,8 +23,10 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync/atomic"
 	"time"
 
+	"cloud.google.com/go/auth"
 	internalTrace "cloud.google.com/go/internal/trace"
 	"cloud.google.com/go/storage/internal"
 	"github.com/googleapis/gax-go/v2/apierror"
@@ -462,4 +464,57 @@ func recordRetryBackoff(ctx context.Context, start time.Time) {
 	}
 	_, backoffSpan := startSpan(ctx, "RetryBackoff", trace.WithTimestamp(start))
 	backoffSpan.End()
+}
+
+// tracedTokenProvider records an Auth.RefreshAccessToken span for every
+// blocking token fetch or refresh. Cache hits, which return the same
+// *auth.Token as the previous call, do not emit a span.
+type tracedTokenProvider struct {
+	base auth.TokenProvider
+	last atomic.Pointer[auth.Token] // cache hits return the same *auth.Token
+}
+
+func (p *tracedTokenProvider) Token(ctx context.Context) (*auth.Token, error) {
+	start := time.Now()
+	tok, err := p.base.Token(ctx)
+	if err == nil && p.last.Swap(tok) == tok {
+		return tok, nil // cache hit, no span
+	}
+	_, span := tracer().Start(ctx, appendPackageName("Auth.RefreshAccessToken"),
+		append(getCommonTraceOptions(), trace.WithTimestamp(start))...)
+	if err != nil {
+		span.SetStatus(otelcodes.Error, err.Error())
+		span.RecordError(err)
+	}
+	span.End()
+	return tok, err
+}
+
+// wrapAuthCredentialsForTracing wraps an auth.Credentials object to record
+// Auth.RefreshAccessToken internal operation spans on blocking token fetches
+// and refreshes (cache hits do not emit spans).
+func wrapAuthCredentialsForTracing(c *auth.Credentials) *auth.Credentials {
+	if c == nil || c.TokenProvider == nil {
+		return c
+	}
+	if hasTracedTokenProvider(c.TokenProvider) {
+		return c
+	}
+	clone := *c
+	clone.TokenProvider = &tracedTokenProvider{base: c.TokenProvider}
+	return &clone
+}
+
+func hasTracedTokenProvider(tp auth.TokenProvider) bool {
+	for tp != nil {
+		switch p := tp.(type) {
+		case *tracedTokenProvider:
+			return true
+		case *metricsTokenProvider:
+			tp = p.base
+		default:
+			return false
+		}
+	}
+	return false
 }
