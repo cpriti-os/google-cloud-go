@@ -518,3 +518,12 @@ func hasTracedTokenProvider(tp auth.TokenProvider) bool {
 	}
 	return false
 }
+
+// setUploadIDAttribute records the resumable upload ID on the span in ctx as
+// gcp.storage.upload.id.
+func setUploadIDAttribute(ctx context.Context, uploadID string) {
+	if !isOTelTracingDevEnabled() || uploadID == "" {
+		return
+	}
+	trace.SpanFromContext(ctx).SetAttributes(attribute.String("gcp.storage.upload.id", uploadID))
+}
