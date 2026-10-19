@@ -1125,9 +1125,12 @@ func (rt *metricsRoundTripper) addNetworkTrace(ctx context.Context, trace *httpt
 	}
 }
 
-// recordHTTPGFEMetrics records the GFE service time reported in the
-// X-Goog-Gfe-Service-Time response header, or counts a missing header. A nil
-// response (the request never reached a server) is counted as missing.
+// recordHTTPGFEMetrics records the server processing time reported in the
+// X-Goog-Gfe-Service-Time response header (gcp.storage.client.server.duration)
+// or, when the header is absent, counts the attempt in
+// gcp.storage.client.server.unreached. A nil response (the round trip failed
+// before any response headers arrived: DNS, TCP connect, TLS handshake or a
+// connection reset) is counted as unreached with the attempt's error.type.
 func (cm *clientMetrics) recordHTTPGFEMetrics(ctx context.Context, resp *http.Response, logicalMethod, host, errorType string) {
 	if cm.gfeHeaderMissing == nil {
 		return
