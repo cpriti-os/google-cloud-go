@@ -182,6 +182,7 @@ func (w *Writer) initPCU(ctx context.Context) error {
 
 	// Track PCU operations using client feature tracking header.
 	ctx = addFeatureAttributes(ctx, featurePCU)
+	recordWriterTraceAttributes(ctx, w)
 
 	// Record the parallel upload as a single WriteObject operation, completed
 	// in Writer.Close. The part uploads, compose and cleanup calls it makes

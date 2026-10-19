@@ -118,6 +118,11 @@ func (o *ObjectHandle) NewRangeReader(ctx context.Context, offset, length int64,
 	// in Reader.Close.
 	ctx, _ = startSpanWithObject(ctx, o.c, o.bucket, o.object, "Object.Reader")
 	defer func() { endSpan(ctx, err) }()
+	readMode := "range"
+	if offset == 0 && length < 0 {
+		readMode = "full"
+	}
+	recordReaderTraceAttributes(ctx, readMode)
 
 	if err := o.validate(); err != nil {
 		return nil, err
@@ -268,6 +273,7 @@ func (o *ObjectHandle) NewMultiRangeDownloader(ctx context.Context, opts ...MRDO
 			endSpan(spanCtx, err)
 		}
 	}()
+	recordReaderTraceAttributes(spanCtx, "multi_range")
 
 	if err := o.validate(); err != nil {
 		return nil, err
