@@ -21,7 +21,9 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/http/httptest"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -2206,5 +2208,163 @@ func verifyUploadIDAttribute(t *testing.T, span tracetest.SpanStub, wantUploadID
 	}
 	if gotUploadID != wantUploadID {
 		t.Errorf("got upload_id %q, want %q", gotUploadID, wantUploadID)
+	}
+}
+
+func TestReaderSpanCoversReadUntilClose(t *testing.T) {
+	ctx := context.Background()
+	te := testutil.NewOpenTelemetryTestExporter()
+	t.Cleanup(func() { te.Unregister(ctx) })
+	t.Setenv("GO_STORAGE_DEV_OTEL_TRACING", "true")
+
+	mock := &mockStorageClient{newReaderFn: func(ctx context.Context, params *newRangeReaderParams, opts ...storageOption) (*Reader, error) {
+		return &Reader{reader: io.NopCloser(strings.NewReader("hello")), remain: 5, size: 5}, nil
+	}}
+	c := &Client{tc: mock}
+	r, err := c.Bucket("b").Object("o").NewReader(ctx)
+	if err != nil {
+		t.Fatalf("NewReader: %v", err)
+	}
+	if n := len(te.Spans()); n != 0 {
+		t.Fatalf("Object.Reader span ended before Close: got %d spans", n)
+	}
+	const readTime = 50 * time.Millisecond
+	time.Sleep(readTime)
+	io.ReadAll(r)
+	r.Close()
+
+	spans := te.Spans()
+	if len(spans) != 1 {
+		t.Fatalf("got %d spans, want 1", len(spans))
+	}
+	if d := spans[0].EndTime.Sub(spans[0].StartTime); d < readTime {
+		t.Errorf("Object.Reader span duration %v does not cover the read (>= %v)", d, readTime)
+	}
+}
+
+func TestReaderSpanEndedOnError(t *testing.T) {
+	ctx := context.Background()
+	te := testutil.NewOpenTelemetryTestExporter()
+	t.Cleanup(func() { te.Unregister(ctx) })
+	t.Setenv("GO_STORAGE_DEV_OTEL_TRACING", "true")
+
+	mock := &mockStorageClient{newReaderFn: func(ctx context.Context, params *newRangeReaderParams, opts ...storageOption) (*Reader, error) {
+		return nil, ErrObjectNotExist
+	}}
+	c := &Client{tc: mock}
+	if _, err := c.Bucket("b").Object("o").NewReader(ctx); err == nil {
+		t.Fatal("NewReader: want error")
+	}
+	spans := te.Spans()
+	if len(spans) != 1 || spans[0].Status.Code != otcodes.Error {
+		t.Fatalf("got %d spans (status %v), want 1 errored span", len(spans), spans)
+	}
+}
+
+func spanAttrMap(s tracetest.SpanStub) map[string]string {
+	m := map[string]string{}
+	for _, kv := range s.Attributes {
+		m[string(kv.Key)] = kv.Value.Emit()
+	}
+	return m
+}
+
+func TestReaderSpanPayloadAttributes(t *testing.T) {
+	ctx := context.Background()
+	te := testutil.NewOpenTelemetryTestExporter()
+	t.Cleanup(func() { te.Unregister(ctx) })
+	t.Setenv("GO_STORAGE_DEV_OTEL_TRACING", "true")
+
+	mock := &mockStorageClient{newReaderFn: func(ctx context.Context, params *newRangeReaderParams, opts ...storageOption) (*Reader, error) {
+		return &Reader{reader: io.NopCloser(strings.NewReader("hello")), remain: 5, size: 10}, nil
+	}}
+	c := &Client{tc: mock}
+	r, err := c.Bucket("b").Object("dir/o").NewRangeReader(ctx, 5, 5)
+	if err != nil {
+		t.Fatalf("NewRangeReader: %v", err)
+	}
+	io.ReadAll(r)
+	r.Close()
+
+	got := spanAttrMap(te.Spans()[0])
+	for k, want := range map[string]string{
+		"gcp.storage.uri":                "gs://b/dir/o",
+		"gcp.storage.read.mode":          "range",
+		"gcp.storage.payload.offset":     "5",
+		"gcp.storage.payload.size_bytes": "5",
+		"gcp.client.service":             "storage",
+	} {
+		if got[k] != want {
+			t.Errorf("%s = %q, want %q", k, got[k], want)
+		}
+	}
+	if _, ok := got["error.type"]; ok {
+		t.Errorf("error.type set on successful span: %q", got["error.type"])
+	}
+}
+
+func TestWriterSpanPayloadAttributes(t *testing.T) {
+	ctx := context.Background()
+	te := testutil.NewOpenTelemetryTestExporter()
+	t.Cleanup(func() { te.Unregister(ctx) })
+	t.Setenv("GO_STORAGE_DEV_OTEL_TRACING", "true")
+
+	w := (&Client{}).Bucket("b").Object("o").NewWriter(ctx)
+	w.bytesWritten = 1234
+	w.markClosed(nil)
+
+	got := spanAttrMap(te.Spans()[0])
+	for k, want := range map[string]string{
+		"gcp.storage.uri":                "gs://b/o",
+		"gcp.storage.checksum.type":      "crc32c",
+		"gcp.storage.payload.size_bytes": "1234",
+	} {
+		if got[k] != want {
+			t.Errorf("%s = %q, want %q", k, got[k], want)
+		}
+	}
+}
+
+func TestAttemptSpanEvents(t *testing.T) {
+	te := testutil.NewOpenTelemetryTestExporter()
+	t.Cleanup(func() { te.Unregister(context.Background()) })
+	t.Setenv("GO_STORAGE_DEV_OTEL_TRACING", "true")
+
+	cm, _ := accuracyMetrics(t)
+	calls := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		if calls == 1 {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer srv.Close()
+	rt := &metricsRoundTripper{base: http.DefaultTransport, metrics: cm}
+
+	ctx, _ := startSpan(context.Background(), "Object.Attrs")
+	for attempt := 1; attempt <= 2; attempt++ {
+		req, _ := http.NewRequestWithContext(ctx, "GET", srv.URL+"/storage/v1/b/b/o/o", nil)
+		req.Header.Set(xGoogHeaderKey, fmt.Sprintf("gl-go/1 gccl-invocation-id/x gccl-attempt-count/%d", attempt))
+		resp, err := rt.RoundTrip(req)
+		if err != nil {
+			t.Fatalf("RoundTrip: %v", err)
+		}
+		io.ReadAll(resp.Body)
+		resp.Body.Close()
+	}
+	endSpan(ctx, nil)
+
+	events := te.Spans()[0].Events
+	if len(events) != 2 {
+		t.Fatalf("got %d attempt events, want 2", len(events))
+	}
+	for i, want := range []struct{ num, errType, status string }{{"1", "UNAVAILABLE", "503"}, {"2", "OK", "200"}} {
+		got := spanAttrMap(tracetest.SpanStub{Attributes: events[i].Attributes})
+		if events[i].Name != attemptSpanEvent || got["gcp.client.retry.attempt_number"] != want.num || got["error.type"] != want.errType ||
+			got["http.response.status_code"] != want.status || got[networkPathAttr] != networkPathCloud {
+			t.Errorf("event %d = %s %v, want attempt %s error.type %s status %s", i, events[i].Name, got, want.num, want.errType, want.status)
+		}
 	}
 }

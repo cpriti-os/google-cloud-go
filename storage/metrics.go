@@ -853,6 +853,14 @@ func (cm *clientMetrics) recordAttempt(ctx context.Context, system, method, serv
 	attemptAttrs := make([]attribute.KeyValue, 0, len(base)+1)
 	attemptAttrs = append(attemptAttrs, base...)
 	attemptAttrs = append(attemptAttrs, statusAttr)
+	if isOTelTracingDevEnabled() {
+		eventAttrs := make([]attribute.KeyValue, 0, len(attemptAttrs)+1)
+		eventAttrs = append(eventAttrs, attemptAttrs...)
+		if info.attempt > 0 {
+			eventAttrs = append(eventAttrs, attribute.Int("gcp.client.retry.attempt_number", info.attempt))
+		}
+		addSpanEvent(ctx, attemptSpanEvent, eventAttrs...)
+	}
 	cm.attempts.Add(ctx, 1, metric.WithAttributes(attemptAttrs...))
 	if errorType != errorTypeOK {
 		cm.errors.Add(ctx, 1, metric.WithAttributes(base...))

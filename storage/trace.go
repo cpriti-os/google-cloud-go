@@ -527,3 +527,27 @@ func setUploadIDAttribute(ctx context.Context, uploadID string) {
 	}
 	trace.SpanFromContext(ctx).SetAttributes(attribute.String("gcp.storage.upload.id", uploadID))
 }
+
+// setSpanAttributes sets attributes on the span in ctx when OpenTelemetry
+// tracing is enabled.
+func setSpanAttributes(ctx context.Context, attrs ...attribute.KeyValue) {
+	if ctx == nil || !isOTelTracingDevEnabled() {
+		return
+	}
+	trace.SpanFromContext(ctx).SetAttributes(attrs...)
+}
+
+// attemptSpanEvent is the name of the span event recorded on the operation
+// span for every attempt (HTTP request or gRPC call) of the operation, with
+// the attempt's rpc.system.name, gcp.storage.operation, server.address,
+// network.path, error.type, response status and attempt number.
+const attemptSpanEvent = "gcp.storage.attempt"
+
+// addSpanEvent adds an event to the span in ctx when OpenTelemetry tracing is
+// enabled.
+func addSpanEvent(ctx context.Context, name string, attrs ...attribute.KeyValue) {
+	if ctx == nil || !isOTelTracingDevEnabled() {
+		return
+	}
+	trace.SpanFromContext(ctx).AddEvent(name, trace.WithAttributes(attrs...))
+}

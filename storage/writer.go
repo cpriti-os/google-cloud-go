@@ -24,6 +24,8 @@ import (
 	"sync/atomic"
 	"time"
 	"unicode/utf8"
+
+	"go.opentelemetry.io/otel/attribute"
 )
 
 // Interface internalWriter wraps low-level implementations which may vary
@@ -460,6 +462,8 @@ func (w *Writer) markClosed(err error) error {
 	total := atomic.LoadInt64(&w.bytesWritten)
 	w.mu.Unlock()
 
+	w.setCloseSpanAttributes(total)
+
 	if state := metricsStateFromContext(w.ctx); state != nil {
 		state.recordRequestBodySize(w.ctx, total)
 		if state.record != nil {
@@ -589,4 +593,23 @@ func (w *Writer) error(err error) {
 	w.mu.Lock()
 	w.err = err
 	w.mu.Unlock()
+}
+
+// setCloseSpanAttributes records the checksum type and the size of the upload
+// on the Object.Writer span when the writer is closed.
+func (w *Writer) setCloseSpanAttributes(total int64) {
+	if !isOTelTracingDevEnabled() {
+		return
+	}
+	checksum := "none"
+	switch {
+	case w.SendCRC32C || !w.DisableAutoChecksum:
+		checksum = "crc32c"
+	case len(w.MD5) > 0:
+		checksum = "md5"
+	}
+	setSpanAttributes(w.ctx,
+		attribute.String(attrChecksumType, checksum),
+		attribute.Int64(attrPayloadSize, total),
+	)
 }
