@@ -16,6 +16,7 @@ package storage
 
 import (
 	"context"
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"io"
@@ -174,8 +175,8 @@ func isNotFoundError(err error) bool {
 	return false
 }
 
-// errorAttributes returns the error.type and, when known, gcp.errors.domain
-// span attributes for err. It returns no attributes for a nil error or io.EOF.
+// errorAttributes returns the error.type, error.message and, when known,
+// gcp.errors.domain span attributes for err. It returns no attributes for a nil error or io.EOF.
 //
 // error.type reuses computeErrorType, the classifier behind the error.type
 // metric attribute, so spans and metrics report the same value for a failure.
@@ -188,7 +189,10 @@ func errorAttributes(err error) []attribute.KeyValue {
 	// HTTP errors always carry a *googleapi.Error.
 	var httpErr *googleapi.Error
 	isHTTP := errors.As(err, &httpErr)
-	attrs := []attribute.KeyValue{attribute.String("error.type", computeErrorType(err, isHTTP, 0))}
+	attrs := []attribute.KeyValue{
+		attribute.String("error.type", computeErrorType(err, isHTTP, 0)),
+		attribute.String("error.message", extractErrorMessage(err)),
+	}
 	if domain := errorDomain(err); domain != "" {
 		attrs = append(attrs, attribute.String("gcp.errors.domain", domain))
 	}
@@ -197,10 +201,72 @@ func errorAttributes(err error) []attribute.KeyValue {
 
 // errorDomain returns the google.rpc.ErrorInfo domain of err, or "" if the
 // error response carried no ErrorInfo.
-func errorDomain(err error) string {
-	// Check for an existing APIError first: the generated JSON client returns
-	// a googleapi.Error wrapping an APIError, and ParseError on that prefers
-	// the APIError's mapped gRPC status, which carries no ErrorInfo.
+func errorDomain(err error) string { return extractErrorDomain(err) }
+
+// extractErrorMessage returns a human-readable error message from err.
+// It prefers the service-provided message from an APIError, googleapi.Error,
+// or gRPC status. For a googleapi.Error without a message, such as an XML API
+// error response, it uses the Message element of the XML body, then the HTTP
+// status text, so that the raw response body is never returned. Otherwise it
+// falls back to err.Error().
+func extractErrorMessage(err error) string {
+	if err == nil {
+		return ""
+	}
+	var apiErr *apierror.APIError
+	if errors.As(err, &apiErr) && apiErr.Message() != "" {
+		return apiErr.Message()
+	}
+	var gErr *googleapi.Error
+	if errors.As(err, &gErr) {
+		if gErr.Message != "" {
+			return gErr.Message
+		}
+		// Error responses from the XML API are not parsed by googleapi, so
+		// Message is empty and Error() would embed the raw response body.
+		if msg := xmlErrorMessage(gErr.Body); msg != "" {
+			return msg
+		}
+		if msg := http.StatusText(gErr.Code); msg != "" {
+			return msg
+		}
+		if gErr.Code > 0 {
+			return fmt.Sprintf("HTTP %d", gErr.Code)
+		}
+	}
+	// status.FromError is not used here: for wrapped errors it replaces the
+	// status message with the entire err.Error() text.
+	var gs interface{ GRPCStatus() *status.Status }
+	if errors.As(err, &gs) {
+		if st := gs.GRPCStatus(); st != nil && st.Message() != "" {
+			return st.Message()
+		}
+	}
+	return err.Error()
+}
+
+// xmlErrorMessage returns the Message element of a Cloud Storage XML API
+// error body, or "" if body is not such an error.
+func xmlErrorMessage(body string) string {
+	if body == "" {
+		return ""
+	}
+	var xmlErr struct {
+		XMLName xml.Name `xml:"Error"`
+		Message string   `xml:"Message"`
+	}
+	if err := xml.Unmarshal([]byte(body), &xmlErr); err != nil {
+		return ""
+	}
+	return strings.TrimSpace(xmlErr.Message)
+}
+
+// extractErrorDomain returns the service domain that originated err, taken
+// from the google.rpc.ErrorInfo details of the error response. It returns ""
+// if the response carried no ErrorInfo or err did not come from the service.
+func extractErrorDomain(err error) string {
+	// Check for an existing APIError first: ParseError on a wrapped APIError
+	// prefers its mapped gRPC status, which carries no ErrorInfo.
 	var apiErr *apierror.APIError
 	if !errors.As(err, &apiErr) {
 		var ok bool
@@ -212,7 +278,8 @@ func errorDomain(err error) string {
 }
 
 // endSpan retrieves the current span from ctx and completes the span.
-// If an error occurs, the error.type and, when known, gcp.errors.domain
+// If an error occurs, the error.type, error.message and, when known,
+// gcp.errors.domain
 // attributes are set, the error is recorded as an exception span event for
 // this span, and the span status is set in the form of a code and a
 // description.
