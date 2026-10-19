@@ -615,6 +615,11 @@ func computeErrorType(err error, isHTTP bool, statusCode int64) string {
 	if isChecksumError(err) {
 		return errorTypeChecksumMismatch
 	}
+	// The not-found sentinels are returned without an underlying status, for
+	// example by the HTTP XML reader on a 404 response.
+	if errors.Is(err, ErrObjectNotExist) || errors.Is(err, ErrBucketNotExist) {
+		return "NOT_FOUND"
+	}
 
 	if !isHTTP {
 		if st, ok := status.FromError(err); ok && st.Code() != codes.OK {
