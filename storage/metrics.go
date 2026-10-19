@@ -18,6 +18,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
@@ -39,6 +40,7 @@ import (
 	"cloud.google.com/go/iam/apiv1/iampb"
 	"cloud.google.com/go/storage/internal"
 	mexporter "github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric"
+	"github.com/google/uuid"
 	"go.opentelemetry.io/contrib/detectors/gcp"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
@@ -182,6 +184,21 @@ func detectMetricsProjectID(ctx context.Context) string {
 	return ""
 }
 
+// metricsResourceAttributes returns the static attributes of every client
+// metric. gcp.client.instance_id identifies the client instance: without it,
+// two clients on the same host (for example two processes, or two GKE pods
+// sharing a node) that call the same method write the same time series,
+// which Cloud Monitoring rejects. It matches the instance_id label of the
+// storage.googleapis.com/Client monitored resource.
+func metricsResourceAttributes() []attribute.KeyValue {
+	return []attribute.KeyValue{
+		attribute.String("gcp.client.version", internal.Version),
+		attribute.String("gcp.client.service", "storage"),
+		attribute.String("gcp.client.artifact", "cloud.google.com/go/storage"),
+		attribute.String("gcp.client.instance_id", uuid.New().String()),
+	}
+}
+
 // initMetrics initializes clientMetrics with a meter provider and registered exporter.
 func initMetrics(ctx context.Context, projectID string, config *storageConfig) (*clientMetrics, func(), error) {
 	var provider *sdkmetric.MeterProvider
@@ -219,11 +236,7 @@ func initMetrics(ctx context.Context, projectID string, config *storageConfig) (
 		// Static common attributes are defined as Resource Attributes.
 		res, err := resource.New(ctx,
 			resource.WithDetectors(gcp.NewDetector()),
-			resource.WithAttributes(
-				attribute.String("gcp.client.version", internal.Version),
-				attribute.String("gcp.client.service", "storage"),
-				attribute.String("gcp.client.artifact", "cloud.google.com/go/storage"),
-			),
+			resource.WithAttributes(metricsResourceAttributes()...),
 		)
 		if err != nil {
 			return nil, nil, fmt.Errorf("storage: creating metrics resource: %w", err)
@@ -271,7 +284,7 @@ func initMetrics(ctx context.Context, projectID string, config *storageConfig) (
 					sdkmetric.Stream{Aggregation: sdkmetric.AggregationExplicitBucketHistogram{Boundaries: latencyHistogramBoundaries()}},
 				),
 				sdkmetric.NewView(
-					sdkmetric.Instrument{Name: "gcp.storage.client.gfe.duration", Kind: sdkmetric.InstrumentKindHistogram},
+					sdkmetric.Instrument{Name: "gcp.storage.client.server.duration", Kind: sdkmetric.InstrumentKindHistogram},
 					sdkmetric.Stream{Aggregation: sdkmetric.AggregationExplicitBucketHistogram{Boundaries: latencyHistogramBoundaries()}},
 				),
 				sdkmetric.NewView(
@@ -423,8 +436,8 @@ func initMetrics(ctx context.Context, projectID string, config *storageConfig) (
 		}
 
 		gfeHeaderMissing, err = meter.Int64Counter(
-			"gcp.storage.client.gfe.header_missing",
-			metric.WithDescription("Number of GCS attempts without an X-Goog-Gfe-Service-Time response header, including attempts that failed before a response was received (see error.type). DirectPath responses, which bypass the GFE, are not counted."),
+			"gcp.storage.client.server.unreached",
+			metric.WithDescription("Number of GCS attempts that received no response from a Cloud Storage server (no server-reported processing time), including attempts that failed before a response was received (see error.type)."),
 			metric.WithUnit("{request}"),
 		)
 		if err != nil {
@@ -459,8 +472,8 @@ func initMetrics(ctx context.Context, projectID string, config *storageConfig) (
 		}
 
 		gfeDuration, err = meter.Float64Histogram(
-			"gcp.storage.client.gfe.duration",
-			metric.WithDescription("GFE proxy processing time"),
+			"gcp.storage.client.server.duration",
+			metric.WithDescription("Server-side processing time of an attempt as reported by Cloud Storage, via the grpc-server-stats-bin trailer (gRPC) or the X-Goog-Gfe-Service-Time header (HTTP)."),
 			metric.WithUnit("s"),
 		)
 		if err != nil {
@@ -1254,9 +1267,11 @@ func grpcResponded(err error, headerMD, trailerMD metadata.MD, p *peer.Peer) boo
 	return p != nil && p.Addr != nil && !isClientSideErrorType(computeErrorType(err, false, 0))
 }
 
-// recordGFEMetrics records the GFE service time from the
-// x-goog-gfe-service-time response metadata, or counts a missing header.
-// DirectPath responses never carry the header and are not counted as missing.
+// recordGFEMetrics records the server-reported processing time from the
+// x-goog-gfe-service-time response metadata or, when absent, from the server
+// elapsed time in the grpc-server-stats-bin trailer. Otherwise it counts the
+// attempt as having not reached a server. DirectPath responses without either
+// are not counted.
 func (cm *clientMetrics) recordGFEMetrics(ctx context.Context, headerMD, trailerMD metadata.MD, err error, logicalMethod, target string, p *peer.Peer) {
 	if cm.gfeHeaderMissing == nil {
 		return
@@ -1265,9 +1280,16 @@ func (cm *clientMetrics) recordGFEMetrics(ctx context.Context, headerMD, trailer
 	if len(headerVals) == 0 {
 		headerVals = trailerMD.Get("x-goog-gfe-service-time")
 	}
-	headerVal := ""
-	if len(headerVals) > 0 {
-		headerVal = headerVals[0]
+	seconds, ok := -1.0, false
+	if len(headerVals) > 0 && headerVals[0] != "" {
+		if ms, parseErr := strconv.ParseFloat(headerVals[0], 64); parseErr == nil {
+			seconds, ok = ms/1000.0, true
+		}
+	}
+	if !ok {
+		if d, found := grpcServerElapsed(trailerMD); found {
+			seconds, ok = d.Seconds(), true
+		}
 	}
 	server := stripPort(target)
 	attrs := []attribute.KeyValue{
@@ -1276,7 +1298,7 @@ func (cm *clientMetrics) recordGFEMetrics(ctx context.Context, headerMD, trailer
 		attribute.String("server.address", server),
 		attribute.String(networkPathAttr, networkPathOfPeer(p)),
 	}
-	if headerVal == "" {
+	if !ok {
 		if isDirectPathPeer(p) {
 			return
 		}
@@ -1284,10 +1306,23 @@ func (cm *clientMetrics) recordGFEMetrics(ctx context.Context, headerMD, trailer
 		return
 	}
 	if cm.gfeDuration != nil {
-		if ms, parseErr := strconv.ParseFloat(headerVal, 64); parseErr == nil {
-			cm.gfeDuration.Record(ctx, ms/1000.0, metric.WithAttributes(attrs...))
-		}
+		cm.gfeDuration.Record(ctx, seconds, metric.WithAttributes(attrs...))
 	}
+}
+
+// grpcServerElapsed decodes the server elapsed time from the
+// grpc-server-stats-bin trailer: version byte 0, field ID 0, then the
+// elapsed time in nanoseconds as a little-endian uint64.
+func grpcServerElapsed(md metadata.MD) (time.Duration, bool) {
+	vals := md.Get("grpc-server-stats-bin")
+	if len(vals) == 0 {
+		return 0, false
+	}
+	b := []byte(vals[0])
+	if len(b) != 10 || b[0] != 0 || b[1] != 0 {
+		return 0, false
+	}
+	return time.Duration(binary.LittleEndian.Uint64(b[2:])), true
 }
 
 // metricsInterceptors returns gRPC client interceptors.
@@ -1568,14 +1603,14 @@ func injectAPIMethod(ctx context.Context, attrs []attribute.KeyValue) []attribut
 }
 
 type metricsState struct {
-	target    atomic.Pointer[string]
+	target        atomic.Pointer[string]
 	lastRPCMethod atomic.Pointer[string]
-	method    string
-	startTime time.Time
-	metrics   *clientMetrics
-	isHTTP    bool
-	record    func(error)
-	sizeOnce  sync.Once
+	method        string
+	startTime     time.Time
+	metrics       *clientMetrics
+	isHTTP        bool
+	record        func(error)
+	sizeOnce      sync.Once
 	// composite marks an operation that is implemented with other client
 	// operations (e.g. a parallel composite upload that uploads parts and
 	// composes them). Operations started within it are not recorded as
@@ -1641,7 +1676,6 @@ func (s *metricsState) setTarget(t string) {
 		s.parent.setTarget(t)
 	}
 }
-
 
 func (s *metricsState) setLastRPCMethod(m string) {
 	if s == nil {

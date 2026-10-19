@@ -1368,11 +1368,11 @@ func TestIntegration_OtelMetricsEnablement(t *testing.T) {
 			}
 
 			// gfe.duration might not be strictly populated locally, but check it if present.
-			if m, ok := metricsMap["gcp.storage.client.gfe.duration"]; ok {
+			if m, ok := metricsMap["gcp.storage.client.server.duration"]; ok {
 				if hist, ok := m.Data.(metricdata.Histogram[float64]); !ok {
 					t.Errorf("expected Histogram data for gfe.duration, got %T", m.Data)
 				} else if len(hist.DataPoints) == 0 {
-					t.Errorf("expected at least 1 datapoint for gcp.storage.client.gfe.duration")
+					t.Errorf("expected at least 1 datapoint for gcp.storage.client.server.duration")
 				}
 			}
 

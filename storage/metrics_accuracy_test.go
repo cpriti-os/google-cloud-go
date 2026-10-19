@@ -16,6 +16,7 @@ package storage
 
 import (
 	"context"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
@@ -281,10 +282,10 @@ func TestGFEHeaderMissingSkipsDirectPath(t *testing.T) {
 	cm.recordGFEMetrics(ctx, nil, nil, nil, "ReadObject", "google-c2p:///storage.googleapis.com", &peer.Peer{Addr: dp})
 	cm.recordGFEMetrics(ctx, nil, nil, nil, "ReadObject", "dns:///storage.googleapis.com:443", &peer.Peer{Addr: cp})
 	cm.recordGFEMetrics(ctx, metadata.Pairs("x-goog-gfe-service-time", "7"), nil, nil, "ReadObject", "dns:///storage.googleapis.com:443", &peer.Peer{Addr: cp})
-	if c, _ := metricPoints(t, mr, "gcp.storage.client.gfe.header_missing", nil); c != 1 {
+	if c, _ := metricPoints(t, mr, "gcp.storage.client.server.unreached", nil); c != 1 {
 		t.Errorf("header_missing = %d, want 1 (CloudPath only)", c)
 	}
-	if c, sum := metricPoints(t, mr, "gcp.storage.client.gfe.duration", nil); c != 1 || sum != 0.007 {
+	if c, sum := metricPoints(t, mr, "gcp.storage.client.server.duration", nil); c != 1 || sum != 0.007 {
 		t.Errorf("gfe.duration count=%d sum=%v, want 1, 0.007", c, sum)
 	}
 }
@@ -593,5 +594,45 @@ func TestMethodAttributesHaveOneMeaningEach(t *testing.T) {
 		if got := fullyQualifiedRPCMethod(op); got != want {
 			t.Errorf("fullyQualifiedRPCMethod(%s) = %s, want %s", op, got, want)
 		}
+	}
+}
+
+func TestMetricsResourceInstanceIDUniquePerClient(t *testing.T) {
+	id := func() string {
+		for _, kv := range metricsResourceAttributes() {
+			if kv.Key == "gcp.client.instance_id" {
+				return kv.Value.AsString()
+			}
+		}
+		return ""
+	}
+	a, b := id(), id()
+	if a == "" || a == b {
+		t.Errorf("gcp.client.instance_id = %q, %q; want two distinct non-empty values", a, b)
+	}
+}
+
+func TestGRPCServerElapsedFallback(t *testing.T) {
+	b := make([]byte, 10)
+	binary.LittleEndian.PutUint64(b[2:], uint64(45*time.Millisecond))
+	md := metadata.Pairs("grpc-server-stats-bin", string(b))
+	d, ok := grpcServerElapsed(md)
+	if !ok || d != 45*time.Millisecond {
+		t.Fatalf("grpcServerElapsed = %v, %v; want 45ms, true", d, ok)
+	}
+	for _, bad := range []metadata.MD{nil, metadata.Pairs("grpc-server-stats-bin", "\x01\x00abcdefgh"), metadata.Pairs("grpc-server-stats-bin", "short")} {
+		if _, ok := grpcServerElapsed(bad); ok {
+			t.Errorf("grpcServerElapsed(%v) ok = true, want false", bad)
+		}
+	}
+
+	cm, mr := accuracyMetrics(t)
+	cp := &net.TCPAddr{IP: net.ParseIP("142.250.1.1"), Port: 443}
+	cm.recordGFEMetrics(context.Background(), nil, md, nil, "ReadObject", "storage.googleapis.com:443", &peer.Peer{Addr: cp})
+	if c, sum := metricPoints(t, mr, "gcp.storage.client.server.duration", map[string]string{networkPathAttr: networkPathCloud}); c != 1 || sum != 0.045 {
+		t.Errorf("server.duration count=%d sum=%v, want 1, 0.045", c, sum)
+	}
+	if c, _ := metricPoints(t, mr, "gcp.storage.client.server.unreached", nil); c != 0 {
+		t.Errorf("server.unreached = %d, want 0", c)
 	}
 }

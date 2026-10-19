@@ -338,7 +338,7 @@ func TestHTTPMetricsRecording(t *testing.T) {
 				}
 			}
 
-			if m.Name == "gcp.storage.client.gfe.duration" {
+			if m.Name == "gcp.storage.client.server.duration" {
 				hist, ok := m.Data.(metricdata.Histogram[float64])
 				if ok && len(hist.DataPoints) > 0 {
 					if hist.DataPoints[0].Sum != 0.15 {
@@ -500,7 +500,7 @@ func TestGRPCMetricsRecording(t *testing.T) {
 				}
 			}
 
-			if m.Name == "gcp.storage.client.gfe.duration" {
+			if m.Name == "gcp.storage.client.server.duration" {
 				hist, ok := m.Data.(metricdata.Histogram[float64])
 				if ok && len(hist.DataPoints) > 0 {
 					foundGfeDuration := false
