@@ -636,3 +636,54 @@ func TestGRPCServerElapsedFallback(t *testing.T) {
 		t.Errorf("server.unreached = %d, want 0", c)
 	}
 }
+
+// server.unreached on HTTP counts attempts without any Cloud Storage response:
+// a response with X-GUploader-UploadID (and no GFE time header) is reached, a
+// round trip that fails before response headers is unreached.
+func TestHTTPServerUnreachedUsesUploadIDHeader(t *testing.T) {
+	cm, mr := accuracyMetrics(t)
+	mode := "uploadid"
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch mode {
+		case "uploadid":
+			w.Header().Set("X-GUploader-UploadID", "abc")
+		case "gfe":
+			w.Header().Set("X-GUploader-UploadID", "abc")
+			w.Header().Set("X-Goog-Gfe-Service-Time", "5")
+		case "proxy": // error page from an intermediary: no GCS headers
+			w.WriteHeader(http.StatusBadGateway)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer srv.Close()
+	rt := &metricsRoundTripper{base: http.DefaultTransport, metrics: cm}
+	do := func(url string) {
+		req, _ := http.NewRequest("GET", url+"/storage/v1/b/b/o/o", nil)
+		if resp, err := rt.RoundTrip(req); err == nil {
+			io.ReadAll(resp.Body)
+			resp.Body.Close()
+		}
+	}
+	do(srv.URL)
+	mode = "gfe"
+	do(srv.URL)
+	mode = "proxy"
+	do(srv.URL)
+	closed := httptest.NewServer(http.NotFoundHandler())
+	closed.Close()
+	do(closed.URL) // connection refused: no response at all
+
+	if c, _ := metricPoints(t, mr, "gcp.storage.client.server.unreached", map[string]string{"error.type": "OK"}); c != 0 {
+		t.Errorf("server.unreached{OK} = %d, want 0 (responses with X-GUploader-UploadID reached the server)", c)
+	}
+	if c, _ := metricPoints(t, mr, "gcp.storage.client.server.unreached", map[string]string{"error.type": errorTypeConnectionError}); c != 1 {
+		t.Errorf("server.unreached{CONNECTION_ERROR} = %d, want 1", c)
+	}
+	if c, _ := metricPoints(t, mr, "gcp.storage.client.server.unreached", map[string]string{"error.type": "UNAVAILABLE"}); c != 1 {
+		t.Errorf("server.unreached{UNAVAILABLE} (502 without GCS headers) = %d, want 1", c)
+	}
+	if c, sum := metricPoints(t, mr, "gcp.storage.client.server.duration", nil); c != 1 || sum != 0.005 {
+		t.Errorf("server.duration count=%d sum=%v, want 1, 0.005", c, sum)
+	}
+}
