@@ -332,7 +332,7 @@ func initMetrics(ctx context.Context, projectID string, config *storageConfig) (
 
 	retries, err := meter.Int64Counter(
 		"gcp.storage.client.retries",
-		metric.WithDescription("Number of GCS client attempts that retried an earlier failed attempt of the same request. error.type is the error of the attempt that was retried. Resumable upload chunks and list pages are not retries."),
+		metric.WithDescription("Number of GCS client retry attempts."),
 		metric.WithUnit("{retry}"),
 	)
 	if err != nil {
